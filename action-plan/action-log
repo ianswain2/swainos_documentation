@@ -122,3 +122,4 @@
 2026-02-12 15:21 - Ran objective forecast/actuals anti-slop pass: centralized UTC month formatting utility, removed duplicated date helpers, and optimized trade-vs-direct monthly bucketing
 2026-02-12 15:34 - Consolidated itinerary forecast/actuals UI controls and KPI presentation with shared SegmentedToggle + KpiStatCard components and revalidated lint/build
 2026-02-12 15:13 - Initialized git repos for frontend/backend/docs, connected GitHub remotes, and pushed main branches to protect current project state
+2026-02-12 15:15 - Refreshed frontend/backend READMEs, added documentation repo README, and pushed updates to keep repo onboarding docs current
