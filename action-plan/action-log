@@ -1,0 +1,123 @@
+2026-02-06 15:51 - Scaffolded frontend module folders and README structure
+2026-02-06 15:51 - Scaffolded backend module folders and README structure
+2026-02-06 15:51 - Created initial Supabase migrations (schema, RLS, views)
+2026-02-06 15:51 - Refined migrations for FK order and spec-aligned views
+2026-02-06 15:51 - Confirmed initial migrations have been run
+2026-02-06 15:56 - Added seed migration for locations and currencies
+2026-02-06 15:57 - Added seed migration for app settings defaults
+2026-02-06 16:27 - Added locations ingestion support and raw backfill migrations
+2026-02-06 16:29 - Added full raw locations seed from Salesforce export
+2026-02-06 16:31 - Regenerated raw locations seed to fix country_code
+2026-02-06 16:33 - Confirmed location/app settings seed imports completed
+2026-02-06 16:41 - Parsed project spec into goals/docs and updated READMEs
+2026-02-06 17:05 - Created backend foundation action plan for Phase 1
+2026-02-06 17:12 - Audited Kaptio-focused action plan against goals
+2026-02-06 18:05 - Implemented backend foundation and Kaptio MVP read APIs
+2026-02-06 18:22 - Audited Kaptio MVP and refined cashflow calculations
+2026-02-06 18:35 - Created backend contract freeze action plan and sample payloads doc
+2026-02-06 18:41 - Audited contract freeze plan against goals
+2026-02-07 08:30 - Implemented contract freeze updates, tests, and docs
+2026-02-07 08:33 - Marked backend contract freeze plan complete
+2026-02-07 08:44 - Created frontend foundation action plan
+2026-02-07 08:46 - Expanded frontend plan for full navigation scope
+2026-02-07 09:00 - Scaffolded SwainOS frontend foundation and docs
+2026-02-07 09:06 - Hardened frontend scaffold (gitignore, error handling, types)
+2026-02-07 12:46 - Initialized Next.js config and marked frontend plan complete
+2026-02-07 12:51 - Added Supabase public env configuration for frontend
+2026-02-07 13:16 - Renamed salesforce_id to external_id across schema and backend
+2026-02-07 13:22 - Created historical data import action plan
+2026-02-07 13:42 - Added contacts schema shift migration and updated plans
+2026-02-07 14:00 - Updated data import plan for contact_type values
+2026-02-07 14:15 - Added agencies consortia field and updated import plan
+2026-02-07 19:19 - Replaced booking_status with is_deleted and updated imports
+2026-02-09 13:10 - Added backend .env scaffold for Supabase settings
+2026-02-09 13:13 - Updated data import plan for REST upsert ingestion
+2026-02-09 13:30 - Added REST upsert script for bookings load
+2026-02-09 19:33 - Completed bookings REST upsert resume after UUID cleanup
+2026-02-09 19:40 - Added migration to drop itinerary_items.quantity
+2026-02-09 19:45 - Added migration to restore itinerary_items.quantity
+2026-02-09 19:52 - Added REST upsert script for itinerary items
+2026-02-09 20:50 - Completed itinerary_items REST upsert
+2026-02-09 20:56 - Added card_type to customer_payments schema
+2026-02-09 21:02 - Added REST upsert script for customer payments
+2026-02-09 21:03 - Completed customer_payments REST upsert
+2026-02-09 21:08 - Refreshed backend/frontend docs and data import plan state
+2026-02-09 21:14 - Created frontend initial buildout action plan
+2026-02-09 21:21 - Audited and aligned frontend buildout plan to spec
+2026-02-10 01:31 - Set up backend venv and started local API server
+2026-02-10 13:32 - Completed frontend initial buildout implementation, contract alignment, and local run verification
+2026-02-10 13:39 - Refined frontend visual system, removed remaining hardcoded metrics, and consolidated command center data flow
+2026-02-10 14:25 - Audited itinerary trend flow, aligned trend aggregation to materialized view, and refreshed frontend trend summaries
+2026-02-10 14:45 - Fixed Command Center loading (resilient fetch + backend fallback for missing mv_itinerary_trends); added FX Command with live rates, exposure (live or mock), and best-time-to-buy UI
+2026-02-10 14:52 - Created FX backend action plan for live rates, exposure, trade logging, AI insights, and forecasts
+2026-02-10 14:55 - Scoped FX to supplier currencies only: ZAR, USD, AUD, NZD (backend filter for rates and exposure; frontend mock and copy updated)
+2026-02-10 14:57 - Replaced module placeholders with full UI shells for Debt Service, Operations, AI Insights, and Settings; updated frontend buildout plan status and docs
+2026-02-10 14:59 - Completed frontend initial buildout plan: lint clean, QA complete, plan marked ✅ COMPLETED
+2026-02-10 15:24 - Updated sample payloads for FX scope and added frontend data queries document
+2026-02-10 16:06 - Created itinerary status pipeline action plan (status-driven trends + filters)
+2026-02-10 16:11 - Implemented itinerary pipeline backend (mv_itinerary_status_trends migration, API route, docs and sample payloads)
+2026-02-10 16:16 - Cleaned backend artifacts, added backend .gitignore, and aligned README structure notes
+2026-02-10 16:17 - Updated itinerary status pipeline plan status and backend docs to current backend completion state
+2026-02-10 16:24 - Added migration to remove closed_count usage and add period_end to status trends; updated docs/sample payloads
+2026-02-10 16:24 - Updated itinerary status pipeline plan to reflect migrations applied and backend complete
+2026-02-10 16:28 - Implemented itinerary pipeline frontend (status cards, stacked trend, detail table) and updated docs
+2026-02-10 16:40 - Reorganized frontend structure: moved route UIs to features, promoted shared UI components, removed unused services/types, and ignored build artifacts
+2026-02-10 16:43 - Marked itinerary status pipeline plan complete and updated frontend docs for shared UI organization
+2026-02-10 16:47 - Updated itinerary pipeline view to line chart + horizontal matrix table for clarity
+2026-02-10 16:59 - Added migration to base itinerary status trends on travel_start_date and updated backend docs
+2026-02-10 16:43 - Verified UI loads in browser with existing dev servers running
+2026-02-10 16:13 - Reviewed SwainOS backend folder structure for organization and alignment
+2026-02-10 16:31 - Audited SwainOS frontend structure for organization and naming
+2026-02-10 17:12 - Added stage-based itinerary pipeline view (new mv_itinerary_pipeline_stages, close-ratio forecast fields, updated UI + docs)
+2026-02-10 17:24 - Switched pipeline trend chart to stacked bars and capped close ratio at 100%
+2026-02-10 17:34 - Fixed pipeline chart scaling so monthly bars render across the full axis
+2026-02-10 17:42 - Updated monthly pipeline chart to gross-amount bars for Confirmed/Quoted/Traveling/Traveled only
+2026-02-10 17:51 - Added compact gross-amount labels atop monthly pipeline bars
+2026-02-10 18:02 - Reworked pipeline matrix to show gross/net/margin across months for core stages
+2026-02-10 18:16 - Added gross/net chart toggle, redesigned monthly pipeline table, and revised close-ratio formula for interpretability
+2026-02-10 18:24 - Switched itinerary pipeline API to forward window (current month onward) and updated UI copy
+2026-02-10 18:39 - Added pipeline pax rollups and rebuilt UI around forward on-books/potential/expected forecast trend + outlook table
+2026-02-11 11:40 - Added itinerary enrichment migration + status reference + monthly revenue/deposit rollups, created itinerary upsert script, and documented itinerary ETL mapping
+2026-02-11 11:55 - Audited and hardened itinerary enrichment migration with pipeline buckets, weekly/consortia/trade-agency rollups, and external-id bridge fields
+2026-02-11 12:03 - Added itinerary upsert FK resolver (external_id -> UUID for agency/contact) and documented resolver behavior
+2026-02-11 12:17 - Ran itinerary REST upsert from latest CSV (215 batches) and validated close_date population post-import
+2026-02-11 12:44 - Implemented owner-cockpit itinerary revenue APIs/UI, deprecated old pipeline/revenue endpoints, and updated docs/contracts
+2026-02-11 17:26 - Audited owner-cockpit refactor, fixed weekly rollup query mismatch, started backend/frontend, and verified revenue-bookings UI in browser
+2026-02-11 17:44 - Stacked channel tables, added share + reseller commission metrics, and added migration to fix trade-agency rollup classification/fallbacks
+2026-02-11 18:18 - Split Revenue & Bookings into Itinerary Forecast + Itinerary Actuals, added actuals-yoy API/UI, and refreshed docs/query inventory
+2026-02-11 18:39 - Simplified side nav labels, added lead-flow tracking to forecast/actuals, fixed actuals to 4-year YoY variance view, and removed legacy forecast dead code
+2026-02-11 18:57 - Added closed-won actuals channel rollups/API and wired Top consortia/trade production panels into Itinerary Actuals
+2026-02-11 19:12 - Audited/cleaned nav + UI, removed metric definition callouts, added collapsible icon nav, and refreshed backend/frontend/query docs for actuals channels
+2026-02-11 19:28 - Completed tech-debt cleanup pass, removed unused nav description metadata, and normalized code documentation docs to current-state format
+2026-02-11 19:41 - Refined Itinerary Actuals owner comparison UX: fixed 3-year scope, added channel period toggles, and added current-vs-last-year production snapshot
+2026-02-11 19:49 - Ensured Itinerary Actuals always renders a 3-year matrix (including zero-data baseline year) and improved YoY baseline labeling
+2026-02-11 20:15 - Diagnosed actuals UI gap to query-param alias mismatch, enforced snake_case filters in itinerary-revenue API, and verified years_back/actuals_year now apply correctly
+2026-02-11 20:34 - Reframed itinerary Forecast/Actuals metrics around Commission Income (Gross - Itinerary Cost), defaulted toggles to Income, and updated charts/tables from Net to Commission Income labels
+2026-02-11 21:08 - Added commission_income rollup migration, refactored backend/front-end itinerary revenue contracts to commissionIncomeAmount, and validated API outputs match gross minus cost
+2026-02-11 21:22 - Completed technical-debt audit pass: removed legacy net fallbacks in itinerary-revenue repo/service, revalidated API commissionIncome fields, and reran frontend lint/build
+2026-02-11 21:36 - Redesigned Itinerary Actuals YoY trend chart with stronger visual contrast, per-month datapoint markers, Jan/Jun/Dec value labels, and multi-level gridlines for readability
+2026-02-11 21:52 - Added per-bar value labels to shared itinerary lead-flow bar chart for clearer month-by-month readability
+2026-02-11 22:01 - Enhanced lead-flow bar labels with responsive behavior: compact values + every-other label on small screens, full labels on medium+
+2026-02-11 22:18 - Completed consistency audit pass: moved legacy forecast panels out of deprecated revenue-bookings folder, removed stale files, and synchronized backend/frontend/payload/query mapping docs to current contracts
+2026-02-12 09:27 - Corrected deposit health window/source semantics, added conversion commission-income best/base/worst projections, and fixed YoY Jan/Dec datapoint clipping
+2026-02-12 09:36 - Added month-by-month Trade vs Direct production (consortia Not Applicable = direct) with totals to itinerary actuals API/UI
+2026-02-12 09:46 - Reclassified Cancelled and Amendment Merged to closed_lost via migration and updated itinerary data-mapping status table
+2026-02-12 09:50 - Converted Trade vs Direct section into a compact vertical 2-year matrix with per-year totals
+2026-02-12 10:07 - Fixed YoY month-label alignment, upgraded forecast to true multi-line chart with monthly datapoints, moved Jan-Dec matrix below YoY, and rebuilt trade production as Jan-Dec MoM matrix
+2026-02-12 10:24 - Added shared project Cursor skill (.cursor/skills/quality-audit-pass) for standardized code quality audit prompts
+2026-02-12 11:01 - Added migration to source commission-income from gross_profit and enforce closed-won allowlist; updated forecast/actuals UI labels and synced backend/frontend/query/payload mapping docs
+2026-02-12 11:07 - Confirmed recent commission-income/closed-won migration was run in Supabase and aligned forecast + lead-flow UI comparisons to the updated model
+2026-02-12 11:19 - Added dedicated itinerary lead-flow rollup/API (created_at cohorts with closed_won/closed_lost conversion) and wired forecast/actuals lead panels to YoY lead conversion metrics
+2026-02-12 11:20 - Fixed lead-flow migration join to use itinerary_status_reference.status_value after SQL error on missing status_label column
+2026-02-12 13:38 - Ran quality-audit-pass on lead-flow rollout and hardened migration with normalized status join + period_start index for stable mapping/perf
+2026-02-12 13:53 - Fixed lead-flow month label timezone shift (Jan/Feb off-by-one) and aligned forecast chart x-axis labels directly to plot coordinates for responsive accuracy
+2026-02-12 13:55 - Standardized UTC-safe month label parsing across itinerary forecast/actuals tables to prevent cross-timezone month shifts
+2026-02-12 13:59 - Replaced brittle forecast SVG line chart with responsive stacked scenario bars (on-books + expected uplift + upside uplift) and validated lint/build
+2026-02-12 14:05 - Reviewed itinerary forecast/actuals readability and upgraded Command Center with itinerary forecast, lead conversion, deposit coverage, and latest actuals gross-profit KPIs
+2026-02-12 14:16 - Added historical forecast + 12% YoY target rollup to itinerary outlook API and updated forecast graph/table to show On Books, Expected, Forecast, and Target
+2026-02-12 14:22 - Refined outlook expected-close logic with blended stage+bucket conversion ratio bounds and added per-series monthly data labels to forecast bars
+2026-02-12 14:34 - Reverted cluttered forecast labels and migrated outlook chart to responsive Recharts grouped bars with readable tooltip/legend
+2026-02-12 14:48 - Removed remaining custom itinerary charts (YoY trend and lead-flow mini chart) in favor of responsive Recharts components and validated lint
+2026-02-12 15:02 - Audited itinerary forecast/actuals recent chart changes, confirmed no active diagnostics, and removed leftover unused outlook chart computations
+2026-02-12 15:21 - Ran objective forecast/actuals anti-slop pass: centralized UTC month formatting utility, removed duplicated date helpers, and optimized trade-vs-direct monthly bucketing
+2026-02-12 15:34 - Consolidated itinerary forecast/actuals UI controls and KPI presentation with shared SegmentedToggle + KpiStatCard components and revalidated lint/build
