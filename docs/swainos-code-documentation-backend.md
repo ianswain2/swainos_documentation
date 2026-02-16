@@ -73,6 +73,9 @@ Errors return a consistent envelope:
 - `GET /api/v1/itinerary-revenue/actuals-channels`
 - `GET /api/v1/fx/rates`
 - `GET /api/v1/fx/exposure`
+- `GET /api/v1/travel-consultants/leaderboard`
+- `GET /api/v1/travel-consultants/{employee_id}/profile`
+- `GET /api/v1/travel-consultants/{employee_id}/forecast`
 
 ## Itinerary Revenue Owner Cockpit API
 - Primary endpoint family: `/api/v1/itinerary-revenue/*`
@@ -118,6 +121,30 @@ Errors return a consistent envelope:
   - `0025_commission_income_rollups.sql` introduced `commission_income_amount` across itinerary revenue and channel rollups.
   - `0027_commission_income_gross_profit_and_closed_won_allowlist.sql` redefines `commission_income_amount` to use `gross_profit` and enforces a strict closed-won allowlist (`Deposited/Confirming`, `Amendment in Progress`, `Pre-Departure`, `eDocs Sent`, `Traveling`, `Traveled`, `Cancel Fees`).
 
+## Travel Consultant Analytics API
+- New canonical consultant identity table: `employees`.
+  - Keys and core fields: `id`, `external_id`, `first_name`, `last_name`, `email`, `salary`, `commission_rate`.
+- Itinerary attribution link: `itineraries.employee_id` (resolved from `owner_external_id -> employees.external_id` during ingest/backfill).
+- New materialized views:
+  - `mv_travel_consultant_leaderboard_monthly` (realized travel-date production leaderboard)
+  - `mv_travel_consultant_profile_monthly` (consultant profile travel outcomes)
+  - `mv_travel_consultant_funnel_monthly` (lead-created to closed outcomes; includes median speed-to-book)
+  - `mv_travel_consultant_compensation_monthly` (salary + commission impact rollup)
+- API contracts:
+  - `GET /api/v1/travel-consultants/leaderboard`
+    - Query params (`snake_case`): `period_type`, `domain`, `year`, `month`, `sort_by`, `sort_order`, `currency_code`
+    - Returns ranking rows + highlights for story-first leaderboard UI.
+  - `GET /api/v1/travel-consultants/{employee_id}/profile`
+    - Query params (`snake_case`): `period_type`, `year`, `month`, `yoy_mode`, `currency_code`
+    - Returns ordered narrative sections (`heroKpis`, `trendStory`, `funnelHealth`, `forecastAndTarget`, `compensationImpact`, `signals`, `insightCards`).
+  - `GET /api/v1/travel-consultants/{employee_id}/forecast`
+    - Query params (`snake_case`): `horizon_months`, `currency_code`
+    - Returns consultant-level forecast timeline with 12% growth target comparison.
+- Story-first response contract:
+  - Backend includes deterministic section ordering and comparison context (`currentPeriod`, `baselinePeriod`, `yoyMode`) to avoid frontend guesswork.
+  - Payloads include signal metadata (`displayLabel`, `description`, `trendDirection`, `trendStrength`, `isLaggingIndicator`) for data-story rendering.
+  - `spend_to_book` is reserved for v2 until a canonical sales/marketing spend source is finalized.
+
 ## Key Modules
 - `src/core/config.py`: settings and environment variables.
 - `src/core/errors.py`: error envelope and handlers.
@@ -127,7 +154,11 @@ Errors return a consistent envelope:
 - `src/api/itinerary_revenue.py`: owner cockpit endpoint surface.
 - `src/services/itinerary_revenue_service.py`: forward outlook/deposit/conversion/channel orchestration.
 - `src/repositories/itinerary_revenue_repository.py`: rollup materialized view access.
+- `src/api/travel_consultants.py`: travel consultant leaderboard/profile/forecast endpoint surface.
+- `src/services/travel_consultants_service.py`: consultant KPI aggregation, YoY storytelling, signals, and forecast logic.
+- `src/repositories/travel_consultants_repository.py`: consultant rollup materialized view access.
 - `scripts/upsert_bookings.py`: REST upsert loader for bookings.
-- `scripts/upsert_itineraries.py`: REST upsert loader for enriched itineraries with external-id FK resolver for agencies/contacts.
+- `scripts/upsert_itineraries.py`: REST upsert loader for enriched itineraries with external-id FK resolver for agencies/contacts/employees.
+- `scripts/upsert_employees.py`: REST upsert loader for Salesforce consultant identity records.
 - `scripts/upsert_itinerary_items.py`: REST upsert loader for itinerary items.
 - `scripts/upsert_customer_payments.py`: REST upsert loader for customer payments.

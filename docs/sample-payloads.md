@@ -619,3 +619,207 @@
   }
 }
 ```
+
+### GET /api/v1/travel-consultants/leaderboard
+**Request (query params)**
+```json
+{
+  "period_type": "monthly",
+  "domain": "travel",
+  "year": 2026,
+  "month": 2,
+  "sort_by": "booked_revenue",
+  "sort_order": "desc",
+  "currency_code": "USD"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "periodStart": "2026-02-01",
+    "periodEnd": "2026-02-28",
+    "periodType": "monthly",
+    "domain": "travel",
+    "sortBy": "booked_revenue",
+    "sortOrder": "desc",
+    "rankings": [
+      {
+        "rank": 1,
+        "employeeId": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
+        "employeeExternalId": "005A0000001XyzQ",
+        "firstName": "Alex",
+        "lastName": "Taylor",
+        "email": "alex@swain.com",
+        "itineraryCount": 14,
+        "paxCount": 38,
+        "bookedRevenue": 148200.0,
+        "commissionIncome": 102900.0,
+        "marginAmount": 45300.0,
+        "marginPct": 0.3057,
+        "leadCount": 22,
+        "closedWonCount": 11,
+        "closedLostCount": 5,
+        "conversionRate": 0.5,
+        "closeRate": 0.6875,
+        "medianSpeedToBookDays": 31.0,
+        "spendToBook": null,
+        "growthTargetVariancePct": 0.0812
+      }
+    ],
+    "highlights": [
+      {
+        "key": "top_mover",
+        "title": "Top Mover",
+        "description": "Alex Taylor leads target pace (8.1%).",
+        "trendDirection": "up",
+        "trendStrength": "high"
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly",
+    "timeWindow": "monthly",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### GET /api/v1/travel-consultants/{employee_id}/profile
+**Request (query params)**
+```json
+{
+  "period_type": "rolling12",
+  "yoy_mode": "same_period",
+  "currency_code": "USD"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "employee": {
+      "employeeId": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
+      "employeeExternalId": "005A0000001XyzQ",
+      "firstName": "Alex",
+      "lastName": "Taylor",
+      "email": "alex@swain.com"
+    },
+    "sectionOrder": [
+      "heroKpis",
+      "trendStory",
+      "funnelHealth",
+      "forecastAndTarget",
+      "compensationImpact",
+      "signals",
+      "insightCards"
+    ],
+    "heroKpis": [
+      {
+        "key": "booked_revenue",
+        "displayLabel": "Booked Revenue",
+        "description": "Closed-won realized travel revenue for selected period.",
+        "value": 148200.0,
+        "trendDirection": "up",
+        "trendStrength": "high",
+        "isLaggingIndicator": false
+      }
+    ],
+    "trendStory": {
+      "points": [],
+      "currentTotal": 148200.0,
+      "baselineTotal": 132000.0,
+      "yoyDeltaPct": 0.1227
+    },
+    "funnelHealth": {
+      "leadCount": 22,
+      "closedWonCount": 11,
+      "closedLostCount": 5,
+      "conversionRate": 0.5,
+      "closeRate": 0.6875,
+      "medianSpeedToBookDays": 31.0
+    },
+    "forecastAndTarget": {
+      "timeline": [],
+      "summary": {
+        "totalProjectedRevenueAmount": 1675000.0,
+        "totalTargetRevenueAmount": 1712000.0,
+        "totalGrowthGapPct": -0.0216
+      }
+    },
+    "compensationImpact": {
+      "salaryAnnualAmount": 95000.0,
+      "salaryPeriodAmount": 7916.67,
+      "commissionRate": 0.15,
+      "estimatedCommissionAmount": 15435.0,
+      "estimatedTotalPayAmount": 23351.67
+    },
+    "signals": [],
+    "insightCards": [],
+    "comparisonContext": {
+      "currentPeriod": "2026-01-01..2026-12-31",
+      "baselinePeriod": "2025-01-01..2025-12-31",
+      "yoyMode": "same_period"
+    }
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "mv_travel_consultant_profile_monthly,mv_travel_consultant_funnel_monthly,mv_travel_consultant_compensation_monthly",
+    "timeWindow": "rolling12",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### GET /api/v1/travel-consultants/{employee_id}/forecast
+**Request (query params)**
+```json
+{
+  "horizon_months": 12,
+  "currency_code": "USD"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "employee": {
+      "employeeId": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
+      "employeeExternalId": "005A0000001XyzQ",
+      "firstName": "Alex",
+      "lastName": "Taylor",
+      "email": "alex@swain.com"
+    },
+    "timeline": [
+      {
+        "periodStart": "2026-03-01",
+        "periodEnd": "2026-03-31",
+        "projectedRevenueAmount": 139200.0,
+        "targetRevenueAmount": 143000.0,
+        "growthGapPct": -0.0266
+      }
+    ],
+    "summary": {
+      "totalProjectedRevenueAmount": 1675000.0,
+      "totalTargetRevenueAmount": 1712000.0,
+      "totalGrowthGapPct": -0.0216
+    }
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "mv_travel_consultant_profile_monthly",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```

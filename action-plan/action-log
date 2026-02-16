@@ -123,3 +123,14 @@
 2026-02-12 15:34 - Consolidated itinerary forecast/actuals UI controls and KPI presentation with shared SegmentedToggle + KpiStatCard components and revalidated lint/build
 2026-02-12 15:13 - Initialized git repos for frontend/backend/docs, connected GitHub remotes, and pushed main branches to protect current project state
 2026-02-12 15:15 - Refreshed frontend/backend READMEs, added documentation repo README, and pushed updates to keep repo onboarding docs current
+2026-02-12 15:46 - Audited backend folder organization, confirmed flat repository/service layout is intentional, and removed unused src/schemas/salesforce.py
+2026-02-12 16:02 - Completed strict backend dead-code and structure cleanup: removed unused pipeline/revenue schema symbols, removed UnauthorizedError, and deleted 34 empty legacy src directories
+2026-02-13 09:30 - Compiled comprehensive API key and environment variable checklist across spec, backend, and frontend docs
+2026-02-15 20:29 - Created Travel Consultant analytics bible action plan with KPI contract, employee schema, attribution strategy, and phased rollout
+2026-02-16 07:08 - Audited Travel Consultant analytics action plan and tightened spend-source, compensation, attribution enforcement, and access-control requirements
+2026-02-16 08:44 - Performed second audit pass to enforce existing rollup/UI reuse, Supabase naming consistency, and query optimization guardrails in Travel Consultant plan
+2026-02-16 08:47 - Final audit pass fixed query-param snake_case and aligned Supabase index naming convention with existing idx_* migration style
+2026-02-16 09:52 - Implemented Travel Consultant backend foundation: employees schema/migrations, itinerary owner resolver, consultant APIs/services/repositories, and updated backend payload/docs
+2026-02-16 10:09 - Ran deep pre-migration audit and hardened RLS/FK behavior plus backend consolidation cleanup for travel consultant rollout
+2026-02-16 11:56 - Imported travel consultant employee CSV (186 rows) with duplicate-email filtering and BOM-safe header handling
+2026-02-16 12:43 - Updated travel consultant action plan/docs to current backend-complete state and completed final consistency audit before push
