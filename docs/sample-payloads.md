@@ -624,10 +624,9 @@
 **Request (query params)**
 ```json
 {
-  "period_type": "monthly",
+  "period_type": "year",
   "domain": "travel",
   "year": 2026,
-  "month": 2,
   "sort_by": "booked_revenue",
   "sort_order": "desc",
   "currency_code": "USD"
@@ -638,9 +637,9 @@
 ```json
 {
   "data": {
-    "periodStart": "2026-02-01",
-    "periodEnd": "2026-02-28",
-    "periodType": "monthly",
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-12-31",
+    "periodType": "year",
     "domain": "travel",
     "sortBy": "booked_revenue",
     "sortOrder": "desc",
@@ -663,9 +662,10 @@
         "closedLostCount": 5,
         "conversionRate": 0.5,
         "closeRate": 0.6875,
-        "medianSpeedToBookDays": 31.0,
+        "avgSpeedToBookDays": 31.0,
         "spendToBook": null,
-        "growthTargetVariancePct": 0.0812
+        "growthTargetVariancePct": 0.0812,
+        "yoyToDateVariancePct": 0.117
       }
     ],
     "highlights": [
@@ -682,7 +682,7 @@
   "meta": {
     "asOfDate": "2026-02-16",
     "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly",
-    "timeWindow": "monthly",
+    "timeWindow": "year",
     "calculationVersion": "v1",
     "currency": "USD"
   }
@@ -693,7 +693,8 @@
 **Request (query params)**
 ```json
 {
-  "period_type": "rolling12",
+  "period_type": "year",
+  "year": 2026,
   "yoy_mode": "same_period",
   "currency_code": "USD"
 }
@@ -710,15 +711,7 @@
       "lastName": "Taylor",
       "email": "alex@swain.com"
     },
-    "sectionOrder": [
-      "heroKpis",
-      "trendStory",
-      "funnelHealth",
-      "forecastAndTarget",
-      "compensationImpact",
-      "signals",
-      "insightCards"
-    ],
+    "sectionOrder": ["heroKpis", "trendStory", "funnelHealth", "operationalSnapshot", "forecastAndTarget", "compensationImpact", "signals", "insightCards"],
     "heroKpis": [
       {
         "key": "booked_revenue",
@@ -728,8 +721,48 @@
         "trendDirection": "up",
         "trendStrength": "high",
         "isLaggingIndicator": false
+      },
+      {
+        "key": "avg_gross_profit",
+        "displayLabel": "Average Gross Profit",
+        "description": "Average gross profit per closed-won itinerary in selected period.",
+        "value": 10520.7,
+        "trendDirection": "up",
+        "trendStrength": "medium",
+        "isLaggingIndicator": false
       }
     ],
+    "threeYearPerformance": {
+      "travelClosedFiles": {
+        "key": "travel_closed_files",
+        "title": "Closed Travel Revenue (Travel Date Basis)",
+        "metricLabel": "revenue",
+        "series": [
+          { "year": 2024, "monthlyValues": [88570, 247234, 227654, 90234, 135443, 42842, 28295, 188423, 127098, 420311, 272940, 215321], "total": 2168365 },
+          { "year": 2025, "monthlyValues": [452310, 307222, 407302, 368740, 139022, 245937, 13350, 167825, 389990, 387995, 258228, 78107], "total": 3212028 },
+          { "year": 2026, "monthlyValues": [64946, 169592, 118005, 58075, 76135, 138738, 0, 263829, 31425, 108335, 109363, 0], "total": 1138443 }
+        ],
+        "variances": [
+          { "label": "2025 vs 2024", "monthlyVariancePct": [4.1067, 0.2426, 0.788, 3.0862, 0.0264, 4.7403, -0.5278, -0.1083, 2.0685, -0.077, -0.0541, -0.6372], "totalVariancePct": 0.4813 },
+          { "label": "2026 vs 2025", "monthlyVariancePct": [-0.8564, -0.4481, -0.7103, -0.8425, -0.4523, -0.4359, -1, 0.5721, -0.9194, -0.7208, -0.5765, -1], "totalVariancePct": -0.6456 }
+        ]
+      },
+      "leadFunnel": {
+        "key": "lead_funnel",
+        "title": "Lead Funnel Revenue (Created/Booked Basis)",
+        "metricLabel": "revenue",
+        "series": [
+          { "year": 2024, "monthlyValues": [364000, 402300, 318700, 294800, 271200, 310900, 281400, 336100, 355600, 372500, 348400, 327900], "total": 3983800 },
+          { "year": 2025, "monthlyValues": [402100, 355900, 250700, 203400, 276500, 298700, 221900, 304100, 287400, 311800, 296300, 284000], "total": 3492800 },
+          { "year": 2026, "monthlyValues": [214500, 188300, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "total": 402800 }
+        ],
+        "variances": [
+          { "label": "2025 vs 2024", "monthlyVariancePct": [0.1047, -0.1153, -0.213, -0.3093, 0.0195, -0.0392, -0.2114, -0.0952, -0.1918, -0.163, -0.1495, -0.1339], "totalVariancePct": -0.1232 },
+          { "label": "2026 vs 2025", "monthlyVariancePct": [-0.4666, -0.471, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1], "totalVariancePct": -0.8847 }
+        ]
+      }
+    },
+    "ytdVariancePct": -0.691,
     "trendStory": {
       "points": [],
       "currentTotal": 148200.0,
@@ -742,7 +775,7 @@
       "closedLostCount": 5,
       "conversionRate": 0.5,
       "closeRate": 0.6875,
-      "medianSpeedToBookDays": 31.0
+      "avgSpeedToBookDays": 31.0
     },
     "forecastAndTarget": {
       "timeline": [],
@@ -759,6 +792,34 @@
       "estimatedCommissionAmount": 15435.0,
       "estimatedTotalPayAmount": 23351.67
     },
+    "operationalSnapshot": {
+      "currentTravelingFiles": [
+        {
+          "itineraryId": "b3a3f183-aaaa-bbbb-cccc-e4d16aa0160e",
+          "itineraryNumber": "ITI-10293",
+          "itineraryName": "South Africa Family Journey",
+          "itineraryStatus": "Traveling",
+          "primaryCountry": "South Africa",
+          "travelStartDate": "2026-02-12",
+          "travelEndDate": "2026-02-24",
+          "grossAmount": 28450.0,
+          "paxCount": 4
+        }
+      ],
+      "topOpenItineraries": [
+        {
+          "itineraryId": "f81d4f3c-aaaa-bbbb-cccc-0f4c5a8bb62b",
+          "itineraryNumber": "ITI-10388",
+          "itineraryName": "Botswana Safari Draft",
+          "itineraryStatus": "Proposal Sent",
+          "primaryCountry": "Botswana",
+          "travelStartDate": "2026-07-14",
+          "travelEndDate": "2026-07-25",
+          "grossAmount": 96200.0,
+          "paxCount": 2
+        }
+      ]
+    },
     "signals": [],
     "insightCards": [],
     "comparisonContext": {
@@ -771,7 +832,7 @@
   "meta": {
     "asOfDate": "2026-02-16",
     "source": "mv_travel_consultant_profile_monthly,mv_travel_consultant_funnel_monthly,mv_travel_consultant_compensation_monthly",
-    "timeWindow": "rolling12",
+    "timeWindow": "year",
     "calculationVersion": "v1",
     "currency": "USD"
   }

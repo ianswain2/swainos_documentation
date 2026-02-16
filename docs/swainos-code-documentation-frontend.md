@@ -42,6 +42,7 @@ Primary modules (spec-aligned):
 - Debt Service
 - Itinerary Forecast
 - Itinerary Actuals
+- Travel Consultant
 - FX Command
 - Operations
 - AI Insights
@@ -62,6 +63,7 @@ Primary modules (spec-aligned):
   - `itineraryTrendsService.ts`
   - `fxService.ts` (FX rates + exposure)
   - `itineraryRevenueService.ts` (forecast outlook/deposits/conversion/channels + actuals YoY + actuals channels)
+  - `travelConsultantService.ts` (leaderboard/profile/forecast with typed normalization)
 - Domain types live in `lib/types/*` and align to sample payloads.
 - Numeric normalization is centralized in `lib/utils/parseNumber.ts` so decimal strings from backend payloads are safely converted before UI rendering.
 
@@ -71,6 +73,9 @@ Primary modules (spec-aligned):
   - `Cash Flow` (summary + timeseries + deposits + payments out)
   - `Itinerary Forecast` (forward outlook, lead flow, deposit control, conversion, channel leaders, forecast grid, primary metric = Gross Profit)
   - `Itinerary Actuals` (fixed 3-year Jan-Dec YoY by `travel_end_date`: yearly KPI cards with YoY deltas, lead flow, channel production, horizontal matrix, monthly detail; primary metric = Gross Profit)
+  - `Travel Consultant`:
+    - `/travel-consultant`: leaderboard with domain toggles (travel vs funnel), search, sortable rankings, mobile-priority columns, highlights, and team effectiveness snapshot
+    - `/travel-consultant/[employeeId]`: consultant deep-dive with effectiveness summary, expanded Hero KPIs (avg gross profit, avg itinerary nights, avg group size, avg lead time, avg speed to close), 3-year revenue matrices (travel + funnel), operational snapshot, forecast/target, compensation, signals, and deduped insight cards
 - Implemented with live + optional mock
   - `FX Command` (live rates and exposure scoped to supplier currencies **ZAR, USD, AUD, NZD** only; live from DB or demo data)
 - Implemented with structured UI (data pending)
@@ -102,6 +107,11 @@ Primary modules (spec-aligned):
   - UI labels use **Gross Profit** while API field `commissionIncomeAmount` remains stable for contract continuity.
   - `commissionIncomeAmount` is sourced from itinerary `gross_profit`.
 - JSON properties remain `camelCase`; query params remain `snake_case`.
+- Travel Consultant profile payload key additions:
+  - `threeYearPerformance`
+  - `ytdVariancePct`
+  - `funnelHealth.avgSpeedToBookDays`
+  - extended `heroKpis` set for advisor effectiveness coaching
 
 ## Organization and Simplification Notes
 - `features/command-center/useCommandCenterData.ts` consolidates command center data loading into one flow to avoid scattered business-fetch logic.

@@ -1,9 +1,9 @@
 # 🎯 Travel Consultant Analytics Bible - Leaderboard + Consultant Deep-Dive
 
-> **Version**: v1.3  
-> **Status**: 🔄 IN PROGRESS  
-> **Date**: 2026-02-15  
-> **Completion Date**: [YYYY-MM-DD] *(for completed plans)*
+> **Version**: v1.4  
+> **Status**: ✅ COMPLETED  
+> **Date**: 2026-02-16  
+> **Completion Date**: 2026-02-16
 
 **Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/src/scripts/`, `SwainOS_FrontEnd/apps/web/src/app/`, `SwainOS_FrontEnd/apps/web/src/features/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwainOS_FrontEnd/apps/web/src/components/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: No dedicated Travel Consultant analytics domain, no canonical employee model synced from Salesforce, and no unified KPI/YoY framework split by travel outcomes vs funnel performance dates.  
@@ -31,16 +31,16 @@
 
 ## 🎯 **EXECUTION STATUS**
 
-**Progress**: 4 of 5 sections completed  
-**Current Status**: Backend implementation complete and validated (migrations, ingest, APIs, docs); frontend Travel Consultant module remains.
+**Progress**: 5 of 5 sections completed  
+**Current Status**: Backend and frontend implementation complete and validated (migrations, ingest, APIs, UX, and documentation sync).
 
 | Phase | Status | Priority | Notes |
 |-------|---------|----------|-------|
 | 1️⃣ KPI Contract + Date Semantics | ✅ COMPLETED | HIGH | KPI/date semantics frozen and documented for implementation |
 | 2️⃣ Data Modeling + Employee Sync | ✅ COMPLETED | HIGH | `employees` + `itineraries.employee_id` + resolver/backfill implemented |
 | 3️⃣ Analytics Rollups + APIs | ✅ COMPLETED | HIGH | Consultant MVs + backend API/service/repository stack implemented |
-| 4️⃣ Frontend Travel Consultant Module | 📋 PENDING | HIGH | Frontend navigation and profile storytelling UI pending |
-| 5️⃣ Signals, Forecast, and Compensation | 🔄 IN PROGRESS | MEDIUM | Backend signal/forecast/compensation contracts implemented; frontend UX pending |
+| 4️⃣ Frontend Travel Consultant Module | ✅ COMPLETED | HIGH | Navigation, leaderboard, profile UX, mobile behavior, and effectiveness summaries shipped |
+| 5️⃣ Signals, Forecast, and Compensation | ✅ COMPLETED | MEDIUM | Signals/forecast/compensation and advisor average KPI surfacing complete in profile UX |
 
 ---
 
@@ -148,7 +148,7 @@ Salesforce consultant identity
 ### **Supporting Metrics (Initial Set)**
 - Net margin and margin %
 - Average booking value
-- Speed to book (median days from `created_at` to `booked_date`)
+- Speed to book (average days from `created_at` to `booked_date`)
 - Lead aging by stage
 - Pipeline coverage ratio
 - Forecast attainment vs target
@@ -494,16 +494,16 @@ class TravelConsultantLeaderboardRow(BaseModel):
 - [x] Error/loading/empty states tested
 
 ### **Documentation** *(MANDATORY)*
-- [ ] `swainos-code-documentation-frontend.md` updated
+- [x] `swainos-code-documentation-frontend.md` updated
 - [x] `swainos-code-documentation-backend.md` updated
 - [x] Migration notes updated for schema changes
-- [ ] Action plan status updated to ✅ COMPLETED
+- [x] Action plan status updated to ✅ COMPLETED
 
 ### **Final Review**
-- [ ] All phases completed
+- [x] All phases completed
 - [x] All validation checklists passed
 - [x] No unresolved attribution diagnostics
-- [ ] Feature ready for controlled release
+- [x] Feature ready for controlled release
 
 ---
 
@@ -515,3 +515,4 @@ class TravelConsultantLeaderboardRow(BaseModel):
 | v1.1 | 2026-02-15 | SwainOS Assistant | Audit pass updates: spend-source contract, compensation allocation rules, staged FK enforcement, and access-control requirements |
 | v1.2 | 2026-02-16 | SwainOS Assistant | Audit pass updates: fixed migration paths, added existing asset reuse requirements, and tightened optimization + naming guardrails |
 | v1.3 | 2026-02-16 | SwainOS Assistant | Marked backend implementation complete/in-progress state and aligned v1 sort contract with shipped backend behavior |
+| v1.4 | 2026-02-16 | SwainOS Assistant | Marked full backend+frontend completion, updated phase status/checklists, and aligned plan with shipped advisor effectiveness UX and profile KPI expansions |

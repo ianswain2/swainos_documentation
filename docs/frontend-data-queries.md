@@ -25,6 +25,9 @@
 | `GET /api/v1/itinerary-revenue/channels` | Top consortia and trade agency performance | `time_window`, `grain`, `currency_code` | `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Pulls from consortia/trade monthly rollups |
 | `GET /api/v1/itinerary-revenue/actuals-yoy` | Jan-Dec year-over-year itinerary actuals | `years_back`, `currency_code` | `features/itinerary-actuals/useItineraryActualsYoy.ts` | Primary Itinerary Actuals source (travel-end basis) |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | Closed-won top consortia and trade agency production for actuals | `years_back`, `actuals_year`, `currency_code` | `features/itinerary-actuals/useItineraryActualsYoy.ts` | Uses actuals channel rollups by travel-end month; `actuals_year` used for current/last-year scope toggles |
+| `GET /api/v1/travel-consultants/leaderboard` | Consultant leaderboard for travel outcomes or funnel views | `period_type` (`monthly`/`year`/`rolling12`), `domain`, `year`, `month`, `sort_by`, `sort_order`, `currency_code` | `features/travel-consultant/leaderboard/useTravelConsultantLeaderboard.ts` | Powers `/travel-consultant` ranking table, consultant search/select, and highlights |
+| `GET /api/v1/travel-consultants/{employee_id}/profile` | Consultant profile story sections with YoY context | `period_type` (`monthly`/`year`/`rolling12`), `year`, `month`, `yoy_mode`, `currency_code` | `features/travel-consultant/profile/useTravelConsultantProfile.ts` | Powers ordered profile sections (hero KPIs with advisor averages, 3-year revenue matrices, funnel, operational snapshot, compensation, signals, and effectiveness summary) |
+| `GET /api/v1/travel-consultants/{employee_id}/forecast` | Consultant forecast timeline and target gap | `horizon_months`, `currency_code` | `features/travel-consultant/profile/useTravelConsultantProfile.ts` | Loaded in parallel with profile for forecast table + target gap |
 | `GET /api/v1/fx/rates` | Live FX rates | `limit` | `app/fx-command/page.tsx` | Filtered to ZAR/USD/AUD/NZD pairs server-side |
 | `GET /api/v1/fx/exposure` | Exposure rollup | none | `app/fx-command/page.tsx` | Returns empty if view missing; UI falls back to demo exposure |
 
@@ -47,4 +50,7 @@
   `Deposited/Confirming`, `Amendment in Progress`, `Pre-Departure`, `eDocs Sent`, `Traveling`, `Traveled`, `Cancel Fees`.
 - Numbers returned as strings are normalized in `lib/utils/parseNumber.ts` before rendering.
 - Command Center uses `Promise.allSettled` so one failed query does not block other modules.
+- Travel Consultant profile also uses `Promise.allSettled` for profile + forecast so one surface can render even if the companion request fails.
+- Travel Consultant profile contract now includes `ytdVariancePct`, `threeYearPerformance` (`travelClosedFiles` + `leadFunnel`), and `funnelHealth.avgSpeedToBookDays`.
+- Leaderboard contract now uses `avgSpeedToBookDays` (replacing prior median naming).
 

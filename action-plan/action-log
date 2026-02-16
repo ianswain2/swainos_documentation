@@ -134,3 +134,20 @@
 2026-02-16 10:09 - Ran deep pre-migration audit and hardened RLS/FK behavior plus backend consolidation cleanup for travel consultant rollout
 2026-02-16 11:56 - Imported travel consultant employee CSV (186 rows) with duplicate-email filtering and BOM-safe header handling
 2026-02-16 12:43 - Updated travel consultant action plan/docs to current backend-complete state and completed final consistency audit before push
+2026-02-16 14:05 - Implemented Travel Consultant frontend routes/modules, wired navigation, and synced consultant query/mapping documentation
+2026-02-16 13:05 - Diagnosed Travel Consultant loading hang, hardened backend settings env parsing, fixed Next.js dynamic params usage, and validated leaderboard/profile live in browser
+2026-02-16 13:11 - Added Travel Consultant This Year mode, consultant search UX, horizontal YoY matrix, and operational snapshot (current traveling files + top open itineraries) with backend/profile contract updates
+2026-02-16 13:14 - Refined consultant leaderboard to average-first KPIs and added explicit YoY-to-date variance metrics with funnel-vs-travel date-basis clarity
+2026-02-16 13:17 - Ran full quality-audit pass, fixed open-itinerary status filtering robustness, and corrected profile YoY matrix month rendering to match selected comparison window
+2026-02-16 13:19 - Tightened operational snapshot to status=Traveling files only and added profile YTD variance KPI in Forecast and Target
+2026-02-16 13:22 - Replaced profile Trend Story with 3-year monthly matrices (closed travel files + lead funnel) including year-over-year variance rows
+2026-02-16 13:24 - Switched speed-to-book metrics from median to average across API/service calculations and frontend labels
+2026-02-16 13:25 - Stacked 3-year performance matrix cards vertically on consultant profile for cleaner readability
+2026-02-16 13:27 - Improved 3-year matrix responsiveness and switched both matrices to revenue-based monthly values with YoY variance rows
+2026-02-16 13:28 - Unnested 3-year matrices into separate full-width profile cards to maximize table display space
+2026-02-16 13:41 - Implemented advisor-effectiveness UX pass across leaderboard/profile: summary strips, clearer funnel denominators, explicit profile CTA, deduped insight narrative, and compensation not-set clarity
+2026-02-16 13:50 - Added mobile breakpoint optimization for leaderboard density by prioritizing core columns and deferring lower-priority columns to larger widths
+2026-02-16 13:53 - Expanded profile Hero KPIs with new advisor averages (gross profit, itinerary nights, group size, lead time, speed to close) and aligned backend metric calculations
+2026-02-16 13:54 - Reformatted forecast Period labels to readable month-year text for faster scanning on consultant profile
+2026-02-16 13:58 - Completed full quality-audit-pass and synchronized Travel Consultant action plan plus frontend/query/mapping/sample docs to current shipped contract and UX
+2026-02-16 14:01 - Standardized consultant 3-year matrix styling to itinerary-actuals format with inline directional indicators and renamed completed plan file with -completed suffix

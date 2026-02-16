@@ -98,8 +98,27 @@ It is intentionally ETL-focused and will be extended table-by-table as new mappi
 - `scripts/upsert_itineraries.py` resolves:
   - `agency_external_id` -> `agency_id` via `agencies.external_id`
   - `primary_contact_external_id` -> `primary_contact_id` via `contacts.external_id`
+- `scripts/upsert_itineraries.py` also resolves:
+  - `owner_external_id` -> `employee_id` via `employees.external_id`
 - Resolver runs by default and prints resolved/unresolved counts.
 - Use `--skip-fk-resolver` only for troubleshooting or partial-load scenarios.
+
+## Travel Consultant Analytics Context
+- Consultant attribution is single-owner per itinerary via `itineraries.employee_id`.
+- Travel outcome analytics (booked revenue, margin, production) are grouped by `travel_end_date`.
+- Funnel analytics (lead count, conversion, speed to book) are grouped by `created_at` and close lifecycle dates.
+- Profile Hero KPI averages are derived from itinerary-level fields and period rollups:
+  - `averageGrossProfit` -> itinerary `gross_profit` (via rollup `commission_income_amount`)
+  - `averageItineraryNights` -> weighted `avg_number_of_nights`
+  - `averageGroupSize` -> `pax_count / itinerary_count`
+  - `averageLeadTime` -> days from `created_at` to `travel_start_date` (closed-won itineraries)
+  - `averageSpeedToClose` -> days from `created_at` to `close_date` (closed-won itineraries)
+- UI speed-to-book is surfaced as **average speed to book** (`avgSpeedToBookDays`) derived from funnel monthly cohorts.
+- Frontend consultant surfaces consume materialized rollups driven by this owner mapping:
+  - `mv_travel_consultant_leaderboard_monthly`
+  - `mv_travel_consultant_profile_monthly`
+  - `mv_travel_consultant_funnel_monthly`
+  - `mv_travel_consultant_compensation_monthly`
 
 ## Rollup Foundations Added
 - `mv_itinerary_revenue_monthly`: monthly recognized financials by `travel_end_date` and pipeline category.
