@@ -13,7 +13,7 @@
 - JSON properties are `camelCase`.
 - Query params are `snake_case`.
 - Dates use ISO 8601 strings.
-- `commissionIncomeAmount` remains the API field name and is sourced from itinerary `gross_profit`.
+- `grossProfitAmount` is the canonical API field name and is sourced from itinerary `gross_profit`.
 - Closed-won analytics are based on the allowlist statuses:
   `Deposited/Confirming`, `Amendment in Progress`, `Pre-Departure`, `eDocs Sent`, `Traveling`, `Traveled`, `Cancel Fees`.
 
@@ -43,6 +43,148 @@
     "asOfDate": "2026-02-07",
     "source": "system",
     "timeWindow": "now",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+## Travel Trade Endpoints
+
+### GET /api/v1/travel-agents/leaderboard
+**Request (query params)**
+```json
+{
+  "period_type": "year",
+  "year": 2026,
+  "top_n": 10,
+  "sort_by": "gross_profit",
+  "sort_order": "desc"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-12-31",
+    "periodType": "year",
+    "sortBy": "gross_profit",
+    "sortOrder": "desc",
+    "topN": 10,
+    "rankings": [
+      {
+        "rank": 1,
+        "agentId": "62f8c8de-10ac-4a32-a8f1-f05f32b4f4f6",
+        "agentExternalId": "003A000001ABC123",
+        "agentName": "Taylor Morgan",
+        "agentEmail": "taylor.morgan@agency.com",
+        "agencyId": "98f0ea5f-7f79-4f06-9f0d-14dbf63a7736",
+        "agencyExternalId": "001A000001ZZZ123",
+        "agencyName": "Northstar Travel",
+        "leadsCount": 54,
+        "convertedLeadsCount": 21,
+        "bookedItinerariesCount": 19,
+        "grossAmount": 912000.0,
+        "grossProfitAmount": 162000.0,
+        "conversionRate": 0.3889
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-17",
+    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup",
+    "timeWindow": "year",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### GET /api/v1/travel-agencies/{agency_id}/profile
+**Request (query params)**
+```json
+{
+  "period_type": "year",
+  "year": 2026,
+  "top_n": 10
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "agency": {
+      "agencyId": "98f0ea5f-7f79-4f06-9f0d-14dbf63a7736",
+      "agencyExternalId": "001A000001ZZZ123",
+      "agencyName": "Northstar Travel",
+      "iataCode": "IATA-00123",
+      "hostIdentifier": "HostCo"
+    },
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-12-31",
+    "periodType": "year",
+    "kpis": {
+      "leadsCount": 202,
+      "convertedLeadsCount": 81,
+      "bookedItinerariesCount": 72,
+      "grossAmount": 3450000.0,
+      "grossProfitAmount": 615000.0,
+      "activeAgentsCount": 14,
+      "conversionRate": 0.401
+    },
+    "yoySeries": [],
+    "topAgents": []
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-17",
+    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agency_monthly_rollup,travel_agent_monthly_rollup",
+    "timeWindow": "year",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### GET /api/v1/travel-trade/search
+**Request (query params)**
+```json
+{
+  "q": "northstar taylor",
+  "entity_type": "all",
+  "limit": 10
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "query": "northstar taylor",
+    "entityType": "all",
+    "results": [
+      {
+        "entityType": "agent",
+        "entityId": "62f8c8de-10ac-4a32-a8f1-f05f32b4f4f6",
+        "entityExternalId": "003A000001ABC123",
+        "displayName": "Taylor Morgan",
+        "email": "taylor.morgan@agency.com",
+        "agencyName": "Northstar Travel",
+        "iataCode": "IATA-00123",
+        "hostIdentifier": "HostCo",
+        "rankScore": 162000.0
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-17",
+    "source": "travel_trade_search_index",
+    "timeWindow": "n/a",
     "calculationVersion": "v1",
     "currency": null
   }
@@ -325,7 +467,7 @@
       "totalOnBooksGrossAmount": 982000.0,
       "totalPotentialGrossAmount": 244000.0,
       "totalExpectedGrossAmount": 1226000.0,
-      "totalExpectedCommissionIncomeAmount": 986400.0,
+      "totalExpectedGrossProfitAmount": 986400.0,
       "totalExpectedMarginAmount": 239600.0,
       "totalOnBooksPaxCount": 1320,
       "totalPotentialPaxCount": 284.5,
@@ -339,8 +481,8 @@
         "potentialGrossAmount": 39000.0,
         "expectedGrossAmount": 180000.0,
         "onBooksCommissionIncomeAmount": 113000.0,
-        "potentialCommissionIncomeAmount": 31500.0,
-        "expectedCommissionIncomeAmount": 144500.0,
+        "potentialGrossProfitAmount": 31500.0,
+        "expectedGrossProfitAmount": 144500.0,
         "onBooksPaxCount": 176,
         "potentialPaxCount": 33.1,
         "expectedPaxCount": 209.1,
@@ -432,7 +574,7 @@
         "itineraryCount": 122,
         "paxCount": 346,
         "grossAmount": 1842000.0,
-        "commissionIncomeAmount": 1487000.0,
+        "grossProfitAmount": 1487000.0,
         "marginAmount": 355000.0,
         "tradeCommissionAmount": 0
       }
@@ -443,7 +585,7 @@
         "itineraryCount": 74,
         "paxCount": 226,
         "grossAmount": 1160000.0,
-        "commissionIncomeAmount": 932000.0,
+        "grossProfitAmount": 932000.0,
         "marginAmount": 228000.0,
         "tradeCommissionAmount": 94000.0
       }
@@ -489,7 +631,7 @@
         "itineraryCount": 258,
         "paxCount": 791,
         "grossAmount": 10982975.0,
-        "commissionIncomeAmount": 9827563.0,
+        "grossProfitAmount": 9827563.0,
         "marginAmount": 1155412.0,
         "tradeCommissionAmount": 0.0
       }
@@ -500,7 +642,7 @@
         "itineraryCount": 134,
         "paxCount": 418,
         "grossAmount": 5822100.0,
-        "commissionIncomeAmount": 5012000.0,
+        "grossProfitAmount": 5012000.0,
         "marginAmount": 810100.0,
         "tradeCommissionAmount": 492800.0
       }
@@ -530,14 +672,14 @@
         "itineraryCount": 41,
         "paxCount": 126,
         "grossAmount": 422000.0,
-        "commissionIncomeAmount": 352000.0,
+        "grossProfitAmount": 352000.0,
         "marginAmount": 70000.0,
         "tradeCommissionAmount": 22000.0,
         "marginPct": 0.1659,
         "avgGrossPerItinerary": 10292.68,
-        "avgCommissionIncomePerItinerary": 8585.37,
+        "avgGrossProfitPerItinerary": 8585.37,
         "avgGrossPerPax": 3349.21,
-        "avgCommissionIncomePerPax": 2793.65,
+        "avgGrossProfitPerPax": 2793.65,
         "avgNumberOfDays": 8.7,
         "avgNumberOfNights": 7.6,
         "grossShareOfYearPct": 0.0784,
@@ -550,14 +692,14 @@
         "itineraryCount": 502,
         "paxCount": 1522,
         "grossAmount": 5382000.0,
-        "commissionIncomeAmount": 4518000.0,
+        "grossProfitAmount": 4518000.0,
         "marginAmount": 864000.0,
         "tradeCommissionAmount": 292000.0,
         "marginPct": 0.1605,
         "avgGrossPerItinerary": 10720.12,
-        "avgCommissionIncomePerItinerary": 9000.0,
+        "avgGrossProfitPerItinerary": 9000.0,
         "avgGrossPerPax": 3536.14,
-        "avgCommissionIncomePerPax": 2968.46,
+        "avgGrossProfitPerPax": 2968.46,
         "avgNumberOfDays": 8.5,
         "avgNumberOfNights": 7.4
       }
@@ -660,7 +802,7 @@
         "itineraryCount": 14,
         "paxCount": 38,
         "bookedRevenue": 148200.0,
-        "commissionIncome": 102900.0,
+        "grossProfit": 102900.0,
         "marginAmount": 45300.0,
         "marginPct": 0.3057,
         "leadCount": 22,
@@ -923,9 +1065,11 @@
   "status": "new",
   "severity": "high",
   "page": 1,
-  "page_size": 25
+  "page_size": 25,
+  "include_totals": true
 }
 ```
+`include_totals` defaults to `false`; set to `true` only when exact pagination totals are needed.
 
 **Response**
 ```json
@@ -996,9 +1140,11 @@
   "priority_min": 1,
   "priority_max": 3,
   "page": 1,
-  "page_size": 25
+  "page_size": 25,
+  "include_totals": true
 }
 ```
+`include_totals` defaults to `false`; set to `true` only when exact pagination totals are needed.
 
 **Response**
 ```json
@@ -1087,9 +1233,11 @@
   "date_from": "2026-01-01",
   "date_to": "2026-12-31",
   "page": 1,
-  "page_size": 50
+  "page_size": 50,
+  "include_totals": true
 }
 ```
+`include_totals` defaults to `false`; set to `true` only when exact pagination totals are needed.
 
 ### GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}
 **Request**

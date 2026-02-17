@@ -1,12 +1,13 @@
 # SwainOS Backend Code Documentation
 
-Last updated: 2026-02-16
+Last updated: 2026-02-17
 
 ## Table of Contents
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Response Envelope](#response-envelope)
 - [API Contract Rules](#api-contract-rules)
+- [Terminology Standard](#terminology-standard)
 - [Error Envelope](#error-envelope)
 - [AI-Ready Design](#ai-ready-design)
 - [External Identifiers](#external-identifiers)
@@ -15,7 +16,9 @@ Last updated: 2026-02-16
 - [Deprecated and Removed Endpoints](#deprecated-and-removed-endpoints)
 - [Itinerary Enrichment and Rollups](#itinerary-enrichment-and-rollups)
 - [Travel Consultant Analytics API](#travel-consultant-analytics-api)
+- [Travel Trade Analytics API](#travel-trade-analytics-api)
 - [AI Insights Platform API](#ai-insights-platform-api)
+- [Performance Optimization Notes](#performance-optimization-notes)
 - [AI Insights Migrations and RLS](#ai-insights-migrations-and-rls)
 - [Operational Scripts](#operational-scripts)
 - [Key Modules](#key-modules)
@@ -55,6 +58,12 @@ All API responses return a standard envelope:
 - Canonical payloads: `docs/sample-payloads.md`
 - All list endpoints return pagination fields; single-resource endpoints return `pagination: null`.
 - Query params are `snake_case`; JSON fields remain `camelCase` via shared schema config.
+
+## Terminology Standard
+- Canonical terminology is defined in `docs/swainos-terminology-glossary.md`.
+- Backend contracts should align field keys and display terms to canonical glossary terms.
+- Required mapping: UI **Gross Profit** maps to API field `grossProfitAmount` (sourced from itinerary `gross_profit`).
+- Any new KPI/filter/title terminology added to API docs, schema descriptions, or AI narrative outputs should align to the glossary before release.
 
 ## Error Envelope
 Errors return a consistent envelope:
@@ -97,6 +106,11 @@ Errors return a consistent envelope:
 - `GET /api/v1/travel-consultants/leaderboard`
 - `GET /api/v1/travel-consultants/{employee_id}/profile`
 - `GET /api/v1/travel-consultants/{employee_id}/forecast`
+- `GET /api/v1/travel-agents/leaderboard`
+- `GET /api/v1/travel-agents/{agent_id}/profile`
+- `GET /api/v1/travel-agencies/leaderboard`
+- `GET /api/v1/travel-agencies/{agency_id}/profile`
+- `GET /api/v1/travel-trade/search`
 - `GET /api/v1/ai-insights/briefing`
 - `GET /api/v1/ai-insights/feed`
 - `GET /api/v1/ai-insights/recommendations`
@@ -117,7 +131,7 @@ Errors return a consistent envelope:
   - `mv_itinerary_trade_agency_actuals_monthly`
   - `mv_itinerary_pipeline_stages` (conversion signal)
 - Purpose: owner-forward outlook, deposit controls, conversion, and channel performance.
-- Canonical income metric: `commissionIncomeAmount = gross_profit` (materialized in rollups as `commission_income_amount` to preserve API contracts).
+- Canonical Gross Profit metric: `grossProfitAmount = gross_profit`.
 - Added actuals surface: Jan-Dec year-over-year recognized revenue and productivity from `travel_end_date`.
 - Added actuals channel production surface: closed-won consortia and trade agency production from `travel_end_date`.
 - Exclusions: `filter_out` statuses are excluded via `itinerary_status_reference`.
@@ -172,6 +186,40 @@ Errors return a consistent envelope:
   - Backend includes deterministic section ordering and comparison context (`currentPeriod`, `baselinePeriod`, `yoyMode`) to avoid frontend guesswork.
   - Payloads include signal metadata (`displayLabel`, `description`, `trendDirection`, `trendStrength`, `isLaggingIndicator`) for data-story rendering.
   - `spend_to_book` is reserved for v2 until a canonical sales/marketing spend source is finalized.
+- Performance notes:
+  - Profile service uses request-local preloaded monthly datasets for trend, YTD variance, three-year matrices, and forecast inputs to reduce duplicate repository calls.
+  - Open and closed-won itinerary status filtering is pushed into repository query filters (PostgREST `in.(...)`) to reduce Python-side broad filtering.
+
+## Travel Trade Analytics API
+- Foundation migration: `0048_create_travel_trade_agent_agency_rollups.sql`.
+- Deterministic split-rollup migration: `0054_split_trade_lead_and_booked_rollups.sql`.
+- Canonical dimensions:
+  - `travel_agencies` (stable `external_id` mapped from CRM account IDs)
+  - `travel_agents` (stable `external_id` mapped from CRM contact IDs)
+  - `travel_agent_agency_assignments` (effective-dated relation model)
+- Rollup/search tables:
+  - `travel_trade_lead_monthly_rollup` (lead-created metrics by `created_at`)
+  - `travel_trade_booked_itinerary_monthly_rollup` (booked-itinerary production by `coalesce(travel_start_date, travel_end_date)` for closed-won)
+  - `travel_agent_monthly_rollup`
+  - `travel_agency_monthly_rollup`
+  - `travel_agent_consultant_affinity_monthly_rollup`
+  - `travel_trade_search_index`
+- Classification lock (no exceptions): itinerary is trade only when `consortia` is present/non-blank and not any not-applicable/null-like marker (`not applicable`, `n/a`, `na`, `none`, `null`), and a valid primary contact -> agency linkage resolves.
+- Contract naming note: API exposes `bookedItinerariesCount` while rollup storage keeps `traveled_itineraries_count` in combined monthly tables for stable DB continuity; mapping occurs in service layer.
+- Endpoint contracts:
+  - `GET /api/v1/travel-agents/leaderboard`
+    - Query params (`snake_case`): `period_type`, `year`, `month`, `top_n`, `sort_by`, `sort_order`, `currency_code`
+  - `GET /api/v1/travel-agents/{agent_id}/profile`
+    - Query params (`snake_case`): `period_type`, `year`, `month`, `top_n`, `currency_code`
+  - `GET /api/v1/travel-agencies/leaderboard`
+    - Query params (`snake_case`): `period_type`, `year`, `month`, `top_n`, `sort_by`, `sort_order`, `currency_code`
+  - `GET /api/v1/travel-agencies/{agency_id}/profile`
+    - Query params (`snake_case`): `period_type`, `year`, `month`, `top_n`, `currency_code`
+  - `GET /api/v1/travel-trade/search`
+    - Query params (`snake_case`): `q`, `entity_type`, `limit`
+- Refresh orchestration:
+  - RPC: `refresh_travel_trade_rollups_v1()`
+  - Script: `scripts/refresh_travel_trade_rollups.py`
 
 ## AI Insights Platform API
 - Primary endpoint family: `/api/v1/ai-insights/*`.
@@ -187,6 +235,9 @@ Errors return a consistent envelope:
   - `ai_context_company_metrics_v1` (company KPI snapshot + command-center KPI joins)
 - Lifecycle status contract is frozen in `snake_case`:
   - `new`, `acknowledged`, `in_progress`, `resolved`, `dismissed`
+- Pagination count strategy:
+  - `GET /api/v1/ai-insights/feed|recommendations|history` supports optional `include_totals` query param.
+  - Exact total counts are opt-in (`include_totals=true`) to avoid unnecessary `count=exact` overhead on default list reads.
 - Model routing policy:
   - Decision-critical operations (briefings, recommendations, consultant coaching) use `OPENAI_MODEL_DECISION` (default `gpt-5.2`).
   - Support operations use `OPENAI_MODEL_SUPPORT`.
@@ -196,6 +247,12 @@ Errors return a consistent envelope:
   - Default is manual on-demand generation via `scripts/generate_ai_insights.py`.
   - `POST /api/v1/ai-insights/run` supports controlled manual API-trigger execution and requires `x-ai-run-token` matching `AI_MANUAL_RUN_TOKEN`.
   - `refresh_consultant_ai_rollups_v1()` must run against migrations `0043` and `0045` so benchmark/company context views are refreshed with consultant rollups.
+
+## Performance Optimization Notes
+- `travel_consultants_service.get_profile()` reuses request-local preloaded datasets for trend/YTD/three-year/forecast derivations to reduce repeated repository calls.
+- `travel_consultants_repository` applies open/closed-won itinerary status filtering in query filters (`in.(...)`) instead of broad Python-side filtering after large fetches.
+- `core/supabase.py` uses a shared pooled `httpx.Client` transport for connection reuse.
+- AI list endpoints (`/ai-insights/feed`, `/ai-insights/recommendations`, `/ai-insights/history`) support `include_totals`; exact count computation is opt-in.
 
 ## AI Insights Migrations and RLS
 - Migrations added:
@@ -217,6 +274,7 @@ Errors return a consistent envelope:
 
 ## Operational Scripts
 - `scripts/refresh_consultant_ai_rollups.py`: calls `refresh_consultant_ai_rollups_v1()` for canonical AI + consultant context refresh.
+- `scripts/refresh_travel_trade_rollups.py`: calls `refresh_travel_trade_rollups_v1()` for travel agent/agency rollup + search refresh.
 - `scripts/generate_ai_insights.py`: manual trigger for orchestration run + persisted outputs.
 - `scripts/purge_ai_insights.py`: clears AI tables for clean regeneration after major data cleanup.
 - `scripts/cleanup_inactive_employees.py`: removes inactive employee records; run AI purge + rollup refresh after execution.
@@ -225,19 +283,25 @@ Errors return a consistent envelope:
 ## Key Modules
 - `src/core/config.py`: settings and environment variables.
 - `src/core/errors.py`: error envelope and handlers.
-- `src/core/supabase.py`: PostgREST client for Supabase.
+- `src/core/supabase.py`: PostgREST client for Supabase with shared pooled `httpx.Client` transport reuse.
 - `src/analytics/cash_flow.py`: cash-in/out aggregation logic.
 - `src/analytics/booking_forecast.py`: trend-based booking forecast.
 - `src/api/itinerary_revenue.py`: owner cockpit endpoint surface.
 - `src/services/itinerary_revenue_service.py`: forward outlook/deposit/conversion/channel orchestration.
 - `src/repositories/itinerary_revenue_repository.py`: rollup materialized view access.
 - `src/api/travel_consultants.py`: travel consultant leaderboard/profile/forecast endpoint surface.
+- `src/api/travel_agents.py`: travel agent leaderboard/profile endpoint surface.
+- `src/api/travel_agencies.py`: travel agency leaderboard/profile endpoint surface.
+- `src/api/travel_trade_search.py`: unified travel trade search endpoint surface.
 - `src/api/ai_insights.py`: AI insights briefing/feed/recommendation/history/entity/run endpoints.
-- `src/services/travel_consultants_service.py`: consultant KPI aggregation, YoY storytelling, signals, and forecast logic.
+- `src/services/travel_consultants_service.py`: consultant KPI aggregation, request-local analytics reuse (trend/YTD/three-year/forecast), signals, and forecast logic.
 - `src/services/ai_insights_service.py`: API-facing AI insight retrieval and recommendation state transitions.
 - `src/services/ai_orchestration_service.py`: AI generation orchestration from context views to persisted outputs.
 - `src/services/openai_insights_service.py`: model-tier routing, strict JSON output handling, and fallback execution.
 - `src/repositories/travel_consultants_repository.py`: consultant rollup materialized view access.
+- `src/repositories/travel_agents_repository.py`: travel agent rollup and itinerary operational query access.
+- `src/repositories/travel_agencies_repository.py`: travel agency rollup and top-agent profile query access.
+- `src/repositories/travel_trade_search_repository.py`: travel trade search index query access.
 - `src/repositories/ai_insights_repository.py`: AI insights tables/context-view read-write operations.
 - `scripts/upsert_bookings.py`: REST upsert loader for bookings.
 - `scripts/upsert_itineraries.py`: REST upsert loader for enriched itineraries with external-id FK resolver for agencies/contacts/employees.

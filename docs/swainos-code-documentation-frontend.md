@@ -1,6 +1,6 @@
 # SwainOS Frontend Code Documentation
 
-Last updated: 2026-02-16
+Last updated: 2026-02-17
 
 ## Table of Contents
 - [Overview](#overview)
@@ -14,6 +14,8 @@ Last updated: 2026-02-16
 - [Assistant UX](#assistant-ux)
 - [AI Insights UX Pattern](#ai-insights-ux-pattern)
 - [Contract Decisions](#contract-decisions)
+- [Terminology Standard](#terminology-standard)
+- [Performance Optimization Notes](#performance-optimization-notes)
 - [Organization and Simplification Notes](#organization-and-simplification-notes)
 - [Conventions](#conventions)
 
@@ -60,6 +62,7 @@ Primary modules (spec-aligned):
 - Itinerary Forecast
 - Itinerary Actuals
 - Travel Consultant
+- Travel Agencies
 - FX Command
 - Operations
 - AI Insights
@@ -71,7 +74,7 @@ Primary modules (spec-aligned):
 - `components/layout/page-shell.tsx` provides page titles, subtitles, and action areas.
 
 ## Data and Services
-- `lib/api/httpClient.ts` handles the shared fetch logic and error envelopes.
+- `lib/api/httpClient.ts` handles shared fetch logic, in-flight GET request deduplication, response cache TTL (hour-aligned defaults), and error envelopes.
 - Service clients:
   - `cashFlowService.ts`
   - `depositsService.ts`
@@ -81,6 +84,9 @@ Primary modules (spec-aligned):
   - `fxService.ts` (FX rates + exposure)
   - `itineraryRevenueService.ts` (forecast outlook/deposits/conversion/channels + actuals YoY + actuals channels)
   - `travelConsultantService.ts` (leaderboard/profile/forecast with typed normalization)
+  - `travelAgentsService.ts` (leaderboard/profile with typed normalization)
+  - `travelAgenciesService.ts` (leaderboard/profile with typed normalization)
+  - `travelTradeSearchService.ts` (unified agent/agency fuzzy search)
 - Domain types live in `lib/types/*` and align to sample payloads.
 - Numeric normalization is centralized in `lib/utils/parseNumber.ts` so decimal strings from backend payloads are safely converted before UI rendering.
 
@@ -93,6 +99,10 @@ Primary modules (spec-aligned):
   - `Travel Consultant`:
     - `/travel-consultant`: leaderboard with domain toggles (travel vs funnel), search, sortable rankings, mobile-priority columns, highlights, team effectiveness snapshot, AI team recommendation strip, and advisor outlier AI callouts
     - `/travel-consultant/[employeeId]`: consultant deep-dive with effectiveness summary, expanded Hero KPIs (avg gross profit, avg itinerary nights, avg group size, avg lead time, avg speed to close), 3-year revenue matrices (travel + funnel), operational snapshot, forecast/target, compensation, signals, deduped insight cards, and advisor-scoped AI actions/events
+  - `Travel Agencies`:
+    - `/travel-agencies`: unified trade search + top agent/agency rankings with top-N controls and Gross Profit-first views
+    - `/travel-agencies/agents/[agentId]`: travel agent deep-dive with KPIs, YoY trend charts, primary consultant affinity matrix, and operational itinerary snapshots
+    - `/travel-agencies/agencies/[agencyId]`: travel agency deep-dive with KPIs, YoY trend charts, top linked agents table, and agency-composition metrics table
 - Implemented with live + optional mock
   - `FX Command` (live rates and exposure scoped to supplier currencies **ZAR, USD, AUD, NZD** only; live from DB or demo data)
 - Implemented with structured UI (data pending)
@@ -121,7 +131,7 @@ Primary modules (spec-aligned):
   - optional `Why` details drawer
 - `components/ui/expandable-text.tsx` caps long narrative copy with `Read more` and viewport-aware char caps for laptop/desktop density tuning.
 - `components/ui/briefing-list-section.tsx` keeps daily briefing lists concise with max-3 bullets and `View more` expansion.
-- Recommendation owner labels avoid raw IDs; frontend resolves display names through existing consultant profile API when available and falls back to concise labels.
+- Recommendation owner labels avoid raw IDs and use concise fallback labels without extra profile lookup requests on AI Insights page load.
 
 ## Contract Decisions
 - Revenue owner cockpit canonical query params are:
@@ -134,8 +144,8 @@ Primary modules (spec-aligned):
 - Frontend default behavior:
   - Itinerary Actuals currently requests a fixed `3` years for consistent year-over-year comparisons.
 - Income semantics:
-  - UI labels use **Gross Profit** while API field `commissionIncomeAmount` remains stable for contract continuity.
-  - `commissionIncomeAmount` is sourced from itinerary `gross_profit`.
+  - UI labels and API fields use **Gross Profit** naming.
+  - `grossProfitAmount` is sourced from itinerary `gross_profit`.
 - JSON properties remain `camelCase`; query params remain `snake_case`.
 - Travel Consultant profile payload key additions:
   - `threeYearPerformance`
@@ -143,15 +153,28 @@ Primary modules (spec-aligned):
   - `funnelHealth.avgSpeedToBookDays`
   - extended `heroKpis` set for advisor effectiveness coaching
 
+## Terminology Standard
+- Canonical terminology is defined in `docs/swainos-terminology-glossary.md`.
+- Frontend display labels must use glossary terms exactly for shared concepts (for example, `Gross Profit`, `Margin Amount`, `Margin %`, `Conversion Rate`, `Close Rate`).
+- Contract reminder: UI label **Gross Profit** maps to API key `grossProfitAmount`.
+- New cross-module title/filter/toggle labels should be added to the glossary before broad rollout.
+
+## Performance Optimization Notes
+- Travel consultant profile uses a single `/travel-consultants/{employee_id}/profile` fetch for both profile sections and forecast/target timeline.
+- Command Center uses staged loading: primary KPI requests first, secondary analytics requests after first content is available.
+- `lib/api/httpClient.ts` provides in-flight GET deduplication and a default 1-hour GET cache TTL aligned to hourly rollups.
+- AI Insights page avoids owner-name profile lookup fan-out to prevent extra per-owner requests on page load.
+
 ## Organization and Simplification Notes
-- `features/command-center/useCommandCenterData.ts` consolidates command center data loading into one flow to avoid scattered business-fetch logic.
+- `features/command-center/useCommandCenterData.ts` uses staged loading (primary KPIs first, secondary analytics next) to reduce first-render request pressure and improve perceived load speed.
 - `features/command-center/useAiBriefing.ts` provides focused loading for persisted AI briefing narrative used in command-center narrative card.
-- `features/ai-insights/useAiInsightsData.ts` orchestrates parallel AI endpoint loading, filter/pagination state, and recommendation status transitions.
+- `features/ai-insights/useAiInsightsData.ts` orchestrates AI endpoint loading with section-level loading flags, filter/pagination state, and recommendation status transitions.
 - `lib/api/aiInsightsService.ts` centralizes typed `/api/v1/ai-insights/*` contract calls and query param mapping (`snake_case` request params, `camelCase` response shapes).
-- `features/command-center/kpi-grid.tsx` and `active-travelers-map.tsx` are now presentation-focused and consume live data props.
-- Command-center business values are sourced from backend responses; hardcoded metrics were removed.
-- Legacy revenue-booking module UIs (`itinerary-pipeline`, `itinerary-trends-overview`, and standalone booking-forecast summary card) were removed in favor of itinerary forecast + actuals modules.
-- Legacy `features/revenue-bookings/*` shared forecast panel files were removed; forecast panels now live under `features/itinerary-forecast/*` and shared channel panels under `features/itinerary-shared/*`.
+- `features/command-center/kpi-grid.tsx` and `active-travelers-map.tsx` are presentation-focused and consume live data props.
+- Command-center business values are sourced from backend responses.
+- `features/travel-consultant/profile/useTravelConsultantProfile.ts` uses a single `/profile` API call and consumes embedded forecast data.
+- Itinerary forecast + actuals modules provide the revenue/booking experience (`itinerary-pipeline`, `itinerary-trends-overview`, and standalone booking-forecast summary card are not part of the active UI surface).
+- Forecast panels live under `features/itinerary-forecast/*` and shared channel panels under `features/itinerary-shared/*`.
 - `features/itinerary-forecast/itinerary-forecast-cockpit.tsx` consumes `/api/v1/itinerary-revenue/outlook|deposits|conversion|channels`.
 - `features/itinerary-actuals/itinerary-actuals-page-content.tsx` consumes `/api/v1/itinerary-revenue/actuals-yoy` and `/api/v1/itinerary-revenue/actuals-channels` (closed-won production rollups).
 - `features/itinerary-shared/itinerary-leads-panel.tsx` is shared by forecast and actuals for itinerary-creation lead flow visualization.
@@ -161,6 +184,11 @@ Primary modules (spec-aligned):
   - `conversion-panel.tsx`
   - `channel-performance-panel.tsx`
   - `forecast-grid.tsx`
+- Travel trade visuals are modularized in:
+  - `features/sales/charts/top-performance-bars.tsx`
+  - `features/sales/charts/agent-affinity-matrix.tsx`
+  - `features/sales/charts/yoy-trend-chart.tsx`
+  - `features/sales/charts/agency-composition-table.tsx`
 - Route files under `app/` are kept thin and delegate to `features/*` modules for UI logic.
 - Shared UI primitives (e.g., `SectionHeader`, `MetricCard`) live in `components/ui` for reuse.
 

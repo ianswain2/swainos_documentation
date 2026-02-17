@@ -91,7 +91,7 @@ It is intentionally ETL-focused and will be extended table-by-table as new mappi
 - Passenger planning uses `pax_count` (plus adult/child when available).
 - Reseller commission (`trade_commission_amount`) is amount paid to travel agents.
 - Cost (`cost_amount`) represents supplier-side obligations where populated.
-- Canonical owner-cockpit income metric uses itinerary `gross_profit` (rollup field remains `commission_income_amount` for API contract stability).
+- Canonical owner-cockpit Gross Profit metric uses itinerary `gross_profit` (rollup field `gross_profit_amount`).
 - Source `net_amount` remains available as source-system net itinerary amount but is not the primary owner-cockpit income metric.
 
 ## FK Resolver Notes (Import Script)
@@ -108,7 +108,7 @@ It is intentionally ETL-focused and will be extended table-by-table as new mappi
 - Travel outcome analytics (booked revenue, margin, production) are grouped by `travel_end_date`.
 - Funnel analytics (lead count, conversion, speed to book) are grouped by `created_at` and close lifecycle dates.
 - Profile Hero KPI averages are derived from itinerary-level fields and period rollups:
-  - `averageGrossProfit` -> itinerary `gross_profit` (via rollup `commission_income_amount`)
+  - `averageGrossProfit` -> itinerary `gross_profit` (via rollup `gross_profit_amount`)
   - `averageItineraryNights` -> weighted `avg_number_of_nights`
   - `averageGroupSize` -> `pax_count / itinerary_count`
   - `averageLeadTime` -> days from `created_at` to `travel_start_date` (closed-won itineraries)

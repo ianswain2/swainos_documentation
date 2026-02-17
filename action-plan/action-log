@@ -155,6 +155,14 @@
 2026-02-16 16:07 - Executed inactive-employee cleanup apply run; deleted 168 employees and verified only 18 active-in-window records remain
 2026-02-16 16:21 - Fixed consultant 3-year matrices to render newest year first and correctly show monthly YoY arrow indicators versus prior year
 2026-02-16 17:11 - Fixed top-open-itineraries query window to avoid undercount; now returns true top 5 open/holding statuses by gross amount
+2026-02-17 06:50 - Replaced profile Hero KPI Average Lead Time with Commission Income and removed unused lead-time calculation path
+2026-02-17 06:53 - Added subtle hover definitions on profile Hero KPI labels and reordered KPI sequence to place Commission Income immediately after Booked Revenue
+2026-02-17 07:54 - Added profile commission-income YoY monthly line chart below Hero KPIs using travel-date monthly commission series from backend profile payload
+2026-02-17 08:33 - Fixed profile runtime null-access bug for commission trend memo and performed clean backend/frontend restart with healthy Travel Consultant profile/API verification
+2026-02-17 08:35 - Replaced monthly commission chart with cumulative YTD pace chart plus YTD comparison KPIs to benchmark current commission run-rate versus prior years
+2026-02-17 08:37 - Enhanced commission YTD section with month-labeled chart axis and detailed monthly comparison table (current/prior, monthly delta, and cumulative YTD delta)
+2026-02-17 08:39 - Simplified commission section to a single standard cumulative YTD line chart (current vs prior year) with 12% target pace overlay; removed added monthly table per UX feedback
+2026-02-17 08:42 - Deprecated and fully removed consultant commission YTD graph feature from profile UI and API contract to simplify experience per feedback
 2026-02-16 14:17 - Created backend-first AI-native insights action plan with travel consultant embeds and cross-domain scaling contract
 2026-02-16 14:32 - Audited AI-native insights plan and locked snake_case lifecycle statuses plus canonical scheduler path (scripts/generate_ai_insights.py)
 2026-02-16 15:29 - Implemented AI insights backend+Supabase foundation (migrations, services, APIs, manual trigger script, tests, and docs updates)
@@ -179,8 +187,50 @@
 2026-02-16 17:19 - Normalized command-center briefing highlight/action formatting to prevent raw object dumps, enforced concise plain-text list constraints, and regenerated AI outputs with cleaned UI-readable briefing cards
 2026-02-16 18:16 - Added executive-grade AI UI polish with reusable expandable text + max-3 briefing bullets and view-more expanders, split diagnosis/action blocks on insights cards, fixed client runtime normalization bug, and revalidated regenerated outputs in browser
 2026-02-16 18:53 - Simplified executive readability pass: resolved owner labels to names when available via consultant profile lookups, added subtle diagnosis/action visual cues, applied viewport-aware summary truncation, and kept fallback labels concise with no raw ID exposure
-2026-02-16 20:17 - Completed full thread audit and cleanup pass, removed lint risk in AI owner-name resolution effect, simplified responsive truncation props, and updated action plan + backend/frontend query/payload docs with aligned TOCs and current AI architecture state
 2026-02-16 19:06 - Added always-on frontend Cursor rule to avoid useEffect by default and follow React alternatives-first guidance
+2026-02-16 20:17 - Completed full thread audit and cleanup pass, removed lint risk in AI owner-name resolution effect, simplified responsive truncation props, and updated action plan + backend/frontend query/payload docs with aligned TOCs and current AI architecture state
 2026-02-16 20:28 - Added employees.analysis_disabled analytics opt-out control, updated itinerary/consultant rollups and refresh RPC to exclude disabled employees across reporting + AI contexts, and updated backend/query docs for checkbox-driven refresh workflow
 2026-02-16 20:31 - Refined analysis_disabled scope to consultant-only analytics exclusion (consultant rollups + consultant AI context) and preserved itinerary/forecast/revenue company reporting behavior
 2026-02-16 20:37 - Fixed migration dependency order for consultant-only analysis_disabled rollout by dropping/rebuilding dependent AI context materialized views before consultant rollup recreates
+2026-02-16 21:02 - Corrected action-log timestamp ordering so entries remain strictly chronological with newest updates appended last.
+2026-02-17 09:44 - Simplified AI Insights page navigation with Focus/Explore/History modes, reduced default filter complexity, and made action-first workflow the default view.
+2026-02-17 09:57 - Renamed AI-native insights action plan to completed naming convention and refreshed plan metadata/current-state to reflect final implemented UI flow.
+2026-02-17 10:00 - Normalized legacy action-plan filenames from '-complete' to '-completed' and verified there are no remaining '-complete.md' references.
+2026-02-17 06:21 - Created platform performance optimization action plan covering backend/frontend/Supabase load-time and processing efficiency fixes.
+2026-02-17 06:31 - Upgraded performance optimization plan with modern architecture guardrails, explicit budgets, count-cost strategy, and anti-overengineering non-goals.
+2026-02-17 06:32 - Updated optimization plans to enforce technical-debt removal and no-backward-compatibility replacement policy for internal legacy paths.
+2026-02-17 06:40 - Implemented platform performance optimization pass: removed duplicate consultant forecast fetch, added request dedupe/cache + progressive loading, reduced backend query fan-out, and made AI exact counts opt-in.
+2026-02-17 06:42 - Completed ruthless audit remediation: fixed command-center loading-state bug, removed standalone performance metrics doc, and folded optimization notes into primary backend/frontend documentation.
+2026-02-17 06:43 - Tightened AI pagination quality by switching non-exact totals to PostgREST planned counts instead of synthetic totals.
+2026-02-17 06:44 - Rewrote backend/frontend code documentation wording to current-state language and removed change-log phrasing.
+2026-02-17 06:48 - Completed final quality-audit pass and converted plan 10 to completed-state file (`-completed`) with current implementation outcomes.
+2026-02-17 06:55 - Reorganized frontend sidebar navigation into grouped sections: top-level overview links, Sales and Finance child nav groups, and standalone Operations/Settings entries.
+2026-02-17 07:51 - Fixed sidebar child-link rendering bug by making nav links full-width blocks and applying a stable, readable active style for section child items.
+2026-02-17 08:49 - Added terminology governance rollout plan, created canonical glossary, and linked glossary in frontend/backend code documentation.
+2026-02-17 09:07 - Completed breaking terminology rollout for Gross Profit naming across backend schemas/services, frontend contracts/UI, AI wording normalization, and core contract docs/sample payloads.
+2026-02-17 09:16 - Added Supabase migration 0047 to rename rollup/context columns from commission-income to canonical gross-profit and updated refresh RPC coverage.
+2026-02-17 09:30 - Verified 0047 rollout in runtime DB: canonical gross-profit columns active, legacy commission-income columns removed, and AI generation script completed successfully.
+2026-02-17 09:40 - Completed quality-audit pass and NaN hardening: normalized raw itinerary/lead/forecast API numerics across frontend services and removed unsafe fallback casting tech debt.
+2026-02-17 10:18 - Created backend-first Travel Agency + Travel Agent analytics action plan with Supabase rollup strategy, consultant-parity API contracts, and full frontend rollout scope.
+2026-02-17 10:22 - Ran first-principles quality audit on plan 12; removed contract unknowns, locked deterministic tie-break rules, and hardened Supabase refresh/search optimization strategy.
+2026-02-17 11:24 - Implemented travel trade analytics rollout: migration 0048 + refresh script, backend travel-agent/agency/search APIs, frontend Travel Agencies routes/charts, and documentation/query/payload updates.
+2026-02-17 11:58 - Applied heavy corrective pass for travel trade rollout: added migration 0049 to harden refresh function against schema drift, include Not Applicable consortia classification, stabilize agent-assignment history, seed rollups immediately, and fixed ranking/search/composition behaviors.
+2026-02-17 12:09 - Fixed 0049 refresh failure on contacts schema by deriving agent first/last/email via JSON-safe and full_name fallback mapping.
+2026-02-17 12:16 - Fixed 0049 refresh CTE scope bug by materializing trade_source as a temp table reused across all rollup insert statements.
+2026-02-17 12:21 - Fixed 0049 search-index aggregation bug by removing aggregate output positions from GROUP BY in travel_trade_search_index inserts.
+2026-02-17 11:11 - Ran quality-audit pass on travel trade rollout and updated Travel Agencies ranking layout to stack tables vertically.
+2026-02-17 11:16 - Diagnosed lead/converted zero mismatch as period-definition behavior, defaulted Travel Agencies to rolling-12, and clarified leads/converted column semantics in ranking tables.
+2026-02-17 11:18 - Reworked Travel Agencies landing page to revenue-first travel outcomes (default This Year) with gross revenue + traveled files prioritized in rankings and KPI context.
+2026-02-17 11:21 - Diagnosed travel-trade refresh RPC failures as database statement-timeout and added migration 0050 to increase refresh function timeout to 15 minutes.
+2026-02-17 11:24 - Updated Travel Agencies landing terminology from traveled files to booked files across KPI/supporting labels and ranking table headers for revenue-first clarity.
+2026-02-17 11:30 - Corrected trade classification rule to consortia-present logic in refresh function source and added migration 0051 to patch live DB function + refresh.
+2026-02-17 11:32 - Corrected trade classification again per business rule: consortia must be present and not any Not Applicable/null-like value; added migration 0052 to patch live function and refresh.
+2026-02-17 11:37 - Completed responsive/UI audit pass across Travel Agencies landing + profile pages; fixed agency-profile 500 by restoring period_start in top-agent rollup repository query.
+2026-02-17 11:38 - Completed final UI wording consistency pass by renaming landing KPI labels from travel gross profit to booked gross profit.
+2026-02-17 11:50 - Aligned booked-itinerary metric to travel-period bucketing (coalesce travel_start/travel_end) via migration 0053 and updated sales profile UI labels/toggles from traveled to booked itineraries.
+2026-02-17 11:54 - Hardened migration path: made 0053 idempotent/no-op safe when pattern already applied and introduced 0054 deterministic function rewrite with dedicated lead + booked-itinerary monthly rollup tables.
+2026-02-17 12:03 - Finalized booked-itinerary model across API/frontend contracts (booked_itineraries sort + bookedItinerariesCount fields), refreshed metadata sources for split lead/booked rollups, and cleared all frontend build/type debt.
+2026-02-17 12:08 - Fixed travel-agent operational profile data lookup by resolving contacts from external_id and querying itineraries via primary_contact_id (with fallback), restoring top-open/current-traveling results.
+2026-02-17 12:11 - Improved Travel Agencies ranking table responsiveness with breakpoint-aware columns, line clamping, and reduced minimum table width to eliminate resize clipping.
+2026-02-17 12:20 - Replaced agency composition bar chart with responsive vertical metrics table (gross revenue, gross profit, leads, conversion rate) and tightened travel-agent ranking table resizing on agency profile.
+2026-02-17 12:26 - Completed objective audit pass for travel-trade rollout: removed unused agency composition payload path, renamed composition component to table, aligned backend/frontend/docs/contracts to split lead+booked rollups, and marked plan 12 complete.
