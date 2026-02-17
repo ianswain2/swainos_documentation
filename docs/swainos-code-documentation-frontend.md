@@ -1,5 +1,22 @@
 # SwainOS Frontend Code Documentation
 
+Last updated: 2026-02-16
+
+## Table of Contents
+- [Overview](#overview)
+- [Local Runbook](#local-runbook)
+- [Structure](#structure)
+- [Navigation Map](#navigation-map)
+- [Layout System](#layout-system)
+- [Data and Services](#data-and-services)
+- [Module Coverage](#module-coverage)
+- [Map Widget (Mapbox)](#map-widget-mapbox)
+- [Assistant UX](#assistant-ux)
+- [AI Insights UX Pattern](#ai-insights-ux-pattern)
+- [Contract Decisions](#contract-decisions)
+- [Organization and Simplification Notes](#organization-and-simplification-notes)
+- [Conventions](#conventions)
+
 ## Overview
 - Next.js App Router with TypeScript strict and Tailwind-first styling.
 - TravelOS design patterns for layout, navigation, and UI primitives.
@@ -53,7 +70,7 @@ Primary modules (spec-aligned):
 - SideNav supports icon-labeled navigation with collapsible icon-only mode for compact layouts.
 - `components/layout/page-shell.tsx` provides page titles, subtitles, and action areas.
 
-## Data & Services
+## Data and Services
 - `lib/api/httpClient.ts` handles the shared fetch logic and error envelopes.
 - Service clients:
   - `cashFlowService.ts`
@@ -69,20 +86,21 @@ Primary modules (spec-aligned):
 
 ## Module Coverage
 - Implemented with live backend data
-  - `Command Center` (live KPI rollups + briefing context from a consolidated hook)
+  - `Command Center` (live KPI rollups + persisted AI daily briefing integration with deterministic fallback)
   - `Cash Flow` (summary + timeseries + deposits + payments out)
   - `Itinerary Forecast` (forward outlook, lead flow, deposit control, conversion, channel leaders, forecast grid, primary metric = Gross Profit)
   - `Itinerary Actuals` (fixed 3-year Jan-Dec YoY by `travel_end_date`: yearly KPI cards with YoY deltas, lead flow, channel production, horizontal matrix, monthly detail; primary metric = Gross Profit)
   - `Travel Consultant`:
-    - `/travel-consultant`: leaderboard with domain toggles (travel vs funnel), search, sortable rankings, mobile-priority columns, highlights, and team effectiveness snapshot
-    - `/travel-consultant/[employeeId]`: consultant deep-dive with effectiveness summary, expanded Hero KPIs (avg gross profit, avg itinerary nights, avg group size, avg lead time, avg speed to close), 3-year revenue matrices (travel + funnel), operational snapshot, forecast/target, compensation, signals, and deduped insight cards
+    - `/travel-consultant`: leaderboard with domain toggles (travel vs funnel), search, sortable rankings, mobile-priority columns, highlights, team effectiveness snapshot, AI team recommendation strip, and advisor outlier AI callouts
+    - `/travel-consultant/[employeeId]`: consultant deep-dive with effectiveness summary, expanded Hero KPIs (avg gross profit, avg itinerary nights, avg group size, avg lead time, avg speed to close), 3-year revenue matrices (travel + funnel), operational snapshot, forecast/target, compensation, signals, deduped insight cards, and advisor-scoped AI actions/events
 - Implemented with live + optional mock
   - `FX Command` (live rates and exposure scoped to supplier currencies **ZAR, USD, AUD, NZD** only; live from DB or demo data)
 - Implemented with structured UI (data pending)
   - `Debt Service` (schedule, risk watchlist scaffolds)
   - `Operations` (advisor productivity + margin panels)
-  - `AI Insights` (anomaly feed, recommendations, history shells)
   - `Settings` (integrations, sync schedules, audit trail shells)
+- Implemented with live backend data + transitions
+  - `AI Insights` (`briefing`, `feed`, `recommendations`, `history` with filter controls, pagination state, recommendation lifecycle updates via PATCH endpoint, and consultant coaching cards normalized for name-first concise manager-readable summaries)
 
 ## Map Widget (Mapbox)
 - Active Travelers Map scaffold lives in `features/command-center/active-travelers-map.tsx`.
@@ -90,8 +108,20 @@ Primary modules (spec-aligned):
 - The component currently renders a placeholder until traveler coordinates are wired.
 
 ## Assistant UX
-- `lib/assistant/assistantContext.tsx` provides assistant state and toggling.
-- `components/assistant/*` includes a launcher and right-side panel scaffold.
+- `lib/assistant/assistantContext.tsx` provides assistant state, module context, and optional entity metadata (`entityType`, `entityId`) for grounded assistant retrieval.
+- `components/assistant/assistant-panel.tsx` renders module context plus entity-scoped AI insight snippets from `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` when entity context is present.
+- Assistant context is set by major AI surfaces (`AI Insights`, travel consultant leaderboard, and travel consultant profile).
+
+## AI Insights UX Pattern
+- `features/ai-insights/recommendation-queue-panel.tsx` renders manager-focused cards with:
+  - headline status (`On track`, `Watch`, `At risk`)
+  - max 3 KPI chips (conversion, margin, YoY)
+  - one trend direction line
+  - one clear action block + owner/timebox line
+  - optional `Why` details drawer
+- `components/ui/expandable-text.tsx` caps long narrative copy with `Read more` and viewport-aware char caps for laptop/desktop density tuning.
+- `components/ui/briefing-list-section.tsx` keeps daily briefing lists concise with max-3 bullets and `View more` expansion.
+- Recommendation owner labels avoid raw IDs; frontend resolves display names through existing consultant profile API when available and falls back to concise labels.
 
 ## Contract Decisions
 - Revenue owner cockpit canonical query params are:
@@ -115,6 +145,9 @@ Primary modules (spec-aligned):
 
 ## Organization and Simplification Notes
 - `features/command-center/useCommandCenterData.ts` consolidates command center data loading into one flow to avoid scattered business-fetch logic.
+- `features/command-center/useAiBriefing.ts` provides focused loading for persisted AI briefing narrative used in command-center narrative card.
+- `features/ai-insights/useAiInsightsData.ts` orchestrates parallel AI endpoint loading, filter/pagination state, and recommendation status transitions.
+- `lib/api/aiInsightsService.ts` centralizes typed `/api/v1/ai-insights/*` contract calls and query param mapping (`snake_case` request params, `camelCase` response shapes).
 - `features/command-center/kpi-grid.tsx` and `active-travelers-map.tsx` are now presentation-focused and consume live data props.
 - Command-center business values are sourced from backend responses; hardcoded metrics were removed.
 - Legacy revenue-booking module UIs (`itinerary-pipeline`, `itinerary-trends-overview`, and standalone booking-forecast summary card) were removed in favor of itinerary forecast + actuals modules.

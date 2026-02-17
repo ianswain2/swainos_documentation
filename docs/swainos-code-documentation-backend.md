@@ -1,7 +1,27 @@
 # SwainOS Backend Code Documentation
 
+Last updated: 2026-02-16
+
+## Table of Contents
+- [Overview](#overview)
+- [Architecture](#architecture)
+- [Response Envelope](#response-envelope)
+- [API Contract Rules](#api-contract-rules)
+- [Error Envelope](#error-envelope)
+- [AI-Ready Design](#ai-ready-design)
+- [External Identifiers](#external-identifiers)
+- [API Endpoints](#api-endpoints)
+- [Itinerary Revenue Owner Cockpit API](#itinerary-revenue-owner-cockpit-api)
+- [Deprecated and Removed Endpoints](#deprecated-and-removed-endpoints)
+- [Itinerary Enrichment and Rollups](#itinerary-enrichment-and-rollups)
+- [Travel Consultant Analytics API](#travel-consultant-analytics-api)
+- [AI Insights Platform API](#ai-insights-platform-api)
+- [AI Insights Migrations and RLS](#ai-insights-migrations-and-rls)
+- [Operational Scripts](#operational-scripts)
+- [Key Modules](#key-modules)
+
 ## Overview
-SwainOS backend is a FastAPI service layered as routes → services → repositories. The current MVP focuses on read-only analytics using Salesforce/Kaptio data already loaded into Supabase, with REST upsert scripts for historical data ingestion.
+SwainOS backend is a FastAPI service layered as routes -> services -> repositories. The platform is deterministic-first: business KPIs are computed from canonical rollups, and AI synthesis is persisted as auditable product data.
 
 ## Architecture
 - **API Layer**: `src/api/` versioned routes and request/response envelopes.
@@ -76,6 +96,13 @@ Errors return a consistent envelope:
 - `GET /api/v1/travel-consultants/leaderboard`
 - `GET /api/v1/travel-consultants/{employee_id}/profile`
 - `GET /api/v1/travel-consultants/{employee_id}/forecast`
+- `GET /api/v1/ai-insights/briefing`
+- `GET /api/v1/ai-insights/feed`
+- `GET /api/v1/ai-insights/recommendations`
+- `PATCH /api/v1/ai-insights/recommendations/{id}`
+- `GET /api/v1/ai-insights/history`
+- `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}`
+- `POST /api/v1/ai-insights/run` (manual trigger)
 
 ## Itinerary Revenue Owner Cockpit API
 - Primary endpoint family: `/api/v1/itinerary-revenue/*`
@@ -145,6 +172,53 @@ Errors return a consistent envelope:
   - Payloads include signal metadata (`displayLabel`, `description`, `trendDirection`, `trendStrength`, `isLaggingIndicator`) for data-story rendering.
   - `spend_to_book` is reserved for v2 until a canonical sales/marketing spend source is finalized.
 
+## AI Insights Platform API
+- Primary endpoint family: `/api/v1/ai-insights/*`.
+- Core persistence tables:
+  - `ai_insight_events`
+  - `ai_recommendation_queue`
+  - `ai_briefings_daily`
+- AI context materialized views:
+  - `ai_context_command_center_v1`
+  - `ai_context_travel_consultant_v1`
+  - `ai_context_itinerary_health_v1`
+  - `ai_context_consultant_benchmarks_v1` (team benchmark context by `period_type` and `domain`)
+  - `ai_context_company_metrics_v1` (company KPI snapshot + command-center KPI joins)
+- Lifecycle status contract is frozen in `snake_case`:
+  - `new`, `acknowledged`, `in_progress`, `resolved`, `dismissed`
+- Model routing policy:
+  - Decision-critical operations (briefings, recommendations, consultant coaching) use `OPENAI_MODEL_DECISION` (default `gpt-5.2`).
+  - Support operations use `OPENAI_MODEL_SUPPORT`.
+  - Decision operations cannot run on support-tier unless explicitly allowed by config.
+  - Model retry fallback stays on GPT-5 lineage only (`gpt-5.2`, `gpt-5.1`, `gpt-5` / `gpt-5-mini`), with deterministic fallback if model calls fail.
+- Trigger mode:
+  - Default is manual on-demand generation via `scripts/generate_ai_insights.py`.
+  - `POST /api/v1/ai-insights/run` supports controlled manual API-trigger execution and requires `x-ai-run-token` matching `AI_MANUAL_RUN_TOKEN`.
+  - `refresh_consultant_ai_rollups_v1()` must run against migrations `0043` and `0045` so benchmark/company context views are refreshed with consultant rollups.
+
+## AI Insights Migrations and RLS
+- Migrations added:
+  - `0036_create_ai_insight_events.sql`
+  - `0037_create_ai_recommendation_queue.sql`
+  - `0038_create_ai_briefings_daily.sql`
+  - `0039_create_ai_context_views.sql`
+  - `0040_ai_rls_policies.sql`
+  - `0041_ai_indexes.sql`
+  - `0042_fix_ai_context_command_center_conversion_rate_numeric.sql`
+  - `0043_create_refresh_consultant_ai_rollups_rpc.sql`
+  - `0044_create_ai_benchmark_rollups.sql`
+  - `0045_update_refresh_consultant_ai_rollups_rpc_with_benchmarks.sql`
+- RLS pattern follows existing conventions:
+  - `*_select_authenticated`
+  - `*_insert_service`
+  - `*_update_admin_or_service`
+
+## Operational Scripts
+- `scripts/refresh_consultant_ai_rollups.py`: calls `refresh_consultant_ai_rollups_v1()` for canonical AI + consultant context refresh.
+- `scripts/generate_ai_insights.py`: manual trigger for orchestration run + persisted outputs.
+- `scripts/purge_ai_insights.py`: clears AI tables for clean regeneration after major data cleanup.
+- `scripts/cleanup_inactive_employees.py`: removes inactive employee records; run AI purge + rollup refresh after execution.
+
 ## Key Modules
 - `src/core/config.py`: settings and environment variables.
 - `src/core/errors.py`: error envelope and handlers.
@@ -155,10 +229,16 @@ Errors return a consistent envelope:
 - `src/services/itinerary_revenue_service.py`: forward outlook/deposit/conversion/channel orchestration.
 - `src/repositories/itinerary_revenue_repository.py`: rollup materialized view access.
 - `src/api/travel_consultants.py`: travel consultant leaderboard/profile/forecast endpoint surface.
+- `src/api/ai_insights.py`: AI insights briefing/feed/recommendation/history/entity/run endpoints.
 - `src/services/travel_consultants_service.py`: consultant KPI aggregation, YoY storytelling, signals, and forecast logic.
+- `src/services/ai_insights_service.py`: API-facing AI insight retrieval and recommendation state transitions.
+- `src/services/ai_orchestration_service.py`: AI generation orchestration from context views to persisted outputs.
+- `src/services/openai_insights_service.py`: model-tier routing, strict JSON output handling, and fallback execution.
 - `src/repositories/travel_consultants_repository.py`: consultant rollup materialized view access.
+- `src/repositories/ai_insights_repository.py`: AI insights tables/context-view read-write operations.
 - `scripts/upsert_bookings.py`: REST upsert loader for bookings.
 - `scripts/upsert_itineraries.py`: REST upsert loader for enriched itineraries with external-id FK resolver for agencies/contacts/employees.
 - `scripts/upsert_employees.py`: REST upsert loader for Salesforce consultant identity records.
 - `scripts/upsert_itinerary_items.py`: REST upsert loader for itinerary items.
 - `scripts/upsert_customer_payments.py`: REST upsert loader for customer payments.
+- `scripts/generate_ai_insights.py`: manual AI insights generation trigger.

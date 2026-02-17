@@ -2,6 +2,12 @@
 
 > Purpose: Canonical request/response examples for frontend consumption.
 
+## Table of Contents
+- [Conventions](#conventions)
+- [Error Envelope (All endpoints)](#error-envelope-all-endpoints)
+- [Core Platform Endpoints](#core-platform-endpoints)
+- [AI Insights Endpoints](#ai-insights-endpoints)
+
 ## Conventions
 - All responses use `{ data, pagination, meta }` envelopes.
 - JSON properties are `camelCase`.
@@ -23,7 +29,7 @@
 }
 ```
 
-## Endpoints
+## Core Platform Endpoints
 
 ### GET /api/v1/health
 **Response**
@@ -845,6 +851,282 @@
 {
   "horizon_months": 12,
   "currency_code": "USD"
+}
+```
+
+## AI Insights Endpoints
+
+### GET /api/v1/ai-insights/briefing
+**Request (query params)**
+```json
+{
+  "briefing_date": "2026-02-16"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "id": "b8f3d2a1-1111-2222-3333-444455556666",
+    "briefingDate": "2026-02-16",
+    "title": "Daily operating brief",
+    "summary": "Command center metrics reviewed with focus on cash, conversion, and deposits.",
+    "highlights": [
+      "Lead conversion 12m is 31.2%.",
+      "Deposit coverage 6m average is 92.7%."
+    ],
+    "topActions": [
+      "Prioritize advisor coaching for low-conversion segments.",
+      "Escalate deposit follow-up on at-risk open itineraries."
+    ],
+    "confidence": 0.84,
+    "evidence": {
+      "summary": "Built from ai_context_command_center_v1 aggregate metrics.",
+      "metrics": [
+        {
+          "key": "lead_conversion_rate_12m",
+          "label": "Lead conversion (12m)",
+          "currentValue": 0.312,
+          "baselineValue": 0.35,
+          "deltaPct": -0.038,
+          "unit": "ratio"
+        }
+      ],
+      "sourceViewNames": ["ai_context_command_center_v1"],
+      "referencePeriod": "2026-02-16"
+    },
+    "generatedAt": "2026-02-16T15:00:00Z",
+    "modelName": "gpt-5.2",
+    "modelTier": "decision",
+    "tokensUsed": 624,
+    "latencyMs": 918,
+    "runId": "f34f6a6c-d8f0-48d5-a512-a4f6f8abf0c2",
+    "updatedAt": "2026-02-16T15:00:00Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "ai_briefings_daily",
+    "timeWindow": "daily",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### GET /api/v1/ai-insights/feed
+**Request (query params)**
+```json
+{
+  "domain": "travel_consultant",
+  "status": "new",
+  "severity": "high",
+  "page": 1,
+  "page_size": 25
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "c2ce9cb2-3fd2-4a81-a33a-65f6a8e4e126",
+        "insightType": "coaching_signal",
+        "domain": "travel_consultant",
+        "severity": "high",
+        "status": "new",
+        "entityType": "employee",
+        "entityId": "employee-123",
+        "title": "Alex coaching opportunity",
+        "summary": "Conversion is 27.1%, growth variance is -8.2%, and margin is 19.4%.",
+        "recommendedAction": "Run pipeline review, tighten lead qualification, and set weekly close-plan actions.",
+        "priority": 2,
+        "confidence": 0.82,
+        "evidence": {
+          "summary": "Built from consultant context + benchmark rollups.",
+          "metrics": [
+            {
+              "key": "conversion_rate",
+              "label": "Conversion rate",
+              "currentValue": 0.271,
+              "baselineValue": 0.35,
+              "deltaPct": -0.079,
+              "unit": "ratio"
+            }
+          ],
+          "sourceViewNames": ["ai_context_travel_consultant_v1", "ai_context_consultant_benchmarks_v1"],
+          "referencePeriod": "2026-02-01"
+        },
+        "generatedAt": "2026-02-16T15:02:00Z",
+        "modelName": "gpt-5.2",
+        "modelTier": "decision",
+        "tokensUsed": 412,
+        "latencyMs": 732,
+        "runId": "f34f6a6c-d8f0-48d5-a512-a4f6f8abf0c2",
+        "createdAt": "2026-02-16T15:02:00Z",
+        "updatedAt": "2026-02-16T15:02:00Z"
+      }
+    ]
+  },
+  "pagination": {
+    "page": 1,
+    "pageSize": 25,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "ai_insight_events",
+    "timeWindow": "rolling",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### GET /api/v1/ai-insights/recommendations
+**Request (query params)**
+```json
+{
+  "domain": "travel_consultant",
+  "status": "new",
+  "priority_min": 1,
+  "priority_max": 3,
+  "page": 1,
+  "page_size": 25
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "9c02bde2-d0b5-4025-b6b0-122f7f8ec0a9",
+        "insightEventId": "c2ce9cb2-3fd2-4a81-a33a-65f6a8e4e126",
+        "domain": "travel_consultant",
+        "status": "new",
+        "entityType": "employee",
+        "entityId": "employee-123",
+        "title": "Alex coaching opportunity",
+        "summary": "Conversion is 27.1%, growth variance is -8.2%, and margin is 19.4%.",
+        "recommendedAction": "Run pipeline review, tighten lead qualification, and set weekly close-plan actions.",
+        "priority": 2,
+        "confidence": 0.82,
+        "ownerUserId": null,
+        "dueDate": null,
+        "resolutionNote": null,
+        "evidence": {
+          "summary": "Built from consultant context + benchmark rollups.",
+          "metrics": [],
+          "sourceViewNames": ["ai_context_travel_consultant_v1", "ai_context_consultant_benchmarks_v1"],
+          "referencePeriod": "2026-02-01"
+        },
+        "generatedAt": "2026-02-16T15:02:00Z",
+        "completedAt": null,
+        "updatedAt": "2026-02-16T15:02:00Z"
+      }
+    ]
+  },
+  "pagination": {
+    "page": 1,
+    "pageSize": 25,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "ai_recommendation_queue",
+    "timeWindow": "rolling",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### PATCH /api/v1/ai-insights/recommendations/{id}
+**Request**
+```json
+{
+  "status": "in_progress",
+  "owner_user_id": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
+  "resolution_note": "Owner accepted and started consultant coaching plan."
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "id": "9c02bde2-d0b5-4025-b6b0-122f7f8ec0a9",
+    "status": "in_progress",
+    "ownerUserId": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
+    "updatedAt": "2026-02-16T15:10:00Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "ai_recommendation_queue",
+    "timeWindow": "point_in_time",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### GET /api/v1/ai-insights/history
+**Request (query params)**
+```json
+{
+  "domain": "travel_consultant",
+  "status": "resolved",
+  "date_from": "2026-01-01",
+  "date_to": "2026-12-31",
+  "page": 1,
+  "page_size": 50
+}
+```
+
+### GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}
+**Request**
+```json
+{
+  "entity_type": "employee",
+  "entity_id": "employee-123"
+}
+```
+
+### POST /api/v1/ai-insights/run
+**Request**
+Header: `x-ai-run-token: <AI_MANUAL_RUN_TOKEN>`
+```json
+{}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "runId": "f34f6a6c-d8f0-48d5-a512-a4f6f8abf0c2",
+    "trigger": "manual_api",
+    "status": "completed",
+    "createdEvents": 5,
+    "createdRecommendations": 4,
+    "briefingGenerated": true,
+    "consultantsEvaluated": 25
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-16",
+    "source": "ai_context_*",
+    "timeWindow": "manual",
+    "calculationVersion": "v1",
+    "currency": null
+  }
 }
 ```
 

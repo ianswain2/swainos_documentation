@@ -151,3 +151,33 @@
 2026-02-16 13:54 - Reformatted forecast Period labels to readable month-year text for faster scanning on consultant profile
 2026-02-16 13:58 - Completed full quality-audit-pass and synchronized Travel Consultant action plan plus frontend/query/mapping/sample docs to current shipped contract and UX
 2026-02-16 14:01 - Standardized consultant 3-year matrix styling to itinerary-actuals format with inline directional indicators and renamed completed plan file with -completed suffix
+2026-02-16 16:05 - Added inactive-employee cleanup script with dry-run/apply modes and validated 2-year itinerary activity candidate set
+2026-02-16 16:07 - Executed inactive-employee cleanup apply run; deleted 168 employees and verified only 18 active-in-window records remain
+2026-02-16 16:21 - Fixed consultant 3-year matrices to render newest year first and correctly show monthly YoY arrow indicators versus prior year
+2026-02-16 17:11 - Fixed top-open-itineraries query window to avoid undercount; now returns true top 5 open/holding statuses by gross amount
+2026-02-16 14:17 - Created backend-first AI-native insights action plan with travel consultant embeds and cross-domain scaling contract
+2026-02-16 14:32 - Audited AI-native insights plan and locked snake_case lifecycle statuses plus canonical scheduler path (scripts/generate_ai_insights.py)
+2026-02-16 15:29 - Implemented AI insights backend+Supabase foundation (migrations, services, APIs, manual trigger script, tests, and docs updates)
+2026-02-16 15:36 - Remediated AI audit findings: fixed manual script bootstrap, secured run endpoint token gate, linked recommendation->insight events, and added numeric cast migration for command-center conversion rate
+2026-02-16 15:55 - Implemented AI frontend buildout: live AI Insights page, command-center briefing integration, travel-consultant AI embeds, assistant entity grounding, and docs/query sync
+2026-02-16 15:59 - Remediated frontend audit risks: added AI fetch race guards, filter pagination resets, partial-data warnings, assistant context cleanup, and status label UX polish
+2026-02-16 16:08 - Purged stale AI outputs after inactive-employee cleanup and regenerated insights from cleaned employee data
+2026-02-16 16:14 - Hardened AI and travel-consultant pipelines to exclude deleted employees, then purged/regenerated AI outputs with zero orphan employee references
+2026-02-16 16:18 - Added consultant+AI rollup refresh RPC/script, refreshed materialized views to remove orphan employee snapshots, and reran AI purge/regeneration with validated YTD/year/rolling travel-vs-funnel outputs
+2026-02-16 16:26 - Aligned AI consultant context to Travel Consultant leaderboard rolling-12 KPI logic, regenerated AI outputs, and verified exact conversion parity between AI recommendations and leaderboard metrics
+2026-02-16 16:33 - Expanded AI consultant context with monthly/year/rolling12 snapshots, travel-vs-funnel deltas, and YoY-to-date tags; regenerated outputs and verified tagged summaries with canonical source lineage
+2026-02-16 16:35 - Removed verbose window-tag dump from AI card summaries, switched to concise manager-grade rolling12 KPI summaries, and regenerated AI outputs for clean UI readability
+2026-02-16 16:38 - Refined AI recommendation cards into manager brief format (headline status, KPI chips, trend line, owner/timebox action, Why drawer) and expanded backend evidence metrics for conversion/margin/YoY/trend deltas
+2026-02-16 16:44 - Switched consultant recommendation summary source to AI narrative output, hardened confidence parsing, added OpenAI model failover to gpt-4o/gpt-4o-mini, and regenerated insights with live manager-readable analysis
+2026-02-16 16:48 - Re-aligned AI consultant actionability to canonical rolling12 benchmarks (dynamic target thresholds + volume gates), fixed evidence unit coverage, and validated recommendation margin/conversion parity against Travel Consultant leaderboard
+2026-02-16 16:50 - Enforced metric-anchored AI coaching narratives with explicit team-average/threshold/strategic-target comparisons in summaries and regenerated recommendation outputs
+2026-02-16 17:01 - Added benchmark/company AI rollup migrations, updated refresh RPC contract, wired orchestration to Supabase benchmark rollups (replacing runtime-only benchmark dependency), and validated benchmark context lineage in generated coaching insights
+2026-02-16 17:03 - Removed gpt-4o fallback path from AI orchestration model routing, set GPT-5.2 decision default, and reran AI generation with verified GPT-5.2 decision-tier outputs
+2026-02-16 17:06 - Tightened consultant coaching prompt/output normalization for clear individual-person summaries (name-first, concise two-sentence format, single benchmark comparison) and regenerated AI recommendations for focus-oriented readability
+2026-02-16 17:10 - Completed objective output-quality pass, enforced consultant name in recommendation titles, tightened action length/word-boundary normalization, purged historical mixed outputs, and regenerated a clean focused recommendation set
+2026-02-16 17:13 - Completed deep thread-wide quality audit, removed dead legacy summary helper, simplified model routing logic, and updated backend/frontend documentation with benchmark rollups and GPT-5.2-only routing details
+2026-02-16 17:19 - Normalized command-center briefing highlight/action formatting to prevent raw object dumps, enforced concise plain-text list constraints, and regenerated AI outputs with cleaned UI-readable briefing cards
+2026-02-16 18:16 - Added executive-grade AI UI polish with reusable expandable text + max-3 briefing bullets and view-more expanders, split diagnosis/action blocks on insights cards, fixed client runtime normalization bug, and revalidated regenerated outputs in browser
+2026-02-16 18:53 - Simplified executive readability pass: resolved owner labels to names when available via consultant profile lookups, added subtle diagnosis/action visual cues, applied viewport-aware summary truncation, and kept fallback labels concise with no raw ID exposure
+2026-02-16 20:17 - Completed full thread audit and cleanup pass, removed lint risk in AI owner-name resolution effect, simplified responsive truncation props, and updated action plan + backend/frontend query/payload docs with aligned TOCs and current AI architecture state
+2026-02-16 19:06 - Added always-on frontend Cursor rule to avoid useEffect by default and follow React alternatives-first guidance
