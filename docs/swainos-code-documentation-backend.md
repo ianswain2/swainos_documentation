@@ -76,6 +76,7 @@ Errors return a consistent envelope:
 ## External Identifiers
 - Canonical external identifier column is `external_id` across normalized tables.
 - `Lineage.sourceRecordId` reflects the upstream `external_id` (e.g., Salesforce/Kaptio).
+- `employees.analysis_disabled` is the canonical consultant-analytics opt-out flag. When `true`, the employee is excluded from consultant-focused rollups and consultant AI context, while company itinerary/revenue/forecast reporting remains unchanged.
 
 ## API Endpoints
 - `GET /api/v1/health`
@@ -208,6 +209,7 @@ Errors return a consistent envelope:
   - `0043_create_refresh_consultant_ai_rollups_rpc.sql`
   - `0044_create_ai_benchmark_rollups.sql`
   - `0045_update_refresh_consultant_ai_rollups_rpc_with_benchmarks.sql`
+  - `0046_add_employee_analysis_disabled_and_rollup_filters.sql`
 - RLS pattern follows existing conventions:
   - `*_select_authenticated`
   - `*_insert_service`
@@ -218,6 +220,7 @@ Errors return a consistent envelope:
 - `scripts/generate_ai_insights.py`: manual trigger for orchestration run + persisted outputs.
 - `scripts/purge_ai_insights.py`: clears AI tables for clean regeneration after major data cleanup.
 - `scripts/cleanup_inactive_employees.py`: removes inactive employee records; run AI purge + rollup refresh after execution.
+- After toggling `employees.analysis_disabled`, run `scripts/refresh_consultant_ai_rollups.py` so itinerary, consultant, and AI context materialized views recompute with the exclusion applied.
 
 ## Key Modules
 - `src/core/config.py`: settings and environment variables.

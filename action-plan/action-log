@@ -181,3 +181,6 @@
 2026-02-16 18:53 - Simplified executive readability pass: resolved owner labels to names when available via consultant profile lookups, added subtle diagnosis/action visual cues, applied viewport-aware summary truncation, and kept fallback labels concise with no raw ID exposure
 2026-02-16 20:17 - Completed full thread audit and cleanup pass, removed lint risk in AI owner-name resolution effect, simplified responsive truncation props, and updated action plan + backend/frontend query/payload docs with aligned TOCs and current AI architecture state
 2026-02-16 19:06 - Added always-on frontend Cursor rule to avoid useEffect by default and follow React alternatives-first guidance
+2026-02-16 20:28 - Added employees.analysis_disabled analytics opt-out control, updated itinerary/consultant rollups and refresh RPC to exclude disabled employees across reporting + AI contexts, and updated backend/query docs for checkbox-driven refresh workflow
+2026-02-16 20:31 - Refined analysis_disabled scope to consultant-only analytics exclusion (consultant rollups + consultant AI context) and preserved itinerary/forecast/revenue company reporting behavior
+2026-02-16 20:37 - Fixed migration dependency order for consultant-only analysis_disabled rollout by dropping/rebuilding dependent AI context materialized views before consultant rollup recreates

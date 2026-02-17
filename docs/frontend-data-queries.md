@@ -67,4 +67,5 @@
 - Travel Consultant profile contract now includes `ytdVariancePct`, `threeYearPerformance` (`travelClosedFiles` + `leadFunnel`), and `funnelHealth.avgSpeedToBookDays`.
 - Leaderboard contract now uses `avgSpeedToBookDays` (replacing prior median naming).
 - AI Insights generation is manual-on-demand by default via backend script/API trigger; scheduled automation is deferred until live sync cadence is enabled.
+- Employee-level consultant analytics opt-out is controlled by backend column `employees.analysis_disabled`; once toggled, rerun consultant/AI rollup refresh so consultant-focused surfaces reflect exclusion while company revenue/forecast reporting remains intact.
 
