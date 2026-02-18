@@ -1,6 +1,6 @@
 # SwainOS Terminology Glossary
 
-Last updated: 2026-02-17
+Last updated: 2026-02-18
 
 ## Purpose
 This glossary is the canonical source of truth for user-facing terminology across SwainOS frontend UI, backend documentation, and AI-generated narrative copy.
@@ -45,6 +45,17 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Supplier Liability | Outstanding supplier invoices/payables. | Currency | `outstandingAmount` | Supplier Payables, Open Supplier Liability |
 | Deposit Liability | Outstanding customer deposit obligations. | Currency | `outstandingDeposits` | Open Deposit Liability |
 | Deposit Coverage % | Deposits received divided by deposits targeted/required. | Percent | Derived from deposit timeline summary | Deposit Health (generic) |
+
+## FX Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Funding Currency | Currency used to fund payable-currency buys in FX workflows. | ISO currency code | `baseCurrency` (`USD` in v1 policy) | Base Buy Currency (ambiguous) |
+| Payable Currency | Non-USD currency used to settle supplier obligations. | ISO currency code | `currencyCode` (target set `AUD`, `NZD`, `ZAR`) | Tracked Currency (ambiguous) |
+| FX Signal | Recommendation output for buy timing decisions. | Enum + rationale | `signalType`, `signalStrength`, `reasonSummary` | FX Alert (generic) |
+| Invoice Pressure (30/60/90d) | Supplier due-date weighted payable amount pressure by currency window. | Currency | `invoicePressure30d`, `invoicePressure60d`, `invoicePressure90d` | Invoice Urgency Score |
+| Data Health | Operator-visible data quality status for recommendation safety. | Enum | `meta.dataStatus` (`live`, `partial`, `degraded`) | Health Flag (generic) |
+| Source Links | Clickable provenance links for macro/news evidence behind intelligence overlays. | URL list | `sourceLinks` | References (generic) |
 
 ## Canonical UI Title and Control Patterns
 

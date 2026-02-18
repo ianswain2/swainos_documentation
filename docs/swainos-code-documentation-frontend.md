@@ -1,6 +1,6 @@
 # SwainOS Frontend Code Documentation
 
-Last updated: 2026-02-17
+Last updated: 2026-02-18
 
 ## Table of Contents
 - [Overview](#overview)
@@ -32,7 +32,10 @@ Last updated: 2026-02-17
 - Frontend
   - `cd /Users/ianswain/Desktop/SwainOS_FrontEnd/apps/web`
   - Copy `.env.local.example` to `.env.local`
+  - Keep frontend env values in `apps/web/.env.local` (single source for this app)
   - Set `NEXT_PUBLIC_API_BASE` to your backend URL (for local: `http://127.0.0.1:8000`)
+  - Set `API_BASE` (server-side route handlers) to the same backend URL
+  - Set `FX_MANUAL_RUN_TOKEN` to match backend `FX_MANUAL_RUN_TOKEN` so FX desk refresh can trigger secure rates pulls
   - `npm run dev`
 - Verification preflight
   - Backend health check: `GET /api/v1/health`
@@ -81,7 +84,7 @@ Primary modules (spec-aligned):
   - `paymentsOutService.ts`
   - `bookingForecastsService.ts`
   - `itineraryTrendsService.ts`
-  - `fxService.ts` (FX rates + exposure)
+  - `fxService.ts` (FX rates, signals, holdings, transactions, intelligence, invoice pressure)
   - `itineraryRevenueService.ts` (forecast outlook/deposits/conversion/channels + actuals YoY + actuals channels)
   - `travelConsultantService.ts` (leaderboard/profile/forecast with typed normalization)
   - `travelAgentsService.ts` (leaderboard/profile with typed normalization)
@@ -103,8 +106,13 @@ Primary modules (spec-aligned):
     - `/travel-agencies`: unified trade search + top agent/agency rankings with top-N controls and Gross Profit-first views
     - `/travel-agencies/agents/[agentId]`: travel agent deep-dive with KPIs, YoY trend charts, primary consultant affinity matrix, and operational itinerary snapshots
     - `/travel-agencies/agencies/[agencyId]`: travel agency deep-dive with KPIs, YoY trend charts, top linked agents table, and agency-composition metrics table
-- Implemented with live + optional mock
-  - `FX Command` (live rates and exposure scoped to supplier currencies **ZAR, USD, AUD, NZD** only; live from DB or demo data)
+- Implemented with live backend data
+  - `FX Command`:
+    - `/fx-command`: trading-desk surface with pair selector, timeframe toggle, prominent spot-conversion widget, lightweight-charts price chart with grid lines, BUY/WAIT recommendation panel, top-action FX transaction modal form (BUY/SPEND/ADJUSTMENT), holdings snapshot, transactions table, invoice pressure cards, and intelligence feed with source links.
+    - Initial FX snapshot is loaded server-side in route layer, then hydrated into client state; refreshes are user-driven from the desk action.
+    - Manual refresh only in current release (auto-refresh intentionally deferred); refresh action now triggers a server-side rate pull before reloading desk sections.
+    - Data health badges sourced from backend `meta.dataStatus` (`live`, `partial`, `degraded`).
+    - Contract scope is deterministic-first and BUY/WAIT only; no SELL workflow in frontend v1.
 - Implemented with structured UI (data pending)
   - `Debt Service` (schedule, risk watchlist scaffolds)
   - `Operations` (advisor productivity + margin panels)
@@ -152,6 +160,10 @@ Primary modules (spec-aligned):
   - `ytdVariancePct`
   - `funnelHealth.avgSpeedToBookDays`
   - extended `heroKpis` set for advisor effectiveness coaching
+- FX canonical query params:
+  - `GET /api/v1/fx/rates|signals|transactions|intelligence` use `page`, `page_size`, `include_totals`.
+  - Optional FX filters use `snake_case` (`currency_code`, `transaction_type`).
+  - Manual FX run endpoints (`/fx/*/run`) are not wired to frontend UX.
 
 ## Terminology Standard
 - Canonical terminology is defined in `docs/swainos-terminology-glossary.md`.
@@ -170,6 +182,13 @@ Primary modules (spec-aligned):
 - `features/command-center/useAiBriefing.ts` provides focused loading for persisted AI briefing narrative used in command-center narrative card.
 - `features/ai-insights/useAiInsightsData.ts` orchestrates AI endpoint loading with section-level loading flags, filter/pagination state, and recommendation status transitions.
 - `lib/api/aiInsightsService.ts` centralizes typed `/api/v1/ai-insights/*` contract calls and query param mapping (`snake_case` request params, `camelCase` response shapes).
+- `features/fx-command/useFxCommandData.ts` orchestrates FX desk reads (rates, exposure, signals, holdings, transactions, intelligence, invoice pressure) with section-safe partial-failure handling and manual refresh.
+- `app/api/fx/rates/run/route.ts` provides a server-side proxy for manual rate pulls so `FX_MANUAL_RUN_TOKEN` remains server-only while `Refresh now` can trigger a fresh ingest cycle.
+- `app/fx-command/page.tsx` performs server-side initial snapshot loading through `lib/api/fxServerService.ts` to avoid mount-fetch effect bootstrapping.
+- FX chart/presentation components:
+  - `features/fx-command/fx-price-chart.tsx`
+  - `features/fx-command/fx-pair-selector.tsx`
+  - `features/fx-command/fx-timeframe-toggle.tsx`
 - `features/command-center/kpi-grid.tsx` and `active-travelers-map.tsx` are presentation-focused and consume live data props.
 - Command-center business values are sourced from backend responses.
 - `features/travel-consultant/profile/useTravelConsultantProfile.ts` uses a single `/profile` API call and consumes embedded forecast data.

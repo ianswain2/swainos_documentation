@@ -46,8 +46,14 @@
 | `GET /api/v1/ai-insights/history` | Historical AI event archive | `domain`, `insight_type`, `status`, `date_from`, `date_to`, `page`, `page_size`, `include_totals` | `features/ai-insights/useAiInsightsData.ts` | Source table: `ai_insight_events`; exact total counts are opt-in (`include_totals=true`) |
 | `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` | Entity-scoped insights (advisor/module context) | none | `features/travel-consultant/profile/useTravelConsultantEntityAi.ts`, `components/assistant/assistant-panel.tsx` | Entity anchor for advisor-level AI cards and assistant context |
 | `POST /api/v1/ai-insights/run` | Manual on-demand generation trigger | Header: `x-ai-run-token` | No frontend route wired yet | Manual trigger is default until live sync automation is enabled; token must match backend `AI_MANUAL_RUN_TOKEN` |
-| `GET /api/v1/fx/rates` | Live FX rates | `limit` | `app/fx-command/page.tsx` | Filtered to ZAR/USD/AUD/NZD pairs server-side |
-| `GET /api/v1/fx/exposure` | Exposure rollup | none | `app/fx-command/page.tsx` | Returns empty if view missing; UI falls back to demo exposure |
+| `GET /api/v1/fx/rates` | Live FX rates (chart + rate context) | `page`, `page_size`, `include_totals` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Initial snapshot loads server-side; manual refresh updates client state; selector enforces `USD/AUD`, `USD/NZD`, `USD/ZAR` |
+| `GET /api/v1/fx/exposure` | Exposure rollup by currency | none | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Initial snapshot + manual refresh drive recommendation context and exposure panel |
+| `GET /api/v1/fx/signals` | BUY/WAIT recommendation list | `page`, `page_size`, `include_totals`, `currency_code` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Frontend renders BUY/WAIT only, aligned to backend v1 taxonomy |
+| `GET /api/v1/fx/holdings` | Current holdings snapshot | `currency_code` (optional) | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Ledger-derived balances for initial load and manual refresh |
+| `GET /api/v1/fx/transactions` | Ledger transaction feed | `page`, `page_size`, `include_totals`, `currency_code`, `transaction_type` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Latest entries shown in FX desk transactions table |
+| `POST /api/v1/fx/transactions` | Create FX ledger transaction | request body: `currencyCode`, `transactionType`, `transactionDate`, `amount`, optional `exchangeRate`, `referenceNumber`, `notes` | `features/fx-command/fx-command-page.tsx` | Used by the top action-triggered modal form to log BUY/SPEND/ADJUSTMENT and then refresh holdings/transactions |
+| `GET /api/v1/fx/intelligence` | Macro/geopolitical intelligence feed | `page`, `page_size`, `include_totals`, `currency_code` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Source links rendered for operator drill-down |
+| `GET /api/v1/fx/invoice-pressure` | Near-term payable pressure by currency window | none | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Supports due-window allocation decisions |
 
 ---
 
@@ -59,6 +65,9 @@
 | `GET /api/v1/revenue-bookings/{booking_id}` | Deprecated and removed | Replaced by owner cockpit and module-specific detail surfaces. |
 | `GET /api/v1/itinerary-pipeline` | Deprecated and removed | Replaced by `/api/v1/itinerary-revenue/outlook` and `/conversion`. |
 | `GET /api/v1/travel-consultants/{employee_id}/forecast` | Not consumed by current UI | Profile screen now uses embedded forecast from `/profile`; standalone forecast endpoint retained for API consumers. |
+| `POST /api/v1/fx/rates/run` | Triggered indirectly by FX Command refresh | Called from `app/api/fx/rates/run/route.ts` proxy using server-side `FX_MANUAL_RUN_TOKEN`; `Refresh now` runs this pull before reloading desk data. |
+| `POST /api/v1/fx/signals/run` | Not consumed by current UI | Manual FX signal-run endpoint remains backend/operator controlled (`x-fx-run-token`). |
+| `POST /api/v1/fx/intelligence/run` | Not consumed by current UI | Manual FX intelligence-run endpoint remains backend/operator controlled (`x-fx-run-token`). |
 
 ---
 
@@ -69,6 +78,9 @@
   `Deposited/Confirming`, `Amendment in Progress`, `Pre-Departure`, `eDocs Sent`, `Traveling`, `Traveled`, `Cancel Fees`.
 - Numbers returned as strings are normalized in `lib/utils/parseNumber.ts` before rendering.
 - Command Center uses staged loading (`primary` then `secondary`) so top sections render first while lower-priority sections load in the background.
+- FX Command uses a single manual refresh action that first triggers a server-side rate pull and then revalidates rates, exposure, signals, holdings, transactions, intelligence, and invoice pressure in parallel.
+- FX Command initial snapshot is fetched server-side by `app/fx-command/page.tsx` via `lib/api/fxServerService.ts`; client hook handles in-session manual refreshes.
+- FX rates/signal/intelligence list requests default to `include_totals=false` for lower-cost list reads.
 - Travel Consultant profile now uses a single `/profile` request for both story sections and forecast/target timeline (duplicate `/forecast` UI call removed).
 - Travel Consultant profile contract now includes `ytdVariancePct`, `threeYearPerformance` (`travelClosedFiles` + `leadFunnel`), and `funnelHealth.avgSpeedToBookDays`.
 - Leaderboard contract now uses `avgSpeedToBookDays` (replacing prior median naming).

@@ -480,7 +480,7 @@
         "onBooksGrossAmount": 141000.0,
         "potentialGrossAmount": 39000.0,
         "expectedGrossAmount": 180000.0,
-        "onBooksCommissionIncomeAmount": 113000.0,
+        "onBooksGrossProfitAmount": 113000.0,
         "potentialGrossProfitAmount": 31500.0,
         "expectedGrossProfitAmount": 144500.0,
         "onBooksPaxCount": 176,
@@ -545,9 +545,9 @@
         "confirmedCount": 40,
         "closeRatio": 0.5405,
         "projectedConfirmedCount": 18.4,
-        "projectedCommissionIncomeExpected": 144500.0,
-        "projectedCommissionIncomeBestCase": 162200.0,
-        "projectedCommissionIncomeWorstCase": 128900.0
+        "projectedGrossProfitExpected": 144500.0,
+        "projectedGrossProfitBestCase": 162200.0,
+        "projectedGrossProfitWorstCase": 128900.0
       }
     ],
     "lookbackCloseRatio": 0.5421
@@ -717,8 +717,9 @@
 ```
 
 ### GET /api/v1/fx/rates
-**Request (query params)** `limit` (optional, default 50).  
+**Request (query params)** `page` (default 1), `page_size` (default 50), `include_totals` (default false).  
 **Scope**: returns rates only for supplier currencies `ZAR`, `USD`, `AUD`, `NZD`.
+**Frontend note**: FX Command trading-desk UI consumes `/fx/rates`, `/fx/exposure`, `/fx/signals`, `/fx/holdings`, `/fx/transactions` (GET + POST), `/fx/intelligence`, and `/fx/invoice-pressure`. Manual `/fx/*/run` endpoints remain backend/operator controlled.
 
 **Response**
 ```json
@@ -728,15 +729,71 @@
       "id": "uuid",
       "currencyPair": "USD/ZAR",
       "rateTimestamp": "2026-02-10T12:00:00Z",
-      "bidRate": 1.082,
-      "askRate": 1.0824,
-      "midRate": 1.0822,
-      "source": "ecb",
+      "bidRate": null,
+      "askRate": null,
+      "midRate": 18.42,
+      "source": "twelve_data",
       "createdAt": "2026-02-10T12:00:00Z"
     }
   ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "supabase",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### POST /api/v1/fx/rates/run
+**Request headers**
+```json
+{
+  "x-fx-run-token": "<FX_MANUAL_RUN_TOKEN>"
+}
+```
+If `FX_MANUAL_RUN_TOKEN` is not configured, this manual endpoint is disabled.
+
+**Request**
+```json
+{
+  "runType": "manual"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "runId": "run-uuid",
+    "status": "success",
+    "recordsProcessed": 3,
+    "recordsCreated": 3,
+    "message": "FX rates pulled and exposure refreshed"
+  },
   "pagination": null,
-  "meta": { "asOfDate": "2026-02-10", "source": "supabase", "timeWindow": "", "calculationVersion": "v1", "currency": null }
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_rate_pull",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "success",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18T09:57:00+00:00"
+  }
 }
 ```
 
@@ -759,11 +816,355 @@
   ],
   "pagination": null,
   "meta": {
-    "asOfDate": "2026-02-10",
+    "asOfDate": "2026-02-18",
     "source": "mv_fx_exposure",
     "timeWindow": "",
     "calculationVersion": "v1",
-    "currency": null
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### GET /api/v1/fx/signals
+**Request (query params)** `page` (default 1), `page_size` (default 25), `include_totals` (default false), `currency_code` (optional).  
+**Behavior note**: endpoint can legitimately return an empty list when prerequisite gates fail (for example missing `mv_fx_exposure` rows for `AUD`/`NZD`/`ZAR`, stale rates, or insufficient rate history).
+**Response**
+```json
+{
+  "data": [
+    {
+      "id": "signal-uuid",
+      "currencyCode": "AUD",
+      "signalType": "buy_now",
+      "signalStrength": "medium",
+      "currentRate": 1.53,
+      "avg30dRate": 1.56,
+      "exposureAmount": 210000,
+      "recommendedAmount": 125000,
+      "reasoning": "Current rate=1.53, avg30d=1.56, gapPct=0.0192, netExposure=210000, invoicePressure30d=125000.",
+      "generatedAt": "2026-02-18T08:30:00Z",
+      "expiresAt": "2026-02-19T08:30:00Z",
+      "wasActedOn": false,
+      "runId": "run-uuid",
+      "confidence": 0.82,
+      "reasonSummary": "AUD: favorable pricing vs 30d average with upcoming payable pressure.",
+      "trendTags": ["Central Bank Watch", "Volatility"],
+      "sourceLinks": ["https://example.com/aud-story"],
+      "exposure30dAmount": 130000,
+      "invoicePressure30d": 125000,
+      "invoicePressure60d": 175000,
+      "invoicePressure90d": 220000,
+      "metadata": {
+        "gapPct": 0.0192,
+        "baseCurrency": "USD"
+      },
+      "createdAt": "2026-02-18T08:30:00Z",
+      "updatedAt": "2026-02-18T08:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 25,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_signals",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### POST /api/v1/fx/signals/run
+**Request headers**
+```json
+{
+  "x-fx-run-token": "<FX_MANUAL_RUN_TOKEN>"
+}
+```
+
+**Request**
+```json
+{
+  "runType": "manual"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "runId": "signal-run-uuid",
+    "status": "success",
+    "recordsProcessed": 3,
+    "recordsCreated": 3,
+    "message": "FX signals generated"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_signals_run",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "success",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18T09:57:00+00:00"
+  }
+}
+```
+
+### GET /api/v1/fx/transactions
+**Request (query params)** `page` (default 1), `page_size` (default 100), `include_totals` (default false), `currency_code` (optional), `transaction_type` (optional).  
+**Response**
+```json
+{
+  "data": [
+    {
+      "id": "tx-uuid",
+      "currencyCode": "AUD",
+      "transactionType": "BUY",
+      "transactionDate": "2026-02-18",
+      "amount": 50000,
+      "exchangeRate": 1.53,
+      "usdEquivalent": 32679.74,
+      "balanceAfter": 142500,
+      "supplierInvoiceId": null,
+      "signalId": null,
+      "referenceNumber": "WIRE-22818",
+      "notes": "Top-up for near-term supplier invoices",
+      "enteredBy": null,
+      "createdAt": "2026-02-18T08:33:00Z",
+      "updatedAt": "2026-02-18T08:33:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 100,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_transactions",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18T09:57:00+00:00"
+  }
+}
+```
+
+### POST /api/v1/fx/transactions
+**Request**
+```json
+{
+  "currencyCode": "AUD",
+  "transactionType": "BUY",
+  "transactionDate": "2026-02-18",
+  "amount": 50000,
+  "exchangeRate": 1.53,
+  "referenceNumber": "WIRE-22818",
+  "notes": "Top-up for near-term supplier invoices"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "id": "tx-uuid",
+    "currencyCode": "AUD",
+    "transactionType": "BUY",
+    "transactionDate": "2026-02-18",
+    "amount": 50000,
+    "exchangeRate": 1.53,
+    "usdEquivalent": 32679.74,
+    "balanceAfter": 142500,
+    "supplierInvoiceId": null,
+    "signalId": null,
+    "referenceNumber": "WIRE-22818",
+    "notes": "Top-up for near-term supplier invoices",
+    "enteredBy": null,
+    "createdAt": "2026-02-18T08:33:00Z",
+    "updatedAt": "2026-02-18T08:33:00Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_transactions",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### GET /api/v1/fx/holdings
+**Response**
+```json
+{
+  "data": [
+    {
+      "id": "holding-uuid",
+      "currencyCode": "AUD",
+      "balanceAmount": 142500,
+      "avgPurchaseRate": 1.55,
+      "totalPurchased": 200000,
+      "totalSpent": 57500,
+      "lastTransactionDate": "2026-02-18",
+      "lastReconciledAt": "2026-02-18T08:33:00Z",
+      "notes": null,
+      "createdAt": "2026-02-11T00:00:00Z",
+      "updatedAt": "2026-02-18T08:33:00Z"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_holdings",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### GET /api/v1/fx/intelligence
+**Request (query params)** `page` (default 1), `page_size` (default 50), `include_totals` (default false), `currency_code` (optional).  
+**Response**
+```json
+{
+  "data": [
+    {
+      "id": "intel-uuid",
+      "runId": "intel-run-uuid",
+      "currencyCode": "AUD",
+      "sourceType": "news",
+      "sourceTitle": "RBA policy outlook shifts toward caution",
+      "sourceUrl": "https://example.com/aud-story",
+      "sourcePublisher": "Reuters",
+      "sourceCredibilityScore": 0.9,
+      "publishedAt": "2026-02-18T06:40:00Z",
+      "riskDirection": "mixed",
+      "confidence": 0.68,
+      "trendTags": ["Central Bank Watch", "Short-Term Volatility"],
+      "summary": "AUD outlook is mixed as central bank commentary points to near-term volatility while demand remains stable.",
+      "rawPayload": {
+        "provider": "marketaux"
+      },
+      "createdAt": "2026-02-18T08:20:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_intelligence_items",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18"
+  }
+}
+```
+
+### POST /api/v1/fx/intelligence/run
+**Request headers**
+```json
+{
+  "x-fx-run-token": "<FX_MANUAL_RUN_TOKEN>"
+}
+```
+
+**Request**
+```json
+{
+  "runType": "on_demand"
+}
+```
+
+**Response**
+```json
+{
+  "data": {
+    "runId": "intel-run-uuid",
+    "status": "success",
+    "recordsProcessed": 12,
+    "recordsCreated": 12,
+    "message": "FX intelligence run completed"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_intelligence_run",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "success",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18T09:57:00+00:00"
+  }
+}
+```
+
+### GET /api/v1/fx/invoice-pressure
+**Response**
+```json
+{
+  "data": [
+    {
+      "currencyCode": "AUD",
+      "due7dAmount": 42000,
+      "due30dAmount": 125000,
+      "due60dAmount": 170000,
+      "due90dAmount": 220000,
+      "invoicesDue30dCount": 6,
+      "nextDueDate": "2026-02-20"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-02-18",
+    "source": "fx_invoice_pressure_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false,
+    "generatedAt": "2026-02-18T09:57:00+00:00"
   }
 }
 ```

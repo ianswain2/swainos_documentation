@@ -1,6 +1,6 @@
 # SwainOS Backend Code Documentation
 
-Last updated: 2026-02-17
+Last updated: 2026-02-18
 
 ## Table of Contents
 - [Overview](#overview)
@@ -102,7 +102,16 @@ Errors return a consistent envelope:
 - `GET /api/v1/itinerary-revenue/actuals-yoy`
 - `GET /api/v1/itinerary-revenue/actuals-channels`
 - `GET /api/v1/fx/rates`
+- `POST /api/v1/fx/rates/run` (manual trigger)
 - `GET /api/v1/fx/exposure`
+- `GET /api/v1/fx/signals`
+- `POST /api/v1/fx/signals/run` (manual trigger)
+- `GET /api/v1/fx/transactions`
+- `POST /api/v1/fx/transactions`
+- `GET /api/v1/fx/holdings`
+- `GET /api/v1/fx/intelligence`
+- `POST /api/v1/fx/intelligence/run` (manual trigger)
+- `GET /api/v1/fx/invoice-pressure`
 - `GET /api/v1/travel-consultants/leaderboard`
 - `GET /api/v1/travel-consultants/{employee_id}/profile`
 - `GET /api/v1/travel-consultants/{employee_id}/forecast`
@@ -118,6 +127,30 @@ Errors return a consistent envelope:
 - `GET /api/v1/ai-insights/history`
 - `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}`
 - `POST /api/v1/ai-insights/run` (manual trigger)
+
+## FX Ledger and Intelligence API
+- Currency policy lock:
+  - `USD` is funding/base only.
+  - Signal targets are `AUD`, `NZD`, `ZAR`.
+- Core tables and views:
+  - `fx_rates` (de-duplicated provider pulls)
+  - `fx_signal_runs` + `fx_signals` (auditable run + recommendation lineage)
+  - `fx_transactions` + `fx_holdings` (BUY/SPEND/ADJUSTMENT ledger and reconciled balances)
+  - `fx_intelligence_runs` + `fx_intelligence_items` (macro/news runs with source links, trend tags, confidence)
+  - `fx_invoice_pressure_v1` (supplier due-date weighting inputs)
+  - `mv_fx_exposure` refreshed via RPC `refresh_fx_exposure_v1()`
+- Manual trigger controls:
+  - FX run endpoints require `x-fx-run-token`.
+  - If `FX_MANUAL_RUN_TOKEN` is unset, manual FX run endpoints are disabled and return a `bad_request` error.
+  - API responses include `meta.dataStatus`, `meta.isStale`, and `meta.degraded` for operator-safe degraded handling.
+- Supabase migration chain:
+  - `0055_fx_backend_foundation_and_intelligence.sql`: core FX tables, constraints, RLS, and exposure refresh RPC.
+  - `0056_fx_auditability_and_holdings_reconciliation_fix.sql`: run-scoped intelligence dedupe (`run_id, source_url`) and holdings zero-balance reconciliation.
+  - `0057_rename_fx_signal_run_index_to_started_at.sql`: canonical index naming alignment (`idx_fx_signal_runs_started_at`).
+  - `0058_fix_fx_ledger_trigger_recursion.sql`: prevents recursive ledger-trigger stack overflows when balance recalculation updates `fx_transactions`.
+- Recommendation model:
+  - Deterministic-first score uses rate context (`currentRate` vs `avg30dRate`) + net exposure + invoice pressure.
+  - Intelligence overlay contributes summarized rationale (`reasonSummary`), `trendTags`, and `sourceLinks` without replacing deterministic gates.
 
 ## Itinerary Revenue Owner Cockpit API
 - Primary endpoint family: `/api/v1/itinerary-revenue/*`
@@ -276,6 +309,10 @@ Errors return a consistent envelope:
 - `scripts/refresh_consultant_ai_rollups.py`: calls `refresh_consultant_ai_rollups_v1()` for canonical AI + consultant context refresh.
 - `scripts/refresh_travel_trade_rollups.py`: calls `refresh_travel_trade_rollups_v1()` for travel agent/agency rollup + search refresh.
 - `scripts/generate_ai_insights.py`: manual trigger for orchestration run + persisted outputs.
+- `scripts/pull_fx_rates.py`: scheduled/on-demand FX provider pull + persistence + exposure refresh.
+- `scripts/backfill_fx_rates_history.py`: controlled historical FX backfill (default daily interval) to seed chart windows (`1D/1W/1M/3M`) before live cadence is established.
+- `scripts/generate_fx_intelligence.py`: daily/on-demand FX macro/news intelligence synthesis.
+- `scripts/refresh_fx_exposure.py`: explicit `mv_fx_exposure` refresh RPC trigger.
 - `scripts/purge_ai_insights.py`: clears AI tables for clean regeneration after major data cleanup.
 - `scripts/cleanup_inactive_employees.py`: removes inactive employee records; run AI purge + rollup refresh after execution.
 - After toggling `employees.analysis_disabled`, run `scripts/refresh_consultant_ai_rollups.py` so itinerary, consultant, and AI context materialized views recompute with the exclusion applied.
@@ -298,11 +335,14 @@ Errors return a consistent envelope:
 - `src/services/ai_insights_service.py`: API-facing AI insight retrieval and recommendation state transitions.
 - `src/services/ai_orchestration_service.py`: AI generation orchestration from context views to persisted outputs.
 - `src/services/openai_insights_service.py`: model-tier routing, strict JSON output handling, and fallback execution.
+- `src/services/fx_service.py`: FX rate ingestion, deterministic signal generation, ledger validation, and holdings/invoice pressure serving.
+- `src/services/fx_intelligence_service.py`: FX macro/news ingestion normalization, credibility scoring, and AI synthesis persistence.
 - `src/repositories/travel_consultants_repository.py`: consultant rollup materialized view access.
 - `src/repositories/travel_agents_repository.py`: travel agent rollup and itinerary operational query access.
 - `src/repositories/travel_agencies_repository.py`: travel agency rollup and top-agent profile query access.
 - `src/repositories/travel_trade_search_repository.py`: travel trade search index query access.
 - `src/repositories/ai_insights_repository.py`: AI insights tables/context-view read-write operations.
+- `src/repositories/fx_repository.py`: FX rates/signals/transactions/holdings/intelligence persistence and exposure refresh RPC access.
 - `scripts/upsert_bookings.py`: REST upsert loader for bookings.
 - `scripts/upsert_itineraries.py`: REST upsert loader for enriched itineraries with external-id FK resolver for agencies/contacts/employees.
 - `scripts/upsert_employees.py`: REST upsert loader for Salesforce consultant identity records.
