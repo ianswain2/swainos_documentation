@@ -1,8 +1,5 @@
 # Itinerary Data Mapping (Salesforce/Kaptio -> Supabase)
 
-This document is the canonical mapping reference for itinerary ingestion and forecasting rollups.
-It is intentionally ETL-focused and will be extended table-by-table as new mappings are introduced.
-
 ## Source Files
 - `itineraries_supabase_import.csv` (primary import dataset)
 - Kaptio/Salesforce itinerary fields (historical source naming retained in mapping below)
@@ -83,55 +80,3 @@ It is intentionally ETL-focused and will be extended table-by-table as new mappi
 | `CreatedDate` | `created_at` | Parse to timestamp |
 | `LastModifiedDate` | `updated_at` | Parse to timestamp |
 | `(optional)` | `synced_at` | Sync job timestamp |
-
-## Forecasting Semantics
-- Revenue recognition should use `travel_end_date` (not close date).
-- Conversion/close trend should use `close_date`.
-- Deposit expectations assume baseline `25%` of gross at confirmation, tracked against `deposit_received`.
-- Passenger planning uses `pax_count` (plus adult/child when available).
-- Reseller commission (`trade_commission_amount`) is amount paid to travel agents.
-- Cost (`cost_amount`) represents supplier-side obligations where populated.
-- Canonical owner-cockpit Gross Profit metric uses itinerary `gross_profit` (rollup field `gross_profit_amount`).
-- Source `net_amount` remains available as source-system net itinerary amount but is not the primary owner-cockpit income metric.
-
-## FK Resolver Notes (Import Script)
-- `scripts/upsert_itineraries.py` resolves:
-  - `agency_external_id` -> `agency_id` via `agencies.external_id`
-  - `primary_contact_external_id` -> `primary_contact_id` via `contacts.external_id`
-- `scripts/upsert_itineraries.py` also resolves:
-  - `owner_external_id` -> `employee_id` via `employees.external_id`
-- Resolver runs by default and prints resolved/unresolved counts.
-- Use `--skip-fk-resolver` only for troubleshooting or partial-load scenarios.
-
-## Travel Consultant Analytics Context
-- Consultant attribution is single-owner per itinerary via `itineraries.employee_id`.
-- Travel outcome analytics (booked revenue, margin, production) are grouped by `travel_end_date`.
-- Funnel analytics (lead count, conversion, speed to book) are grouped by `created_at` and close lifecycle dates.
-- Profile Hero KPI averages are derived from itinerary-level fields and period rollups:
-  - `averageGrossProfit` -> itinerary `gross_profit` (via rollup `gross_profit_amount`)
-  - `averageItineraryNights` -> weighted `avg_number_of_nights`
-  - `averageGroupSize` -> `pax_count / itinerary_count`
-  - `averageLeadTime` -> days from `created_at` to `travel_start_date` (closed-won itineraries)
-  - `averageSpeedToClose` -> days from `created_at` to `close_date` (closed-won itineraries)
-- UI speed-to-book is surfaced as **average speed to book** (`avgSpeedToBookDays`) derived from funnel monthly cohorts.
-- Frontend consultant surfaces consume materialized rollups driven by this owner mapping:
-  - `mv_travel_consultant_leaderboard_monthly`
-  - `mv_travel_consultant_profile_monthly`
-  - `mv_travel_consultant_funnel_monthly`
-  - `mv_travel_consultant_compensation_monthly`
-
-## Rollup Foundations Added
-- `mv_itinerary_revenue_monthly`: monthly recognized financials by `travel_end_date` and pipeline category.
-- `mv_itinerary_revenue_weekly`: weekly recognized financials by `travel_end_date`.
-- `mv_itinerary_deposit_monthly`: monthly close-date deposit performance vs 25% target.
-- `mv_itinerary_consortia_monthly`: monthly consortia breakdown by travel start date.
-- `mv_itinerary_trade_agency_monthly`: monthly trade agency breakdown (trade/agent contact types + agency fallback resolution).
-- `mv_itinerary_consortia_actuals_monthly`: closed-won consortia production by `travel_end_date`.
-- `mv_itinerary_trade_agency_actuals_monthly`: closed-won trade-agency production by `travel_end_date`.
-- `itinerary_status_reference`: canonical status classification used by rollups.
-
-## Next Tables To Map (Suggested Priority)
-1. `contacts` (for trade/direct segmentation and agency attribution)
-2. `bookings` (service-level and supplier performance forecast drivers)
-3. `customer_payments` (cash-in pacing and deposit conversion health)
-4. `supplier_invoices` / `supplier_invoice_lines` (cash-out forecasting and FX exposure)

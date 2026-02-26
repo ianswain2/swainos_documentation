@@ -1,7 +1,5 @@
 # SwainOS Terminology Glossary
 
-Last updated: 2026-02-18
-
 ## Purpose
 This glossary is the canonical source of truth for user-facing terminology across SwainOS frontend UI, backend documentation, and AI-generated narrative copy.
 
@@ -14,13 +12,13 @@ This glossary is the canonical source of truth for user-facing terminology acros
 
 ## Core Rules
 - Use one canonical display name per concept across all modules.
-- API contract keys should align to canonical terminology and remove deprecated variants in breaking rollouts.
+- API contract keys should align to canonical terminology.
 - Prefer explicit labels that distinguish amount vs percent/rate.
 - When backend key names differ from display names, document mapping here and in backend/frontend code documentation.
 
 ## Breaking Contract Targets
 - This glossary defines breaking canonical targets for API and code symbols.
-- Legacy naming variants are deprecated and should be removed from active contracts and active code.
+- Legacy naming variants are not used in active contracts or active code.
 - Canonical financial metric family:
   - `grossAmount` (revenue)
   - `grossProfitAmount` (profit)
@@ -31,8 +29,8 @@ This glossary is the canonical source of truth for user-facing terminology acros
 
 | Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
 |---|---|---|---|---|
-| Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `bookedRevenue`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (when ambiguous) |
-| Gross Profit | Profit from itinerary activity; canonical metric replacing commission-income naming. | Currency | `grossProfitAmount`, `expectedGrossProfitAmount`, `forecastGrossProfitAmount`, `targetGrossProfitAmount` | Commission Income, Income, Net (legacy) |
+| Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `bookedRevenue`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (ambiguous) |
+| Gross Profit | Profit from itinerary activity. | Currency | `grossProfitAmount`, `expectedGrossProfitAmount`, `forecastGrossProfitAmount`, `targetGrossProfitAmount` | Commission Income, Income, Net |
 | Booked Itineraries | Count of closed-won itineraries attributed to the selected travel period window. | Integer | `bookedItinerariesCount` | Traveled Itineraries, Traveled Files |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |

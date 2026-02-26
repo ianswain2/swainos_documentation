@@ -1,217 +1,78 @@
 # SwainOS Frontend Code Documentation
 
-Last updated: 2026-02-18
-
-## Table of Contents
-- [Overview](#overview)
-- [Local Runbook](#local-runbook)
-- [Structure](#structure)
-- [Navigation Map](#navigation-map)
-- [Layout System](#layout-system)
-- [Data and Services](#data-and-services)
-- [Module Coverage](#module-coverage)
-- [Map Widget (Mapbox)](#map-widget-mapbox)
-- [Assistant UX](#assistant-ux)
-- [AI Insights UX Pattern](#ai-insights-ux-pattern)
-- [Contract Decisions](#contract-decisions)
-- [Terminology Standard](#terminology-standard)
-- [Performance Optimization Notes](#performance-optimization-notes)
-- [Organization and Simplification Notes](#organization-and-simplification-notes)
-- [Conventions](#conventions)
-
 ## Overview
-- Next.js App Router with TypeScript strict and Tailwind-first styling.
-- TravelOS design patterns for layout, navigation, and UI primitives.
-- Contract-first API clients using `{ data, pagination, meta }` envelopes.
-- AI-forward UI with assistant entry points and context scaffolding.
+SwainOS frontend is a Next.js App Router application with feature-based modules and typed API services.
 
-## Local Runbook
-- Backend
-  - `cd /Users/ianswain/Desktop/SwainOS_BackEnd`
-  - `uvicorn src.main:app --reload`
-- Frontend
-  - `cd /Users/ianswain/Desktop/SwainOS_FrontEnd/apps/web`
-  - Copy `.env.local.example` to `.env.local`
-  - Keep frontend env values in `apps/web/.env.local` (single source for this app)
-  - Set `NEXT_PUBLIC_API_BASE` to your backend URL (for local: `http://127.0.0.1:8000`)
-  - Set `API_BASE` (server-side route handlers) to the same backend URL
-  - Set `FX_MANUAL_RUN_TOKEN` to match backend `FX_MANUAL_RUN_TOKEN` so FX desk refresh can trigger secure rates pulls
-  - `npm run dev`
-- Verification preflight
-  - Backend health check: `GET /api/v1/health`
-  - Open `http://localhost:3000` and verify redirect to `/command-center`
-  - Ensure backend CORS allows `http://localhost:3000` and `http://127.0.0.1:3000` for browser fetches
+## Stack
+- Next.js + React + TypeScript (strict)
+- Tailwind CSS
+- Recharts and lightweight-charts for visualizations
 
 ## Structure
-```
-apps/web/src/
-├── app/                    # Next.js routes
-├── components/             # Shared UI + layout
-├── features/               # Feature modules
-├── lib/
-│   ├── api/                # Service clients + http client
-│   ├── assistant/          # Assistant context/types
-│   ├── constants/          # Navigation config
-│   ├── types/              # Domain + API envelope types
-│   └── utils/              # Formatting helpers
-└── public/                 # Static assets
-```
+- `apps/web/src/app`: route entrypoints
+- `apps/web/src/features`: page-level feature modules and hooks
+- `apps/web/src/components`: shared layout and UI primitives
+- `apps/web/src/lib/api`: typed API clients and HTTP client
+- `apps/web/src/lib/types`: contract types
+- `apps/web/src/lib/utils`: shared parsing/formatting helpers
 
-## Navigation Map
-Primary modules (spec-aligned):
-- Command Center
-- Cash Flow
-- Debt Service
-- Itinerary Forecast
-- Itinerary Actuals
-- Travel Consultant
-- Travel Agencies
-- FX Command
-- Operations
-- AI Insights
-- Settings
+## Route Surface
+- `/command-center`
+- `/cash-flow`
+- `/debt-service`
+- `/itinerary-forecast`
+- `/itinerary-actuals`
+- `/travel-consultant`
+- `/travel-agencies`
+- `/fx-command`
+- `/operations`
+- `/ai-insights`
+- `/settings`
+- `/revenue-bookings` (route exists; active itinerary analytics live in itinerary forecast/actuals modules)
 
-## Layout System
-- `components/layout/system-shell.tsx` wraps the app with a SideNav, TopBar, and AssistantPanel.
-- SideNav supports icon-labeled navigation with collapsible icon-only mode for compact layouts.
-- `components/layout/page-shell.tsx` provides page titles, subtitles, and action areas.
+## Data Access Pattern
+- Service modules under `lib/api/*Service.ts`
+- Envelope handling in `lib/api/httpClient.ts`
+- Number normalization in `lib/utils/parseNumber.ts`
+- In-flight GET dedupe is enabled
+- GET caching is disabled in non-production and enabled in production unless `skipCache` is set
 
-## Data and Services
-- `lib/api/httpClient.ts` handles shared fetch logic, in-flight GET request deduplication, response cache TTL (hour-aligned defaults), and error envelopes.
-- Service clients:
-  - `cashFlowService.ts`
-  - `depositsService.ts`
-  - `paymentsOutService.ts`
-  - `bookingForecastsService.ts`
-  - `itineraryTrendsService.ts`
-  - `fxService.ts` (FX rates, signals, holdings, transactions, intelligence, invoice pressure)
-  - `itineraryRevenueService.ts` (forecast outlook/deposits/conversion/channels + actuals YoY + actuals channels)
-  - `travelConsultantService.ts` (leaderboard/profile/forecast with typed normalization)
-  - `travelAgentsService.ts` (leaderboard/profile with typed normalization)
-  - `travelAgenciesService.ts` (leaderboard/profile with typed normalization)
-  - `travelTradeSearchService.ts` (unified agent/agency fuzzy search)
-- Domain types live in `lib/types/*` and align to sample payloads.
-- Numeric normalization is centralized in `lib/utils/parseNumber.ts` so decimal strings from backend payloads are safely converted before UI rendering.
+## Feature Contracts
+- Itinerary forecast reads:
+  - `/api/v1/itinerary-revenue/outlook`
+  - `/api/v1/itinerary-revenue/deposits`
+  - `/api/v1/itinerary-revenue/conversion`
+  - `/api/v1/itinerary-revenue/channels`
+  - `/api/v1/itinerary-revenue/actuals-yoy` (for Booked This Year card)
+- Itinerary actuals reads:
+  - `/api/v1/itinerary-revenue/actuals-yoy`
+  - `/api/v1/itinerary-revenue/actuals-channels`
+  - `/api/v1/itinerary-lead-flow`
+- Command center reads:
+  - cash-flow, deposits, payments-out, booking-forecasts, itinerary-trends, itinerary-lead-flow
+- Travel consultant pages read leaderboard/profile endpoints
+- Travel agencies pages read agent/agency leaderboards, profiles, and trade search
+- FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
+- AI Insights reads briefing/feed/recommendations/history/entity insights
 
-## Module Coverage
-- Implemented with live backend data
-  - `Command Center` (live KPI rollups + persisted AI daily briefing integration with deterministic fallback)
-  - `Cash Flow` (summary + timeseries + deposits + payments out)
-  - `Itinerary Forecast` (forward outlook, lead flow, deposit control, conversion, channel leaders, forecast grid, primary metric = Gross Profit)
-  - `Itinerary Actuals` (fixed 3-year Jan-Dec YoY by `travel_end_date`: yearly KPI cards with YoY deltas, lead flow, channel production, horizontal matrix, monthly detail; primary metric = Gross Profit)
-  - `Travel Consultant`:
-    - `/travel-consultant`: leaderboard with domain toggles (travel vs funnel), search, sortable rankings, mobile-priority columns, highlights, team effectiveness snapshot, AI team recommendation strip, and advisor outlier AI callouts
-    - `/travel-consultant/[employeeId]`: consultant deep-dive with effectiveness summary, expanded Hero KPIs (avg gross profit, avg itinerary nights, avg group size, avg lead time, avg speed to close), 3-year revenue matrices (travel + funnel), operational snapshot, forecast/target, compensation, signals, deduped insight cards, and advisor-scoped AI actions/events
-  - `Travel Agencies`:
-    - `/travel-agencies`: unified trade search + top agent/agency rankings with top-N controls and Gross Profit-first views
-    - `/travel-agencies/agents/[agentId]`: travel agent deep-dive with KPIs, YoY trend charts, primary consultant affinity matrix, and operational itinerary snapshots
-    - `/travel-agencies/agencies/[agencyId]`: travel agency deep-dive with KPIs, YoY trend charts, top linked agents table, and agency-composition metrics table
-- Implemented with live backend data
-  - `FX Command`:
-    - `/fx-command`: trading-desk surface with pair selector, timeframe toggle, prominent spot-conversion widget, lightweight-charts price chart with grid lines, BUY/WAIT recommendation panel, top-action FX transaction modal form (BUY/SPEND/ADJUSTMENT), holdings snapshot, transactions table, invoice pressure cards, and intelligence feed with source links.
-    - Initial FX snapshot is loaded server-side in route layer, then hydrated into client state; refreshes are user-driven from the desk action.
-    - Manual refresh only in current release (auto-refresh intentionally deferred); refresh action now triggers a server-side rate pull before reloading desk sections.
-    - Data health badges sourced from backend `meta.dataStatus` (`live`, `partial`, `degraded`).
-    - Contract scope is deterministic-first and BUY/WAIT only; no SELL workflow in frontend v1.
-- Implemented with structured UI (data pending)
-  - `Debt Service` (schedule, risk watchlist scaffolds)
-  - `Operations` (advisor productivity + margin panels)
-  - `Settings` (integrations, sync schedules, audit trail shells)
-- Implemented with live backend data + transitions
-  - `AI Insights` (`briefing`, `feed`, `recommendations`, `history` with filter controls, pagination state, recommendation lifecycle updates via PATCH endpoint, and consultant coaching cards normalized for name-first concise manager-readable summaries)
+## UX and Composition Notes
+- System shell and navigation live in `components/layout/*`
+- Assistant panel uses module/entity context and entity AI endpoint when entity context is present
+- Itinerary lead-flow panel is rendered on itinerary actuals, not itinerary forecast
+- Forecast chart card labels:
+  - `Booked This Year` (calendar-year actuals source)
+  - `Expected`
+  - `Forecast`
+  - `Target (+12% YoY)`
 
-## Map Widget (Mapbox)
-- Active Travelers Map scaffold lives in `features/command-center/active-travelers-map.tsx`.
-- Mapbox token stored in `.env.local` as `NEXT_PUBLIC_MAPBOX_TOKEN`.
-- The component currently renders a placeholder until traveler coordinates are wired.
-
-## Assistant UX
-- `lib/assistant/assistantContext.tsx` provides assistant state, module context, and optional entity metadata (`entityType`, `entityId`) for grounded assistant retrieval.
-- `components/assistant/assistant-panel.tsx` renders module context plus entity-scoped AI insight snippets from `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` when entity context is present.
-- Assistant context is set by major AI surfaces (`AI Insights`, travel consultant leaderboard, and travel consultant profile).
-
-## AI Insights UX Pattern
-- `features/ai-insights/recommendation-queue-panel.tsx` renders manager-focused cards with:
-  - headline status (`On track`, `Watch`, `At risk`)
-  - max 3 KPI chips (conversion, margin, YoY)
-  - one trend direction line
-  - one clear action block + owner/timebox line
-  - optional `Why` details drawer
-- `components/ui/expandable-text.tsx` caps long narrative copy with `Read more` and viewport-aware char caps for laptop/desktop density tuning.
-- `components/ui/briefing-list-section.tsx` keeps daily briefing lists concise with max-3 bullets and `View more` expansion.
-- Recommendation owner labels avoid raw IDs and use concise fallback labels without extra profile lookup requests on AI Insights page load.
-
-## Contract Decisions
-- Revenue owner cockpit canonical query params are:
-  - `time_window`
-  - `grain` (`weekly` or `monthly`)
-  - `currency_code` (optional)
-- Itinerary actuals canonical query params:
-  - `years_back` (API supports `2` to `5`; frontend defaults to fixed `3`)
-  - `currency_code` (optional)
-- Frontend default behavior:
-  - Itinerary Actuals currently requests a fixed `3` years for consistent year-over-year comparisons.
-- Income semantics:
-  - UI labels and API fields use **Gross Profit** naming.
-  - `grossProfitAmount` is sourced from itinerary `gross_profit`.
-- JSON properties remain `camelCase`; query params remain `snake_case`.
-- Travel Consultant profile payload key additions:
-  - `threeYearPerformance`
-  - `ytdVariancePct`
-  - `funnelHealth.avgSpeedToBookDays`
-  - extended `heroKpis` set for advisor effectiveness coaching
-- FX canonical query params:
-  - `GET /api/v1/fx/rates|signals|transactions|intelligence` use `page`, `page_size`, `include_totals`.
-  - Optional FX filters use `snake_case` (`currency_code`, `transaction_type`).
-  - Manual FX run endpoints (`/fx/*/run`) are not wired to frontend UX.
-
-## Terminology Standard
-- Canonical terminology is defined in `docs/swainos-terminology-glossary.md`.
-- Frontend display labels must use glossary terms exactly for shared concepts (for example, `Gross Profit`, `Margin Amount`, `Margin %`, `Conversion Rate`, `Close Rate`).
-- Contract reminder: UI label **Gross Profit** maps to API key `grossProfitAmount`.
-- New cross-module title/filter/toggle labels should be added to the glossary before broad rollout.
-
-## Performance Optimization Notes
-- Travel consultant profile uses a single `/travel-consultants/{employee_id}/profile` fetch for both profile sections and forecast/target timeline.
-- Command Center uses staged loading: primary KPI requests first, secondary analytics requests after first content is available.
-- `lib/api/httpClient.ts` provides in-flight GET deduplication and a default 1-hour GET cache TTL aligned to hourly rollups.
-- AI Insights page avoids owner-name profile lookup fan-out to prevent extra per-owner requests on page load.
-
-## Organization and Simplification Notes
-- `features/command-center/useCommandCenterData.ts` uses staged loading (primary KPIs first, secondary analytics next) to reduce first-render request pressure and improve perceived load speed.
-- `features/command-center/useAiBriefing.ts` provides focused loading for persisted AI briefing narrative used in command-center narrative card.
-- `features/ai-insights/useAiInsightsData.ts` orchestrates AI endpoint loading with section-level loading flags, filter/pagination state, and recommendation status transitions.
-- `lib/api/aiInsightsService.ts` centralizes typed `/api/v1/ai-insights/*` contract calls and query param mapping (`snake_case` request params, `camelCase` response shapes).
-- `features/fx-command/useFxCommandData.ts` orchestrates FX desk reads (rates, exposure, signals, holdings, transactions, intelligence, invoice pressure) with section-safe partial-failure handling and manual refresh.
-- `app/api/fx/rates/run/route.ts` provides a server-side proxy for manual rate pulls so `FX_MANUAL_RUN_TOKEN` remains server-only while `Refresh now` can trigger a fresh ingest cycle.
-- `app/fx-command/page.tsx` performs server-side initial snapshot loading through `lib/api/fxServerService.ts` to avoid mount-fetch effect bootstrapping.
-- FX chart/presentation components:
-  - `features/fx-command/fx-price-chart.tsx`
-  - `features/fx-command/fx-pair-selector.tsx`
-  - `features/fx-command/fx-timeframe-toggle.tsx`
-- `features/command-center/kpi-grid.tsx` and `active-travelers-map.tsx` are presentation-focused and consume live data props.
-- Command-center business values are sourced from backend responses.
-- `features/travel-consultant/profile/useTravelConsultantProfile.ts` uses a single `/profile` API call and consumes embedded forecast data.
-- Itinerary forecast + actuals modules provide the revenue/booking experience (`itinerary-pipeline`, `itinerary-trends-overview`, and standalone booking-forecast summary card are not part of the active UI surface).
-- Forecast panels live under `features/itinerary-forecast/*` and shared channel panels under `features/itinerary-shared/*`.
-- `features/itinerary-forecast/itinerary-forecast-cockpit.tsx` consumes `/api/v1/itinerary-revenue/outlook|deposits|conversion|channels`.
-- `features/itinerary-actuals/itinerary-actuals-page-content.tsx` consumes `/api/v1/itinerary-revenue/actuals-yoy` and `/api/v1/itinerary-revenue/actuals-channels` (closed-won production rollups).
-- `features/itinerary-shared/itinerary-leads-panel.tsx` is shared by forecast and actuals for itinerary-creation lead flow visualization.
-- Forecast visuals are modularized in:
-  - `outlook-chart.tsx`
-  - `deposit-health-panel.tsx`
-  - `conversion-panel.tsx`
-  - `channel-performance-panel.tsx`
-  - `forecast-grid.tsx`
-- Travel trade visuals are modularized in:
-  - `features/sales/charts/top-performance-bars.tsx`
-  - `features/sales/charts/agent-affinity-matrix.tsx`
-  - `features/sales/charts/yoy-trend-chart.tsx`
-  - `features/sales/charts/agency-composition-table.tsx`
-- Route files under `app/` are kept thin and delegate to `features/*` modules for UI logic.
-- Shared UI primitives (e.g., `SectionHeader`, `MetricCard`) live in `components/ui` for reuse.
+## Environment
+- Frontend env file: `apps/web/.env.local`
+- Required: `NEXT_PUBLIC_API_BASE`
+- For FX server proxy route: `API_BASE`, `FX_MANUAL_RUN_TOKEN`
+- Optional: `NEXT_PUBLIC_MAPBOX_TOKEN`
 
 ## Conventions
-- Components use `kebab-case.tsx`; utilities use `camelCase.ts`.
-- JSON properties are `camelCase`; API slugs are `kebab-case`.
-- No `any` types, no unused imports, no dead code.
+- Component files: `kebab-case.tsx`
+- Utility files: `camelCase.ts`
+- No unused imports, dead code, or compatibility shims
+- Contract/display terms align with `docs/swainos-terminology-glossary.md`
