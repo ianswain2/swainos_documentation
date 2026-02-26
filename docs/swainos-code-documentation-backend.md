@@ -9,7 +9,7 @@ Primary focus: deterministic analytics contracts, traceable rollups, and API env
 - `src/services`: business logic and aggregation orchestration
 - `src/repositories`: Supabase/PostgREST access
 - `src/schemas`: typed request/response contracts
-- `src/core`: config, error handling, Supabase client
+- `src/core`: config, error handling, Supabase client, structured logging, request context
 - `src/shared`: response envelope and time helpers
 - `scripts`: ingestion/upsert and refresh workflows
 
@@ -37,14 +37,17 @@ Error envelope:
   "error": {
     "code": "bad_request",
     "message": "Unsupported time window format",
-    "details": null
+    "details": {
+      "requestId": "f9f2f6ca-1d6b-49a7-9848-a0c7a5c2d322"
+    }
   }
 }
 ```
 
 ## Active Endpoint Families
-- Health: `/health`, `/healthz`
+- Health: `/health`, `/healthz`, `/health/ready`
 - Command center core: `/cash-flow/*`, `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
+- Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
 - Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
@@ -100,3 +103,4 @@ Error envelope:
 - JSON payload fields remain `camelCase`
 - New terms and metric labels follow `docs/swainos-terminology-glossary.md`
 - No compatibility shims: active contracts are represented directly and refactored when needed
+- AI insights require live model execution (no deterministic fallback contract)

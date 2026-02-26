@@ -15,7 +15,23 @@ Purpose: canonical request/response examples for active frontend/backend contrac
   "error": {
     "code": "bad_request",
     "message": "Unsupported time window format",
-    "details": null
+    "details": {
+      "requestId": "f9f2f6ca-1d6b-49a7-9848-a0c7a5c2d322"
+    }
+  }
+}
+```
+
+## Health
+
+### `GET /health/ready`
+
+```json
+{
+  "status": "ok",
+  "service": "swainos-backend",
+  "checks": {
+    "supabase": "ok"
   }
 }
 ```

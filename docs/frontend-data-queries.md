@@ -13,18 +13,17 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 
 | Endpoint | Used In | Purpose |
 |---|---|---|
-| `GET /api/v1/cash-flow/summary` | `features/command-center/useCommandCenterData.ts`, `features/cash-flow/cash-flow-dashboard.tsx` | Cash totals |
+| `GET /api/v1/cash-flow/summary` | `features/command-center/command-center-server-loader.ts`, `features/cash-flow/cash-flow-dashboard.tsx` | Cash totals |
 | `GET /api/v1/cash-flow/timeseries` | `features/cash-flow/cash-flow-dashboard.tsx` | Cash trend series |
-| `GET /api/v1/deposits/summary` | `features/command-center/useCommandCenterData.ts`, `features/deposits/deposits-summary.tsx` | Deposit totals |
-| `GET /api/v1/payments-out/summary` | `features/command-center/useCommandCenterData.ts`, `features/payments-out/payments-out-summary.tsx` | Supplier invoice totals |
-| `GET /api/v1/booking-forecasts` | `features/command-center/useCommandCenterData.ts` | Short-horizon booking projection |
-| `GET /api/v1/itinerary-trends` | `features/command-center/useCommandCenterData.ts` | Itinerary trend context for command center |
-| `GET /api/v1/itinerary-lead-flow` | `features/command-center/useCommandCenterData.ts`, `features/itinerary-actuals/useItineraryActualsYoy.ts` | Lead-flow trend by booking semantics |
-| `GET /api/v1/itinerary-revenue/outlook` | `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Forward outlook timeline |
-| `GET /api/v1/itinerary-revenue/deposits` | `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Deposit health timeline |
+| `GET /api/v1/deposits/summary` | `features/command-center/command-center-server-loader.ts`, `features/deposits/deposits-summary.tsx` | Deposit totals |
+| `GET /api/v1/payments-out/summary` | `features/command-center/command-center-server-loader.ts`, `features/payments-out/payments-out-summary.tsx` | Supplier invoice totals |
+| `GET /api/v1/booking-forecasts` | `features/command-center/command-center-server-loader.ts` | Short-horizon booking projection |
+| `GET /api/v1/itinerary-lead-flow` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-actuals/useItineraryActualsYoy.ts` | Lead-flow trend by booking semantics |
+| `GET /api/v1/itinerary-revenue/outlook` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Forward outlook timeline |
+| `GET /api/v1/itinerary-revenue/deposits` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Deposit health timeline |
 | `GET /api/v1/itinerary-revenue/conversion` | `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Conversion projections |
 | `GET /api/v1/itinerary-revenue/channels` | `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Consortia/trade channel performance |
-| `GET /api/v1/itinerary-revenue/actuals-yoy` | `features/itinerary-actuals/useItineraryActualsYoy.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Jan-Dec matrix and current-year booked total |
+| `GET /api/v1/itinerary-revenue/actuals-yoy` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-actuals/useItineraryActualsYoy.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Jan-Dec matrix and current-year booked total |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `features/itinerary-actuals/useItineraryActualsYoy.ts` | Actuals channel production |
 | `GET /api/v1/travel-consultants/leaderboard` | `features/travel-consultant/leaderboard/useTravelConsultantLeaderboard.ts` | Consultant ranking and highlights |
 | `GET /api/v1/travel-consultants/{employee_id}/profile` | `features/travel-consultant/profile/useTravelConsultantProfile.ts` | Consultant detail and embedded forecast section |
@@ -33,7 +32,7 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `GET /api/v1/travel-agencies/leaderboard` | `features/sales/useTravelAgenciesLeaderboard.ts` | Agency ranking |
 | `GET /api/v1/travel-agencies/{agency_id}/profile` | `features/sales/useTravelAgencyProfile.ts` | Agency profile |
 | `GET /api/v1/travel-trade/search` | `features/sales/useTravelTradeSearch.ts` | Unified trade search |
-| `GET /api/v1/ai-insights/briefing` | `features/command-center/useAiBriefing.ts`, `features/ai-insights/useAiInsightsData.ts` | Daily briefing |
+| `GET /api/v1/ai-insights/briefing` | `features/command-center/command-center-server-loader.ts`, `features/ai-insights/useAiInsightsData.ts` | Daily briefing |
 | `GET /api/v1/ai-insights/feed` | `features/ai-insights/useAiInsightsData.ts` | AI events feed |
 | `GET /api/v1/ai-insights/recommendations` | `features/ai-insights/useAiInsightsData.ts`, consultant AI hooks | Recommendation queue |
 | `PATCH /api/v1/ai-insights/recommendations/{id}` | `features/ai-insights/useAiInsightsData.ts` | Recommendation status transition |

@@ -12,7 +12,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `apps/web/src/app`: route entrypoints
 - `apps/web/src/features`: page-level feature modules and hooks
 - `apps/web/src/components`: shared layout and UI primitives
-- `apps/web/src/lib/api`: typed API clients and HTTP client
+- `apps/web/src/lib/api`: typed API clients, server loaders, and HTTP client
 - `apps/web/src/lib/types`: contract types
 - `apps/web/src/lib/utils`: shared parsing/formatting helpers
 
@@ -28,10 +28,12 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/operations`
 - `/ai-insights`
 - `/settings`
-- `/revenue-bookings` (route exists; active itinerary analytics live in itinerary forecast/actuals modules)
+- `/revenue-bookings` (route exists and redirects to `/itinerary-forecast`)
 
 ## Data Access Pattern
 - Service modules under `lib/api/*Service.ts`
+- Server-first route loaders under `features/*/*-server-loader.ts`
+- Shared parallel server loader orchestration in `lib/api/parallelFetch.ts`
 - Envelope handling in `lib/api/httpClient.ts`
 - Number normalization in `lib/utils/parseNumber.ts`
 - In-flight GET dedupe is enabled
@@ -49,7 +51,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/itinerary-revenue/actuals-channels`
   - `/api/v1/itinerary-lead-flow`
 - Command center reads:
-  - cash-flow, deposits, payments-out, booking-forecasts, itinerary-trends, itinerary-lead-flow
+  - cash-flow, deposits, payments-out, booking-forecasts, itinerary-lead-flow, itinerary outlook/actuals/deposits
 - Travel consultant pages read leaderboard/profile endpoints
 - Travel agencies pages read agent/agency leaderboards, profiles, and trade search
 - FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
@@ -59,6 +61,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - System shell and navigation live in `components/layout/*`
 - Assistant panel uses module/entity context and entity AI endpoint when entity context is present
 - Itinerary lead-flow panel is rendered on itinerary actuals, not itinerary forecast
+- Chart containers use fluid `ResponsiveContainer` rendering; shell enforces `min-w-0` and overflow guards for responsive stability
 - Forecast chart card labels:
   - `Booked This Year` (calendar-year actuals source)
   - `Expected`
