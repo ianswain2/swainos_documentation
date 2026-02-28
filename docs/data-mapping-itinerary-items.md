@@ -26,6 +26,19 @@
 | `quantity` | `quantity` | integer | no | Numeric cast |
 | `unit_cost` | `unit_cost` | numeric | no | Numeric cast |
 | `total_cost` | `total_cost` | numeric | no | Numeric cast |
+| `full_service_name` | `full_service_name` | text | no | Preserve full supplier/service label |
+| `unit_price` | `unit_price` | numeric | no | Numeric cast |
+| `total_price` | `total_price` | numeric | no | Numeric cast |
+| `subtotal_price` | `subtotal_price` | numeric | no | Numeric cast |
+| `subtotal_cost` | `subtotal_cost` | numeric | no | Numeric cast |
+| `gross_margin` | `gross_margin` | numeric | no | Numeric cast |
+| `profit_margin_percent` | `profit_margin_percent` | numeric | no | Numeric cast |
+| `is_cancelled` | `is_cancelled` | boolean | no | Parse common true/false values |
+| `cancelled_date` | `cancelled_date` | date | no | Parse to ISO date |
+| `is_invoiced` | `is_invoiced` | boolean | no | Parse common true/false values |
+| `is_deleted` | `is_deleted` | boolean | no | Parse common true/false values |
+| `voucher_title` | `voucher_title` | text | no | Voucher/document label |
+| `destination_continent` | `destination_continent` | text | no | Continent mapping when provided |
 | `currency_code` | `currency_code` | text | no | ISO currency code |
 | `voucher_reference` | `confirmation_number` | text | no | Confirmation/reference mapping |
 | `confirmation_status` | `item_status` | text | no | Status mapping |
@@ -33,20 +46,18 @@
 | `(not in file)` | `updated_at` | timestamptz | no | Null unless provided |
 | `(not in file)` | `synced_at` | timestamptz | no | Sync-job timestamp when available |
 
-## Excluded Source Fields Mapping
+## Remaining Excluded Source Fields Mapping
 
 | Source Field | Mapping Status |
 | --- | --- |
-| `full_service_name` | Not mapped |
-| `unit_price` | Not mapped |
-| `total_price` | Not mapped |
-| `subtotal_price` | Not mapped |
-| `subtotal_cost` | Not mapped |
-| `gross_margin` | Not mapped |
-| `profit_margin_percent` | Not mapped |
-| `is_cancelled` | Not mapped |
-| `cancelled_date` | Not mapped |
-| `is_invoiced` | Not mapped |
-| `is_deleted` | Not mapped |
-| `voucher_title` | Not mapped |
-| `destination_continent` | Not mapped |
+| _None_ | All currently requested source fields are mapped |
+
+## Destination Booked Rollup Filter Rules
+
+- Rollup source view: `mv_itinerary_destination_booked_monthly`.
+- Time bucketing uses `itinerary_items.service_start_date` (month grain).
+- Booked eligibility uses itinerary join plus status reference mapping:
+  `itinerary_status_reference.is_filter_out = false` and
+  (`itinerary_status_reference.pipeline_bucket = "closed_won"` OR `itineraries.itinerary_status = "Confirmed"`).
+- Active booked metrics exclude item rows where `is_cancelled = true` or `is_deleted = true`.
+- Cancellation/deletion counts are still retained in rollup quality fields for operational context.

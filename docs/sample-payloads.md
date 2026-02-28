@@ -36,6 +36,211 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 }
 ```
 
+## Debt Service
+
+### `GET /api/v1/debt-service/overview`
+
+```json
+{
+  "data": {
+    "asOfDate": "2026-09-01",
+    "facilityCount": 3,
+    "outstandingBalanceAmount": 6780029,
+    "nextPaymentDate": "2026-09-01",
+    "nextPaymentAmount": 49927,
+    "principalPaidYtdAmount": 19971,
+    "interestPaidYtdAmount": 79883,
+    "scheduledDebtService30dAmount": 49927,
+    "scheduledDebtService60dAmount": 99854,
+    "scheduledDebtService90dAmount": 149781,
+    "dscrValue": null,
+    "covenantStatus": "in_compliance",
+    "facilities": [
+      {
+        "facilityId": "9ac0b77e-bda3-4784-b4de-7a76a53f2110",
+        "facilityName": "SBA 7A Guaranteed Loan",
+        "currencyCode": "USD",
+        "asOfDate": "2026-09-01",
+        "outstandingBalanceAmount": 4280029,
+        "principalPaidToDateAmount": 19971,
+        "interestPaidToDateAmount": 79883,
+        "extraPrincipalToDateAmount": 0,
+        "nextDueDate": "2026-09-01",
+        "nextDueAmount": 49927,
+        "scheduledDebtService30dAmount": 49927,
+        "scheduledDebtService60dAmount": 99854,
+        "scheduledDebtService90dAmount": 149781,
+        "covenantInCompliance": true
+      },
+      {
+        "facilityId": "fd95dfdd-7b13-41ea-b6a8-460938ac395d",
+        "facilityName": "Seller Note 1",
+        "currencyCode": "USD",
+        "asOfDate": "2026-09-01",
+        "outstandingBalanceAmount": 2142105,
+        "principalPaidToDateAmount": 0,
+        "interestPaidToDateAmount": 0,
+        "extraPrincipalToDateAmount": 0,
+        "nextDueDate": "2028-06-01",
+        "nextDueAmount": null,
+        "scheduledDebtService30dAmount": 0,
+        "scheduledDebtService60dAmount": 0,
+        "scheduledDebtService90dAmount": 0,
+        "covenantInCompliance": null
+      },
+      {
+        "facilityId": "b6fd95aa-7e8e-40ff-b969-6ab9301b74e1",
+        "facilityName": "Seller Note 2 (Equity Injection)",
+        "currencyCode": "USD",
+        "asOfDate": "2026-09-01",
+        "outstandingBalanceAmount": 357895,
+        "principalPaidToDateAmount": 0,
+        "interestPaidToDateAmount": 0,
+        "extraPrincipalToDateAmount": 0,
+        "nextDueDate": null,
+        "nextDueAmount": null,
+        "scheduledDebtService30dAmount": 0,
+        "scheduledDebtService60dAmount": 0,
+        "scheduledDebtService90dAmount": 0,
+        "covenantInCompliance": null
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-09-01",
+    "source": "debt_facilities,debt_payment_schedule,debt_payments_actual,debt_covenant_snapshots",
+    "timeWindow": "90d",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### `GET /api/v1/debt-service/facilities`
+
+```json
+{
+  "data": [
+    {
+      "id": "9ac0b77e-bda3-4784-b4de-7a76a53f2110",
+      "externalId": "citizens_sba_7a_2026",
+      "lenderName": "Citizens Bank",
+      "facilityName": "SBA 7A Guaranteed Loan",
+      "facilityType": "term_loan",
+      "originalPrincipalAmount": 4300000,
+      "currencyCode": "USD",
+      "originationDate": "2026-05-01",
+      "firstPaymentDate": "2026-06-01",
+      "maturityDate": "2036-05-01",
+      "paymentDayOfMonth": 1,
+      "prepaymentPenaltyMode": "none",
+      "status": "active",
+      "notes": "Bank term loan from Citizens. Fixed 7.00 percent, amortizing.",
+      "createdAt": "2026-02-27T20:10:00Z",
+      "updatedAt": "2026-02-27T20:10:00Z"
+    },
+    {
+      "id": "fd95dfdd-7b13-41ea-b6a8-460938ac395d",
+      "externalId": "seller_note_1_ian_swain_sr_2026",
+      "lenderName": "Ian Swain Sr.",
+      "facilityName": "Seller Note 1",
+      "facilityType": "seller_note",
+      "originalPrincipalAmount": 2142105,
+      "currencyCode": "USD",
+      "originationDate": "2026-05-01",
+      "firstPaymentDate": "2028-06-01",
+      "maturityDate": "2036-05-01",
+      "paymentDayOfMonth": 1,
+      "prepaymentPenaltyMode": "unknown",
+      "status": "active",
+      "notes": "Confirmed seller note: 10-year term, 4.65 percent fixed, 2-year standby.",
+      "createdAt": "2026-02-27T20:10:00Z",
+      "updatedAt": "2026-02-27T20:10:00Z"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-09-01",
+    "source": "debt_facilities,debt_facility_terms",
+    "timeWindow": "na",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### `POST /api/v1/debt-service/payments`
+
+Request:
+
+```json
+{
+  "facilityId": "9ac0b77e-bda3-4784-b4de-7a76a53f2110",
+  "paymentDate": "2026-09-01",
+  "principalPaidAmount": 24843,
+  "interestPaidAmount": 25083,
+  "extraPrincipalAmount": 0,
+  "feeAmount": 0,
+  "sourceAccount": "citizens-operating",
+  "reference": "SIM-2026-09-01"
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "paymentId": "4d23313a-f3fa-40c9-b6f4-10db9ed953e4",
+    "facilityId": "9ac0b77e-bda3-4784-b4de-7a76a53f2110",
+    "paymentDate": "2026-09-01",
+    "principalPaidAmount": 24843,
+    "interestPaidAmount": 25083,
+    "extraPrincipalAmount": 0,
+    "remainingBalanceAmount": 4280029
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-09-01",
+    "source": "debt_payments_actual,debt_balance_snapshots",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### `GET /api/v1/debt-service/covenants`
+
+```json
+{
+  "data": [
+    {
+      "covenantId": "2fd79aca-abd2-4ccc-bf8f-6892f2f54c56",
+      "facilityId": "9ac0b77e-bda3-4784-b4de-7a76a53f2110",
+      "covenantCode": "dscr_min_1_25",
+      "covenantName": "Debt Service Coverage Ratio Minimum",
+      "metricName": "dscr",
+      "thresholdValue": 1.25,
+      "comparisonOperator": "gte",
+      "asOfDate": "2026-09-01",
+      "measuredValue": 1.41,
+      "isInCompliance": true,
+      "note": null
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-09-01",
+    "source": "debt_covenants,debt_covenant_snapshots,v_debt_service_overview",
+    "timeWindow": "na",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
 ## Itinerary Revenue
 
 ### `GET /api/v1/itinerary-revenue/outlook`

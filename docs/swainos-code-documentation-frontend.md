@@ -35,6 +35,8 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Server-first route loaders under `features/*/*-server-loader.ts`
 - Shared parallel server loader orchestration in `lib/api/parallelFetch.ts`
 - Envelope handling in `lib/api/httpClient.ts`
+- `httpClient` raises typed `ApiClientError` values and wraps network failures with actionable diagnostics (`network_error`), including resolved API base/path context
+- In local development, `httpClient` falls back to `http://127.0.0.1:8000` when `NEXT_PUBLIC_API_BASE` is not set
 - Number normalization in `lib/utils/parseNumber.ts`
 - In-flight GET dedupe is enabled
 - GET caching is disabled in non-production and enabled in production unless `skipCache` is set
@@ -52,6 +54,12 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/itinerary-lead-flow`
 - Command center reads:
   - cash-flow, deposits, payments-out, booking-forecasts, itinerary-lead-flow, itinerary outlook/actuals/deposits
+- Debt service reads:
+  - `/api/v1/debt-service/overview`
+  - `/api/v1/debt-service/facilities`
+  - `/api/v1/debt-service/schedule`
+  - `/api/v1/debt-service/payments` (GET/POST)
+  - `/api/v1/debt-service/scenarios` and `/api/v1/debt-service/scenarios/run`
 - Travel consultant pages read leaderboard/profile endpoints
 - Travel agencies pages read agent/agency leaderboards, profiles, and trade search
 - FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
@@ -67,6 +75,13 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `Expected`
   - `Forecast`
   - `Target (+12% YoY)`
+- Debt Service module includes:
+  - Creditor-level debt table (`Debt by Creditor`) showing lender, facility, outstanding, and next due values
+  - Top-bar manual payment action that opens a prefilled prompt and only posts on explicit confirm
+  - Facility selector to target schedule/payments/scenarios and payment posting per selected loan
+  - Initial server-load failure path returns a safe snapshot with user-visible error state instead of route crash
+  - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service currently uses compact `1rem` values)
+  - Event-driven refresh and mutation handlers (`useState`, `useMemo`, `useTransition`) without `useEffect`-driven synchronization logic
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`

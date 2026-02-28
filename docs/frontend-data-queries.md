@@ -18,6 +18,13 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `GET /api/v1/deposits/summary` | `features/command-center/command-center-server-loader.ts`, `features/deposits/deposits-summary.tsx` | Deposit totals |
 | `GET /api/v1/payments-out/summary` | `features/command-center/command-center-server-loader.ts`, `features/payments-out/payments-out-summary.tsx` | Supplier invoice totals |
 | `GET /api/v1/booking-forecasts` | `features/command-center/command-center-server-loader.ts` | Short-horizon booking projection |
+| `GET /api/v1/debt-service/overview` | `features/debt-service/debt-service-server-loader.ts`, `features/command-center/command-center-server-loader.ts` | Debt KPI overview and scheduled 30/60/90 obligations |
+| `GET /api/v1/debt-service/facilities` | `features/debt-service/debt-service-server-loader.ts` | Facility list and identifiers for debt slices |
+| `GET /api/v1/debt-service/schedule` | `features/debt-service/debt-service-server-loader.ts`, `features/debt-service/debt-service-page.tsx` | Amortization timeline rows |
+| `GET /api/v1/debt-service/payments` | `features/debt-service/debt-service-server-loader.ts`, `features/debt-service/debt-service-page.tsx` | Logged payment ledger entries |
+| `POST /api/v1/debt-service/payments` | `features/debt-service/debt-service-page.tsx` | Principal/interest posting workflow |
+| `GET /api/v1/debt-service/scenarios` | `features/debt-service/debt-service-server-loader.ts` | Persisted scenario result summaries |
+| `POST /api/v1/debt-service/scenarios/run` | `features/debt-service/debt-service-page.tsx` | Deterministic payoff/interest scenario compare run |
 | `GET /api/v1/itinerary-lead-flow` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-actuals/useItineraryActualsYoy.ts` | Lead-flow trend by booking semantics |
 | `GET /api/v1/itinerary-revenue/outlook` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Forward outlook timeline |
 | `GET /api/v1/itinerary-revenue/deposits` | `features/command-center/command-center-server-loader.ts`, `features/itinerary-forecast/useItineraryForecastOutlook.ts` | Deposit health timeline |
@@ -32,6 +39,10 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `GET /api/v1/travel-agencies/leaderboard` | `features/sales/useTravelAgenciesLeaderboard.ts` | Agency ranking |
 | `GET /api/v1/travel-agencies/{agency_id}/profile` | `features/sales/useTravelAgencyProfile.ts` | Agency profile |
 | `GET /api/v1/travel-trade/search` | `features/sales/useTravelTradeSearch.ts` | Unified trade search |
+| `GET /api/v1/itinerary-destinations/summary` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Current-year booked destination KPI summary and top-country ranking |
+| `GET /api/v1/itinerary-destinations/trends` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Monthly destination trend by selected country/city scope |
+| `GET /api/v1/itinerary-destinations/breakdown` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Country and city booked production breakdown |
+| `GET /api/v1/itinerary-destinations/matrix` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Horizontal Jan-Dec country/city matrix with monthly and annual YoY for Gross Revenue, Booked Cost, and Gross Profit |
 | `GET /api/v1/ai-insights/briefing` | `features/command-center/command-center-server-loader.ts`, `features/ai-insights/useAiInsightsData.ts` | Daily briefing |
 | `GET /api/v1/ai-insights/feed` | `features/ai-insights/useAiInsightsData.ts` | AI events feed |
 | `GET /api/v1/ai-insights/recommendations` | `features/ai-insights/useAiInsightsData.ts`, consultant AI hooks | Recommendation queue |
@@ -52,6 +63,7 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 
 | Endpoint | Note |
 |---|---|
+| `GET /api/v1/debt-service/covenants` | Endpoint is live; current debt page surfaces aggregate covenant status from overview and does not yet render per-covenant snapshot rows. |
 | `GET /api/v1/travel-consultants/{employee_id}/forecast` | Profile endpoint includes forecast section; standalone endpoint is not called by current UI. |
 | `POST /api/v1/ai-insights/run` | Manual/operator trigger; no direct frontend action in module UI. |
 | `POST /api/v1/fx/signals/run` | Manual/operator trigger; no direct frontend action in module UI. |
@@ -61,4 +73,6 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 - Itinerary revenue surfaces use `grossProfitAmount` as canonical Gross Profit metric.
 - Itinerary actuals and channel rollups are aligned to travel-period reporting.
 - Itinerary lead-flow panel is present on command center and itinerary actuals; itinerary forecast does not render lead-flow.
+- Destination matrix API still carries passenger fields, but destination UI intentionally hides passenger metrics to avoid itinerary-item duplication inflation.
+- Debt Service payment posting is user-confirmed from a prefilled prompt; frontend does not auto-post when opening the log-payment flow.
 

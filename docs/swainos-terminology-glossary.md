@@ -35,6 +35,9 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
 | Booked Revenue | Closed-won revenue for selected period in consultant and leaderboard contexts. | Currency | `bookedRevenue` | Revenue (generic) |
+| Booked Item Value | Total booked destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` | Item Value, Destination Revenue |
+| Destination Country | Country rollup dimension for destination analytics. | Text | `country`, `locationCountry` | Country (when entity context is unclear) |
+| Destination City | City rollup dimension nested under destination country analytics. | Text | `city`, `locationCity` | City (when entity context is unclear) |
 | Conversion Rate | Closed won divided by total leads. | Percent | `conversionRate` | Conversion (when not clearly rate) |
 | Close Rate | Closed won divided by (closed won + closed lost). | Percent | `closeRate` | Win Rate (unless explicitly same formula) |
 | Speed to Close (Days) | Average days from lead creation to booking close. | Days (`d`) | `avgSpeedToBookDays` | Avg Speed to Book, Lead Time |
@@ -43,6 +46,18 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Supplier Liability | Outstanding supplier invoices/payables. | Currency | `outstandingAmount` | Supplier Payables, Open Supplier Liability |
 | Deposit Liability | Outstanding customer deposit obligations. | Currency | `outstandingDeposits` | Open Deposit Liability |
 | Deposit Coverage % | Deposits received divided by deposits targeted/required. | Percent | Derived from deposit timeline summary | Deposit Health (generic) |
+
+## Debt Service Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Debt by Creditor | Facility-level breakdown of lender obligations and due timing. | Table section title | `facilities[]` in debt overview + `lenderName` in facilities endpoint | Loan Breakdown (ambiguous) |
+| Outstanding Balance | Current unpaid principal balance for facility or aggregate debt view. | Currency | `outstandingBalanceAmount` | Remaining Debt (generic) |
+| Next Due Date | Next contractual due date for a facility (null for standby debt). | Date | `nextDueDate` | Next Payment Date (facility-row context) |
+| Next Due Amount | Next contractual payment amount for a facility (null for standby debt). | Currency | `nextDueAmount` | Next Payment (facility-row context) |
+| Seller Note 1 | Seller-financed note with 2-year standby period and then repayment schedule. | Facility label | `facilityName` | Seller Note (ambiguous single-note label) |
+| Seller Note 2 (Equity Injection) | Seller note counted toward SBA equity injection with full standby through SBA life. | Facility label | `facilityName` | Seller Equity Note (inconsistent variants) |
+| Standby / N/A | Display state for obligations with no current due date/amount under standby terms. | Text state | `nextDueDate = null`, `nextDueAmount = null` | No Payment Due (inconsistent variants) |
 
 ## FX Canonical Terms
 

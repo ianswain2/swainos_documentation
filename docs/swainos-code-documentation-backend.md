@@ -47,6 +47,7 @@ Error envelope:
 ## Active Endpoint Families
 - Health: `/health`, `/healthz`, `/health/ready`
 - Command center core: `/cash-flow/*`, `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
+- Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
 - Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
 - Itinerary lead flow: `/itinerary-lead-flow`
@@ -62,6 +63,18 @@ Error envelope:
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics is refreshed via `refresh_travel_trade_rollups_v1()`
 - FX exposure is refreshed via `refresh_fx_exposure_v1()`
+
+## Debt Service Domain
+- Debt facilities are data-driven rows in `debt_facilities`; no loan constants are embedded in service code.
+- Terms are effective-dated in `debt_facility_terms` so future loans and term revisions do not require code changes.
+- Current seeded obligations are split as separate facilities (Citizens SBA term loan, Seller Note 1, Seller Note 2 equity standby) rather than a combined seller loan row.
+- Projected schedule rows live in `debt_payment_schedule`; posted events live in `debt_payments_actual`.
+- Balance snapshots in `debt_balance_snapshots` power fast KPI reads and auditability.
+- Scenario simulation is isolated in `debt_scenarios` and `debt_scenario_events` and never mutates baseline ledgers.
+- Core formulas are deterministic: fixed-rate monthly PI allocation, balance rollforward, extra-principal payoff delta.
+- Rate interpretation is explicit using `rate_unit` (`decimal` or `percent`) with validation in schema and service normalization.
+- Facility terms are protected against overlapping effective windows using `btree_gist` exclusion constraints.
+- Payment posting blocks backdated entries in the live posting path to protect snapshot chronology.
 
 ## Core Materialized Views
 - `mv_itinerary_revenue_monthly`
