@@ -319,9 +319,6 @@
 2026-02-27 12:09 - Updated Destination layout to stack Seasonality Heat Ribbon and Country Momentum Constellation vertically at all breakpoints for improved readability.
 2026-02-27 12:12 - Replaced custom momentum-card grid template with native responsive Tailwind columns/spans so the constellation chart width scales fluidly and remains readable across breakpoints.
 2026-02-27 13:18 - Created debt-service foundation action plan from Citizens signed term sheet, locking fixed-rate principal+interest repayment modeling, Supabase debt schema expansion, payment logging behavior, and Debt tab visual rollout scope.
-2026-02-27 15:04 - Implemented debt-service execution v1: added normalized debt schema+RLS migrations, shipped backend debt-service APIs with deterministic schedule/payment/scenario logic, replaced Debt Service placeholder with live visuals and actions, and integrated Command Center debt-obligation snapshot card.
-2026-02-27 15:22 - Hardened debt-service pre-migration safeguards: added explicit debt term rate-unit modeling/validation, prevented overlapping term windows, corrected scenario interest recomputation after extra principal events, blocked backdated live payment posting, and upgraded covenant endpoint to return dedicated covenant snapshots.
-2026-02-27 15:33 - Confirmed Supabase debt migrations `0065_create_debt_service_domain_v1.sql` and `0066_add_debt_service_domain_rls_policies.sql` have been run.
 2026-02-27 13:56 - Added debt seed migration 0067 with Citizens + Seller Note facilities, active term records, DSCR covenant baseline, and opening snapshots for immediate Debt Service visibility.
 2026-02-27 14:15 - Added debt migration 0068 to split seller obligations into Note 1 + Note 2 (equity standby), and updated Debt Service UI to show creditor-level balances (who is owed what).
 2026-02-27 14:17 - Updated Debt Service UI: moved Log payment action to top bar and replaced one-click auto-post with a prefilled manual payment prompt requiring explicit confirm before posting.
@@ -331,4 +328,8 @@
 2026-02-27 14:46 - Added native responsive KPI text scaling via CSS clamp in shared kpi-stat-card to improve readability across browser widths and prevent card-value overflow.
 2026-02-27 14:46 - Tuned KPI card responsive typography smaller and removed aggressive word-breaking to prevent oversized/wrapped metric values in compact browser widths.
 2026-02-27 14:51 - Completed final debt-service audit: resolved KPI sizing scope tech debt, re-validated frontend/backend checks, and synced action-plan/frontend documentation to final implemented state.
+2026-02-27 15:04 - Implemented debt-service execution v1: added normalized debt schema+RLS migrations, shipped backend debt-service APIs with deterministic schedule/payment/scenario logic, replaced Debt Service placeholder with live visuals and actions, and integrated Command Center debt-obligation snapshot card.
+2026-02-27 15:22 - Hardened debt-service pre-migration safeguards: added explicit debt term rate-unit modeling/validation, prevented overlapping term windows, corrected scenario interest recomputation after extra principal events, blocked backdated live payment posting, and upgraded covenant endpoint to return dedicated covenant snapshots.
+2026-02-27 15:33 - Confirmed Supabase debt migrations `0065_create_debt_service_domain_v1.sql` and `0066_add_debt_service_domain_rls_policies.sql` have been run.
 2026-02-27 20:33 - Verified docs are current to implementation state and committed synchronized frontend/backend/documentation repositories on their current branches.
+2026-02-27 20:36 - Corrected out-of-order debt-service entries in action log so 2026-02-27 timeline is strictly chronological (13:56–14:51 before 15:04+).
