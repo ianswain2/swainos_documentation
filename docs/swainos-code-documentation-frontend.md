@@ -19,12 +19,20 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 ## Route Surface
 - `/command-center`
 - `/cash-flow`
+- `/cash-flow/forecast`
+- `/cash-flow/ap-schedule`
+- `/cash-flow/scenarios`
 - `/debt-service`
 - `/itinerary-forecast`
 - `/itinerary-actuals`
 - `/travel-consultant`
 - `/travel-agencies`
 - `/fx-command`
+- `/marketing`
+- `/marketing/page-activity`
+- `/marketing/geography-events`
+- `/marketing/search-performance`
+- `/marketing/ai-website-insights`
 - `/operations`
 - `/ai-insights`
 - `/settings`
@@ -54,6 +62,13 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/itinerary-lead-flow`
 - Command center reads:
   - cash-flow, deposits, payments-out, booking-forecasts, itinerary-lead-flow, itinerary outlook/actuals/deposits
+- Cash-flow module reads dedicated risk-first endpoints:
+  - `/api/v1/cash-flow/risk-overview`
+  - `/api/v1/cash-flow/forecast`
+  - `/api/v1/cash-flow/ap-schedule`
+  - `/api/v1/cash-flow/scenarios` (read-only)
+- Command center keeps existing lightweight cash-flow summary contract:
+  - `/api/v1/cash-flow/summary`
 - Debt service reads:
   - `/api/v1/debt-service/overview`
   - `/api/v1/debt-service/facilities`
@@ -63,6 +78,13 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Travel consultant pages read leaderboard/profile endpoints
 - Travel agencies pages read agent/agency leaderboards, profiles, and trade search
 - FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
+- Marketing Web Analytics reads:
+  - `/api/v1/marketing/web-analytics/overview`
+  - `/api/v1/marketing/web-analytics/page-activity`
+  - `/api/v1/marketing/web-analytics/geo`
+  - `/api/v1/marketing/web-analytics/events`
+  - `/api/v1/marketing/web-analytics/search`
+  - `/api/v1/marketing/web-analytics/ai-insights`
 - AI Insights reads briefing/feed/recommendations/history/entity insights
 
 ## UX and Composition Notes
@@ -82,6 +104,20 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Initial server-load failure path returns a safe snapshot with user-visible error state instead of route crash
   - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service currently uses compact `1rem` values)
   - Event-driven refresh and mutation handlers (`useState`, `useMemo`, `useTransition`) without `useEffect`-driven synchronization logic
+- Cash Flow + Command Center liability posture includes explicit AR/AP semantics:
+  - Supplier liabilities from AP line-based rollups (`payments-out` and AP endpoints)
+  - Customer receivable/deposit posture from deposits summary
+  - AR/AP-adjusted liquidity displayed as a first-class metric
+- Cash Flow module is split into overview + detail routes with decision-first order:
+  - Overview answers `Are we at risk?`, `When is first risk?`, and `Why?`
+  - Forecast and AP Schedule provide drill-down tables by currency and horizon
+  - Scenarios page is read-only and does not mutate baseline data
+- Marketing module is split into strategic operator tabs:
+  - Web Analytics Overview for KPI + trend direction (DoD/MoM/YoY) plus visual trend graphs (30d line trend, 6-month MoM bars, 12-month YoY sessions comparison, and a rolling 12-month horizontal sessions+YoY indicator table)
+  - Page Activity for page-level usage behavior, itinerary page diagnostics, and best/worst ranking
+  - Geography & Events for geo segmentation and event meaning transparency
+  - Search Performance for landing-page/channel opportunity scanning
+  - AI Website Insights for prioritized marketer/sales actions
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`

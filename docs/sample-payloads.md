@@ -36,6 +36,227 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 }
 ```
 
+## Liquidity (AR/AP)
+
+### `GET /api/v1/payments-out/summary?time_window=90d`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "AUD",
+      "openLineCount": 321,
+      "totalOutstandingAmount": 418922.44,
+      "due30dAmount": 210305.0,
+      "nextDueDate": "2026-03-04"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "ap_open_liability_v1",
+    "timeWindow": "90d",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/ap/aging?time_window=90d`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "AUD",
+      "openLineCount": 321,
+      "totalOutstandingAmount": 418922.44,
+      "currentNotDueAmount": 180010.0,
+      "overdue130Amount": 145512.44,
+      "overdue3160Amount": 55100.0,
+      "overdue6190Amount": 20200.0,
+      "overdue90PlusAmount": 18100.0
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "ap_aging_v1",
+    "timeWindow": "90d",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/ap/payment-calendar?time_window=90d`
+
+```json
+{
+  "data": [
+    {
+      "paymentDate": "2026-03-04",
+      "currencyCode": "AUD",
+      "lineCount": 42,
+      "supplierCount": 8,
+      "amountDue": 56200.0
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "ap_payment_calendar_v1",
+    "timeWindow": "90d",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/deposits/summary?time_window=90d`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "USD",
+      "totalDeposits": 1200000.0,
+      "receivedDeposits": 945000.0,
+      "outstandingDeposits": 255000.0,
+      "availableCashAfterLiability": 712000.0
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "salesforce_kaptio",
+    "timeWindow": "90d",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/cash-flow/risk-overview?time_window=12m`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "USD",
+      "riskStatus": "watch",
+      "firstRiskDate": "2026-07-01",
+      "timeToRiskDays": 121,
+      "projectedEndingCash": 742500.0,
+      "projectedMinCash": 184000.0,
+      "cashBufferAmount": 225000.0,
+      "coverageRatio": 1.12,
+      "riskDrivers": [
+        {
+          "code": "buffer_breach",
+          "message": "Projected cash drops below the operating buffer threshold."
+        }
+      ]
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "customer_payments + ap_payment_calendar_v1",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/cash-flow/forecast?time_window=12m`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "USD",
+      "timeWindow": "12m",
+      "points": [
+        {
+          "periodStart": "2026-03-01",
+          "periodEnd": "2026-03-31",
+          "cashIn": 812000.0,
+          "cashOut": 641500.0,
+          "netCash": 170500.0,
+          "projectedEndingCash": 170500.0,
+          "coverageRatio": 1.27,
+          "atRisk": false
+        }
+      ]
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "customer_payments + ap_payment_calendar_v1",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/cash-flow/ap-schedule?time_window=12m`
+
+```json
+{
+  "data": [
+    {
+      "paymentDate": "2026-03-04",
+      "currencyCode": "AUD",
+      "amountDue": 56200.0,
+      "lineCount": 42,
+      "supplierCount": 8
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "ap_payment_calendar_v1",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/cash-flow/scenarios?time_window=12m`
+
+```json
+{
+  "data": [
+    {
+      "scenarioName": "Delay 10% of near-term AP by 30 days",
+      "currencyCode": "USD",
+      "description": "Read-only simulation showing a timing relief case for a portion of upcoming AP obligations.",
+      "projectedEndingCash": 906250.0,
+      "firstRiskDate": "2026-07-01",
+      "riskStatus": "healthy"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "synthetic_scenarios_v1",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
 ## Debt Service
 
 ### `GET /api/v1/debt-service/overview`
@@ -461,6 +682,32 @@ Response:
 
 ## FX
 
+### `GET /api/v1/fx/invoice-pressure`
+
+```json
+{
+  "data": [
+    {
+      "currencyCode": "AUD",
+      "due7dAmount": 40200.0,
+      "due30dAmount": 210305.0,
+      "due60dAmount": 315920.0,
+      "due90dAmount": 418922.44,
+      "invoicesDue30dCount": 77,
+      "nextDueDate": "2026-03-04"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-02",
+    "source": "ap_pressure_30_60_90_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
 ### `POST /api/v1/fx/transactions`
 
 Request:
@@ -505,6 +752,338 @@ Response:
     "timeWindow": "",
     "calculationVersion": "v1",
     "currency": null
+  }
+}
+```
+
+## Marketing Web Analytics
+
+### `GET /api/v1/marketing/web-analytics/overview`
+
+```json
+{
+  "data": {
+    "kpis": [
+      {
+        "metricKey": "sessions",
+        "label": "Sessions",
+        "format": "integer",
+        "currentValue": 14230,
+        "previousValue": 13102,
+        "yearAgoValue": 10498,
+        "dayOverDayDeltaPct": 0.073,
+        "monthOverMonthDeltaPct": 0.0861,
+        "yearOverYearDeltaPct": 0.3555
+      }
+    ],
+    "trend": [
+      {
+        "snapshotDate": "2026-03-01",
+        "sessions": 523,
+        "totalUsers": 402,
+        "engagedSessions": 389,
+        "keyEvents": 37,
+        "engagementRate": 0.744
+      }
+    ],
+    "topLandingPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "landingPage": "/",
+        "sessions": 4220,
+        "totalUsers": 3052,
+        "engagementRate": 0.693,
+        "keyEvents": 211,
+        "avgSessionDurationSeconds": null
+      }
+    ],
+    "channels": [
+      {
+        "channelName": "Organic Search",
+        "sessions": 5340,
+        "totalUsers": 4022,
+        "engagementRate": 0.721,
+        "keyEvents": 286
+      }
+    ],
+    "events": [
+      {
+        "snapshotDate": "2026-03-03",
+        "eventName": "page_view",
+        "eventCount": 33120,
+        "totalUsers": 4089,
+        "eventValueAmount": null
+      }
+    ],
+    "searchConsoleConnected": false,
+    "currency": "USD",
+    "timezone": "America/New_York"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/search`
+
+```json
+{
+  "data": {
+    "searchConsoleConnected": false,
+    "connectionMessage": "Search Console is not connected yet. Connect it to unlock query-level SEO insights.",
+    "topLandingPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "landingPage": "/destinations",
+        "sessions": 910,
+        "totalUsers": 706,
+        "engagementRate": 0.581,
+        "keyEvents": 22,
+        "avgSessionDurationSeconds": null
+      }
+    ],
+    "channels": [
+      {
+        "channelName": "Direct",
+        "sessions": 1940,
+        "totalUsers": 1532,
+        "engagementRate": 0.664,
+        "keyEvents": 88
+      }
+    ],
+    "topQueries": []
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4 + gsc",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "partial",
+    "isStale": false,
+    "degraded": true
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/ai-insights`
+
+```json
+{
+  "data": [
+    {
+      "insightId": "improve-low-engagement-page",
+      "priority": "high",
+      "title": "Improve a high-traffic landing page with low engagement",
+      "summary": "/destinations is attracting traffic but engagement is trailing. This is likely a messaging or page intent mismatch.",
+      "evidencePoints": [
+        "Sessions: 910",
+        "Engagement rate: 58.1%"
+      ],
+      "recommendedActions": [
+        "Refresh above-the-fold value proposition and CTA hierarchy.",
+        "Align headline and hero copy to the intent of top entry channels.",
+        "Run two headline+CTA variants for one business week and compare key events."
+      ]
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/health`
+
+```json
+{
+  "data": {
+    "statuses": [
+      {
+        "key": "ga4Configuration",
+        "label": "GA4 Configuration",
+        "status": "connected",
+        "detail": "GA4 credentials and property ID are configured."
+      },
+      {
+        "key": "searchConsoleConnection",
+        "label": "Search Console Connection",
+        "status": "pending",
+        "detail": "Search Console is deferred; connect later for keyword query analytics."
+      },
+      {
+        "key": "latestSyncRun",
+        "label": "Latest Sync Run",
+        "status": "healthy",
+        "detail": "Latest run status: success."
+      }
+    ],
+    "lastSyncedAt": "2026-03-03T11:31:00Z",
+    "latestRunStatus": "success"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/page-activity`
+
+```json
+{
+  "data": {
+    "snapshotDate": "2026-03-03",
+    "metricGuide": "Quality score blends key event rate, engagement rate, and traffic scale to rank pages.",
+    "bestPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "pagePath": "/itinerary/luxury-safari-botswana",
+        "pageTitle": "Luxury Safari Itinerary",
+        "screenPageViews": 2140,
+        "sessions": 1310,
+        "totalUsers": 990,
+        "engagedSessions": 1022,
+        "keyEvents": 181,
+        "engagementRate": 0.78,
+        "keyEventRate": 0.138,
+        "avgSessionDurationSeconds": 172.4,
+        "qualityScore": 0.422,
+        "isItineraryPage": true
+      }
+    ],
+    "worstPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "pagePath": "/blog/older-post",
+        "pageTitle": "Travel Blog 2022",
+        "screenPageViews": 802,
+        "sessions": 650,
+        "totalUsers": 600,
+        "engagedSessions": 181,
+        "keyEvents": 9,
+        "engagementRate": 0.278,
+        "keyEventRate": 0.014,
+        "avgSessionDurationSeconds": 41.8,
+        "qualityScore": 0.119,
+        "isItineraryPage": false
+      }
+    ],
+    "itineraryPages": [],
+    "allPages": []
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/geo`
+
+```json
+{
+  "data": {
+    "snapshotDate": "2026-03-03",
+    "rows": [
+      {
+        "snapshotDate": "2026-03-03",
+        "country": "United States",
+        "region": "California",
+        "city": "San Francisco",
+        "sessions": 622,
+        "totalUsers": 520,
+        "engagedSessions": 484,
+        "keyEvents": 71,
+        "engagementRate": 0.778,
+        "keyEventRate": 0.114
+      }
+    ],
+    "topCountries": []
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/events`
+
+```json
+{
+  "data": {
+    "snapshotDate": "2026-03-03",
+    "events": [
+      {
+        "eventName": "generate_lead",
+        "eventCount": 152,
+        "totalUsers": 140,
+        "eventValueAmount": null,
+        "category": "conversion",
+        "description": "User completed a lead action.",
+        "isConversionEvent": true
+      },
+      {
+        "eventName": "page_view",
+        "eventCount": 33120,
+        "totalUsers": 4089,
+        "eventValueAmount": null,
+        "category": "navigation",
+        "description": "A page load or page route view.",
+        "isConversionEvent": false
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
   }
 }
 ```

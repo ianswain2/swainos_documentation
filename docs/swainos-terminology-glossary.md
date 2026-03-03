@@ -43,9 +43,14 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Speed to Close (Days) | Average days from lead creation to booking close. | Days (`d`) | `avgSpeedToBookDays` | Avg Speed to Book, Lead Time |
 | YoY Variance % | Year-over-year percent change vs comparable prior period. | Signed Percent | `yoyToDateVariancePct`, `ytdVariancePct`, derived YoY delta fields | YoY to-date (without %) |
 | Target Variance % | Percent variance against strategic target trajectory. | Signed Percent | `growthTargetVariancePct`, `growthGapPct`, `totalGrowthGapPct` | Growth Gap (without %) |
-| Supplier Liability | Outstanding supplier invoices/payables. | Currency | `outstandingAmount` | Supplier Payables, Open Supplier Liability |
-| Deposit Liability | Outstanding customer deposit obligations. | Currency | `outstandingDeposits` | Open Deposit Liability |
+| Supplier Liability | Outstanding supplier AP from payable line rollups. | Currency | `totalOutstandingAmount`, `due30dAmount` | Supplier Payables, Open Supplier Liability |
+| Deposit Liability | Outstanding customer receivable/deposit posture in current window. | Currency | `outstandingDeposits`, `availableCashAfterLiability` | Open Deposit Liability |
+| Net Liquidity (AR/AP) | Net liquidity after combining cash window with customer receivable and supplier AP liabilities. | Currency | Derived UI metric (`netCashTotal + outstandingDeposits - totalOutstandingAmount`) | Cash Position (ambiguous) |
 | Deposit Coverage % | Deposits received divided by deposits targeted/required. | Percent | Derived from deposit timeline summary | Deposit Health (generic) |
+| Cash Risk Status | Risk classification for upcoming cash posture by currency. | Enum (`healthy`, `watch`, `at_risk`) | `riskStatus` | Cash Health Flag |
+| First Risk Date | Earliest date where projected cash violates risk rule by currency. | Date | `firstRiskDate` | First Breach Date |
+| Cash Buffer Threshold | Operating cash reserve threshold used in risk scoring. | Currency | `cashBufferAmount` | Reserve Floor |
+| Coverage Ratio | Projected inflows divided by projected outflows in selected horizon. | Ratio (`x`) | `coverageRatio` | Inflow/Outflow Ratio |
 
 ## Debt Service Canonical Terms
 
@@ -69,6 +74,40 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Invoice Pressure (30/60/90d) | Supplier due-date weighted payable amount pressure by currency window. | Currency | `invoicePressure30d`, `invoicePressure60d`, `invoicePressure90d` | Invoice Urgency Score |
 | Data Health | Operator-visible data quality status for recommendation safety. | Enum | `meta.dataStatus` (`live`, `partial`, `degraded`) | Health Flag (generic) |
 | Source Links | Clickable provenance links for macro/news evidence behind intelligence overlays. | URL list | `sourceLinks` | References (generic) |
+
+## Marketing Web Analytics Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Web Analytics Overview | Strategic top-level web performance view for traffic, engagement, and conversion trends. | Section title | `/marketing/web-analytics/overview` payload | Website Summary |
+| Search Performance | Search demand and landing-page visibility performance surface. | Section title | `/marketing/web-analytics/search` payload | SEO Dashboard (generic) |
+| AI Website Insights | Prioritized recommendations generated from web analytics signals for marketer/sales actioning. | Section title | `/marketing/web-analytics/ai-insights` payload | AI SEO Tips |
+| Tracking Health | Integration and freshness health payload used for operator diagnostics; not currently surfaced as a primary Marketing tab. | Backend diagnostic concept | `/marketing/web-analytics/health` payload | Data Health (generic) |
+| Page Activity | Page-level behavior surface for identifying best/worst marketing pages and usage patterns. | Section title | `/marketing/web-analytics/page-activity` payload | Content Performance (generic) |
+| Geography & Events | Combined geo segmentation and event-definition analytics surface. | Section title | `/marketing/web-analytics/geo` + `/marketing/web-analytics/events` payloads | Geo Dashboard + Event Logs |
+| Sessions | Total website sessions in selected analysis window. | Integer | `sessions` | Visits |
+| Users | Distinct users in selected analysis window. | Integer | `totalUsers` | Visitors |
+| Engagement Rate | Share of sessions considered engaged by GA4 rules. | Percent | `engagementRate` | Engagement |
+| Key Events | Count of strategically relevant conversion/intent events. | Integer | `keyEvents` | Conversions (generic) |
+| Key Event Rate | Share of sessions that generated key events; used for page quality ranking. | Percent | `keyEventRate` | Conversion Rate (ambiguous) |
+| Landing Page | First page in a session used for entry-point performance analysis. | Text | `landingPage` | Entry Page |
+| Page Path | Canonical URL path used for per-page behavior diagnostics. | Text | `pagePath` | URL (ambiguous) |
+| Quality Score | Composite score blending key event rate, engagement, and traffic scale for ranking pages. | Percent-like score | `qualityScore` | Page Score (generic) |
+| Itinerary Page | Any page path matching itinerary intent (`itinerary` in path). | Boolean marker | `isItineraryPage` | Trip Page (informal) |
+| Channel Group | Default acquisition channel grouping from GA4 attribution. | Text | `channelName` (`sessionDefaultChannelGroup`) | Traffic Source (ambiguous) |
+
+## Supplier Invoice Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Supplier Invoice | Parent payable record from supplier billing feed. | Entity label | `supplierInvoices[]`, `supplierInvoiceId`, `supplierInvoiceExternalId` | Vendor Invoice |
+| Supplier Invoice Booking | Booking-junction parent record used by supplier invoice lines (`a29` object). | Entity label | `supplierInvoiceBookings[]`, `supplierInvoiceBookingId`, `supplierInvoiceBookingExternalId` | Supplier Invoice Booking Junction, Invoice Booking Link |
+| Supplier Invoice Line | Child line item attached to a supplier invoice parent. | Entity label | `supplierInvoiceLines[]`, `supplierInvoiceLineId`, `supplierInvoiceExternalId` | Vendor Invoice Line, AP Line |
+| Supplier Invoice External ID | Source-system external parent key used for strict resolver linkage. | Text key | `supplierInvoiceExternalId` | Invoice SFID (ambiguous) |
+| Supplier Invoice Header External ID | Header/payables source key for `supplier_invoices` (`a2B` object). | Text key | `supplierInvoices.externalId` | Invoice Header SFID |
+| Supplier Invoice Booking External ID | Booking-junction source key used for line-parent resolution (`a29` object). | Text key | `supplierInvoiceBookingExternalId`, `supplierInvoiceLines.supplierInvoiceExternalId` | Supplier Invoice Booking SFID |
+| Strict FK Resolver | Import mode that derives FK UUIDs from external IDs and ignores incoming FK UUID columns. | Operational mode | `--strict-fk-resolver` in import scripts | Auto-link mode |
+| Unresolved FK Export | Reconciliation artifact listing unresolved external IDs after strict resolution pass. | CSV output | `--export-unresolved-csv` output | Error export |
 
 ## Canonical UI Title and Control Patterns
 

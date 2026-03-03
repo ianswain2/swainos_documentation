@@ -46,7 +46,9 @@ Error envelope:
 
 ## Active Endpoint Families
 - Health: `/health`, `/healthz`, `/health/ready`
-- Command center core: `/cash-flow/*`, `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
+- AP liquidity: `/ap/summary|aging|payment-calendar`
+- Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|scenarios`
+- Command center core: `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
 - Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
@@ -54,6 +56,7 @@ Error envelope:
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
 - FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure` and run endpoints
+- Marketing web analytics: `/marketing/web-analytics/overview|search|ai-insights|page-activity|geo|events|health|sync/run`
 - AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
 
 ## Data and Rollup Model
@@ -63,6 +66,17 @@ Error envelope:
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics is refreshed via `refresh_travel_trade_rollups_v1()`
 - FX exposure is refreshed via `refresh_fx_exposure_v1()`
+- AP/liquidity canonical rollups are sourced from `supplier_invoice_lines` + `supplier_invoice_bookings`:
+  - `ap_open_liability_v1`
+  - `ap_summary_v1`
+  - `ap_aging_v1`
+  - `ap_payment_calendar_v1`
+  - `ap_pressure_30_60_90_v1`
+- FX invoice pressure endpoint reads from AP pressure rollups (`ap_pressure_30_60_90_v1`) instead of header-only supplier invoice totals.
+- `/cash-flow/summary|timeseries` uses customer payments + AP payment-calendar rows for historical/net liquidity slices.
+- `/cash-flow/risk-overview|forecast|ap-schedule|scenarios` uses forward AP schedule rows plus projected inflow baseline from trailing customer payment history to flag upcoming cash stress by currency.
+- `/payments-out/summary` reports AP line-based outstanding and near-term due pressure.
+- `/marketing/web-analytics/*` is GA4-first in v1; Search Console query-level analytics is enabled once `GOOGLE_GSC_SITE_URL` is configured.
 
 ## Debt Service Domain
 - Debt facilities are data-driven rows in `debt_facilities`; no loan constants are embedded in service code.
@@ -104,12 +118,96 @@ Error envelope:
 - `scripts/upsert_customer_payments.py`
 - `scripts/upsert_agencies.py`
 - `scripts/upsert_suppliers.py`
+- `scripts/sync_salesforce_readonly.py`
+- `scripts/validate_salesforce_readonly_permissions.py`
 - `scripts/refresh_consultant_ai_rollups.py`
 - `scripts/refresh_travel_trade_rollups.py`
 - `scripts/pull_fx_rates.py`
 - `scripts/generate_fx_intelligence.py`
 - `scripts/refresh_fx_exposure.py`
 - `scripts/generate_ai_insights.py`
+- `scripts/sync_marketing_web_analytics.py` (GA4 runtime sync path)
+
+## Marketing Web Analytics (GA4-First)
+- Runtime API route: `src/api/marketing_web_analytics.py`
+- Service orchestration: `src/services/marketing_web_analytics_service.py`
+- Persistence adapter: `src/repositories/marketing_web_analytics_repository.py`
+- GA4 integration client: `src/integrations/google_analytics_client.py`
+- Runtime state and snapshot tables:
+  - `public.marketing_web_analytics_daily`
+  - `public.marketing_web_analytics_channels_daily`
+  - `public.marketing_web_analytics_landing_pages_daily`
+  - `public.marketing_web_analytics_events_daily`
+  - `public.marketing_web_analytics_page_activity_daily`
+  - `public.marketing_web_analytics_geo_daily`
+  - `public.marketing_web_analytics_sync_runs`
+  - migrations:
+    - `supabase/migrations/0077_create_marketing_web_analytics_runtime_tables.sql`
+    - `supabase/migrations/0078_expand_marketing_web_analytics_dimension_storage.sql`
+    - `supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
+- Search Console is optional/deferred in v1; `/marketing/web-analytics/search` surfaces a partial status when not connected.
+- Deep-dive endpoints:
+  - `/marketing/web-analytics/page-activity` for best/worst pages, itinerary-page filtering, and quality scoring
+  - `/marketing/web-analytics/geo` for country/region/city marketing performance
+  - `/marketing/web-analytics/events` for event catalog definitions and conversion classification
+- Quality/consolidation notes:
+  - Page-activity ingestion deduplicates by `page_path` before persistence and avoids additive overcounting of non-additive `total_users` segmented rows.
+  - Large page-activity and geo writes are chunked in repository upserts to keep sync reliability stable at higher row counts.
+  - `/marketing/web-analytics/overview` returns an extended trend window (up to ~800 days) from Supabase snapshots so frontend YoY visualizations do not require live GA4 calls.
+
+## Salesforce Read-Only Ingestion
+- Runtime orchestrator: `scripts/sync_salesforce_readonly.py`
+- Permission smoke check: `scripts/validate_salesforce_readonly_permissions.py`
+- Client guardrails live in: `src/integrations/salesforce_bulk_client.py`
+- Runtime state storage:
+  - `public.salesforce_sync_cursors`
+  - `public.salesforce_sync_runs`
+  - migration: `supabase/migrations/0076_create_salesforce_sync_runtime_tables.sql`
+
+### External Client App Configuration
+- App name: `SwainOS`
+- OAuth enabled: yes
+- OAuth scopes: `Manage user data via APIs (api)` only
+- Flow enablement:
+  - Client Credentials: enabled
+  - Authorization Code + Credentials: disabled
+  - Device Flow: disabled
+  - JWT Bearer Flow: disabled
+  - Token Exchange Flow: disabled
+- Non-required app types disabled:
+  - SAML/Web App
+  - Canvas
+  - Mobile
+  - Push Notifications
+- Callback URL is placeholder-only for this flow (for example `https://localhost/callback`)
+
+### Permission Model and Scope
+- One-way pull only: Salesforce -> SwainOS.
+- Integration principal is read-only for scoped objects and fields.
+- Required technical fields include: `Id`, `SystemModstamp`, `LastModifiedDate`, `IsDeleted` (where supported).
+- Business fields are sourced from:
+  - `docs/data-mapping-agency.md`
+  - `docs/data-mapping-supplier.md`
+  - `docs/data-mapping-user.md`
+  - `docs/data-mapping-itinerary.md`
+  - `docs/data-mapping-itinerary-items.md`
+
+### Sync Semantics
+- Incremental cursor: `SystemModstamp + Id` tie-break.
+- Extract mode: Bulk API 2.0 `queryAll`.
+- Delete handling: map Salesforce `IsDeleted` into destination soft-delete behavior.
+- Load order per run:
+  1. agencies
+  2. suppliers
+  3. employees
+  4. itineraries
+  5. itinerary_items
+
+### API Safety and Failure Behavior
+- Singleton lock prevents overlapping scheduled runs.
+- Conservative polling and per-run API budgets are enforced.
+- No automatic retries; failures stop current run and continue next scheduled interval.
+- Endpoint allowlist blocks non-Bulk/token Salesforce API paths.
 
 ## Contract Rules
 - Query params remain `snake_case`
