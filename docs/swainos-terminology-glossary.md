@@ -80,11 +80,12 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
 |---|---|---|---|---|
 | Web Analytics Overview | Strategic top-level web performance view for traffic, engagement, and conversion trends. | Section title | `/marketing/web-analytics/overview` payload | Website Summary |
-| Search Performance | Search demand and landing-page visibility performance surface. | Section title | `/marketing/web-analytics/search` payload | SEO Dashboard (generic) |
-| AI Website Insights | Prioritized recommendations generated from web analytics signals for marketer/sales actioning. | Section title | `/marketing/web-analytics/ai-insights` payload | AI SEO Tips |
+| Source Tracking | Source/medium and referral performance surface for acquisition quality and value ranking decisions. | Section title | `/marketing/web-analytics/search` payload | Search Performance |
+| Search Console Insights | Search Console readiness and SEO-focused proxy analytics surface. | Section title | `/marketing/web-analytics/search-console` payload | SEO Dashboard (generic) |
+| AI Website Insights | Structured action-engine recommendations generated from web analytics signals for marketer/sales actioning. | Section title | `/marketing/web-analytics/ai-insights` payload | AI SEO Tips |
 | Tracking Health | Integration and freshness health payload used for operator diagnostics; not currently surfaced as a primary Marketing tab. | Backend diagnostic concept | `/marketing/web-analytics/health` payload | Data Health (generic) |
-| Page Activity | Page-level behavior surface for identifying best/worst marketing pages and usage patterns. | Section title | `/marketing/web-analytics/page-activity` payload | Content Performance (generic) |
-| Geography & Events | Combined geo segmentation and event-definition analytics surface. | Section title | `/marketing/web-analytics/geo` + `/marketing/web-analytics/events` payloads | Geo Dashboard + Event Logs |
+| Page Activity | Page-level behavior surface for identifying best/worst pages, itinerary diagnostics, and lookbook/destination activity. | Section title | `/marketing/web-analytics/page-activity` payload | Content Performance (generic) |
+| Geography & Events | Combined geo segmentation, audience/device breakdown, and event-definition analytics surface. | Section title | `/marketing/web-analytics/geo` + `/marketing/web-analytics/events` payloads | Geo Dashboard + Event Logs |
 | Sessions | Total website sessions in selected analysis window. | Integer | `sessions` | Visits |
 | Users | Distinct users in selected analysis window. | Integer | `totalUsers` | Visitors |
 | Engagement Rate | Share of sessions considered engaged by GA4 rules. | Percent | `engagementRate` | Engagement |
@@ -94,7 +95,23 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Page Path | Canonical URL path used for per-page behavior diagnostics. | Text | `pagePath` | URL (ambiguous) |
 | Quality Score | Composite score blending key event rate, engagement, and traffic scale for ranking pages. | Percent-like score | `qualityScore` | Page Score (generic) |
 | Itinerary Page | Any page path matching itinerary intent (`itinerary` in path). | Boolean marker | `isItineraryPage` | Trip Page (informal) |
+| Lookbook Page | Page path classified as lookbook-related using deterministic path contains rules (`lookbook`, `/about/lookbooks`). | Boolean/path classification | `lookbookPages[]`, `pagePath` | Catalog Page (generic) |
+| Destination Page | Page path classified as destination-related using deterministic path contains rules (`destination`, `destinations`). | Boolean/path classification | `destinationPages[]`, `pagePath` | Locale Page (generic) |
+| Internal Site Search Term | On-site user query term captured from GA4 `view_search_results` event context. | Text + integer counts | `internalSiteSearchTerms[].searchTerm` | Query (ambiguous) |
+| Source Value Score | Composite source quality score blending key-event rate, qualified-session rate, bounce profile, and scaled session volume. | Decimal score | `sourceMix[].valueScore`, `topValuableSources[].valueScore` | Source Rank |
+| Qualified Session Rate | Share of sessions from a source that meet engaged-session criteria and represent higher-intent traffic. | Percent | `sourceMix[].qualifiedSessionRate` | Engaged Session Share |
+| Bounce Rate | Share of sessions from a source that bounce, used as a traffic quality risk signal. | Percent | `sourceMix[].bounceRate` | Exit Rate (ambiguous) |
+| Source Quality Label | Classification of source quality (`qualified`, `mixed`, `poor`) based on qualification, bounce, and conversion signals. | Enum | `sourceMix[].qualityLabel` | Source Tier |
+| Device Category | GA4 device segmentation bucket (mobile/desktop/tablet) for UX prioritization. | Text | `devices[].deviceCategory` | Device Type (informal) |
+| Age Bracket | GA4 audience age cohort bucket used for demographic targeting. | Text | `demographics[].ageBracket` | Age Group (generic) |
+| Focus Area | Primary action posture assigned by the marketing action engine (`scale`, `fix`, `cut`, `instrument`, `localize`, `optimize`). | Enum | `focusArea` | Action Type (generic) |
+| Impact Score | Relative expected business impact of an action recommendation on a 0-100 scale. | Integer-like score | `impactScore` | Priority Score |
+| Confidence Score | Relative confidence in a recommendation based on signal strength and consistency on a 0-100 scale. | Integer-like score | `confidenceScore` | Confidence (generic) |
+| Target Label | Main entity the action recommendation is aimed at (page, channel, market, device, or demand topic). | Text | `targetLabel` | Target (generic) |
 | Channel Group | Default acquisition channel grouping from GA4 attribution. | Text | `channelName` (`sessionDefaultChannelGroup`) | Traffic Source (ambiguous) |
+| Canonical Daily Fact | Marketing snapshot row whose primary key matches the surfaced business grain (for example `snapshotDate + channelName` or `snapshotDate + country`). | Data-model concept | Marketing analytics snapshot tables | Derived Rollup Row |
+| Overview Period Summary | Precomputed KPI window summary used by Overview (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) to avoid distinct-user overcounting from day-level sums. | Data-model concept | `marketing_web_analytics_overview_period_summaries` | On-read Window Math |
+| Market Scope | Explicit market filter context applied to Marketing analytics responses (`all` or country name, e.g. `United States`). | Text + label pair | `meta.marketScope`, `meta.marketLabel`, `country` query param | Region Filter (ambiguous) |
 
 ## Supplier Invoice Canonical Terms
 

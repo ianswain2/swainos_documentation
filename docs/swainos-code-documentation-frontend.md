@@ -32,6 +32,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/marketing/page-activity`
 - `/marketing/geography-events`
 - `/marketing/search-performance`
+- `/marketing/search-console-insights`
 - `/marketing/ai-website-insights`
 - `/operations`
 - `/ai-insights`
@@ -84,6 +85,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/marketing/web-analytics/geo`
   - `/api/v1/marketing/web-analytics/events`
   - `/api/v1/marketing/web-analytics/search`
+  - `/api/v1/marketing/web-analytics/search-console`
   - `/api/v1/marketing/web-analytics/ai-insights`
 - AI Insights reads briefing/feed/recommendations/history/entity insights
 
@@ -113,11 +115,13 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Forecast and AP Schedule provide drill-down tables by currency and horizon
   - Scenarios page is read-only and does not mutate baseline data
 - Marketing module is split into strategic operator tabs:
-  - Web Analytics Overview for KPI + trend direction (DoD/MoM/YoY) plus visual trend graphs (30d line trend, 6-month MoM bars, 12-month YoY sessions comparison, and a rolling 12-month horizontal sessions+YoY indicator table)
-  - Page Activity for page-level usage behavior, itinerary page diagnostics, and best/worst ranking
-  - Geography & Events for geo segmentation and event meaning transparency
-  - Search Performance for landing-page/channel opportunity scanning
-  - AI Website Insights for prioritized marketer/sales actions
+  - Web Analytics Overview for KPI + trend direction (DoD/MoM/YoY) plus visual trend graphs (30d line trend, 6-month MoM bars, 12-month YoY sessions comparison, and a rolling 12-month horizontal sessions+YoY indicator table); KPI windows are served from synced canonical period summaries (not client-side rollups)
+  - Page Activity for page-level usage behavior, itinerary diagnostics, best/worst ranking, dedicated lookbook/destination activity, and explicit rescue/scale focus cards
+  - Geography & Events for geo segmentation, audience demographics, device mix, event meaning transparency, and market-priority focus cards (top-country cards use exact same-window country totals)
+  - Source Tracking (route: `/marketing/search-performance`) for source/medium mix, referral analysis, value-ranked source decisions, and explicit traffic-quality scoring (`qualifiedSessionRate`, `bounceRate`, `qualityLabel`) plus landing-page/internal-search demand
+  - Search Console Insights (route: `/marketing/search-console-insights`) for Search Console readiness plus SEO proxy analytics while query-level ingestion is deferred; it is a dedicated left-navigation destination, not a Web Analytics sub-tab
+  - AI Website Insights for structured marketer/sales action cards with category, focus area, owner hint, target, impact score, and confidence score
+  - Shared `Market` selector (layout-level) defaults to `United States`, supports `All markets`, and preserves `country` + `days` URL state across tab/date navigation for consistent cross-surface scope.
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`

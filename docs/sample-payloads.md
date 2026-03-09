@@ -760,6 +760,9 @@ Response:
 
 ### `GET /api/v1/marketing/web-analytics/overview`
 
+KPI window values in `kpis[]` are sourced from synced canonical period summaries (not client-side day-level user summations).
+Optional query: `country=United States|all`.
+
 ```json
 {
   "data": {
@@ -825,6 +828,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,
@@ -835,11 +840,11 @@ Response:
 
 ### `GET /api/v1/marketing/web-analytics/search`
 
+Optional query: `days_back=<7|30|90...>&country=United States|all`.
+
 ```json
 {
   "data": {
-    "searchConsoleConnected": false,
-    "connectionMessage": "Search Console is not connected yet. Connect it to unlock query-level SEO insights.",
     "topLandingPages": [
       {
         "snapshotDate": "2026-03-03",
@@ -860,14 +865,127 @@ Response:
         "keyEvents": 88
       }
     ],
-    "topQueries": []
+    "sourceMix": [
+      {
+        "sourceLabel": "google / organic",
+        "source": "google",
+        "medium": "organic",
+        "channelName": "Organic Search",
+        "sessions": 2140,
+        "totalUsers": 1720,
+        "engagedSessions": 1495,
+        "keyEvents": 141,
+        "engagementRate": 0.699,
+        "keyEventRate": 0.066,
+        "bounceRate": 0.41,
+        "qualifiedSessionRate": 0.699,
+        "qualityLabel": "qualified",
+        "valueScore": 42.6
+      }
+    ],
+    "referralSources": [
+      {
+        "sourceLabel": "tripadvisor.com / referral",
+        "source": "tripadvisor.com",
+        "medium": "referral",
+        "channelName": "Referral",
+        "sessions": 440,
+        "totalUsers": 371,
+        "engagedSessions": 298,
+        "keyEvents": 49,
+        "engagementRate": 0.677,
+        "keyEventRate": 0.111,
+        "bounceRate": 0.34,
+        "qualifiedSessionRate": 0.677,
+        "qualityLabel": "qualified",
+        "valueScore": 35.0
+      }
+    ],
+    "topValuableSources": [
+      {
+        "sourceLabel": "tripadvisor.com / referral",
+        "source": "tripadvisor.com",
+        "medium": "referral",
+        "channelName": "Referral",
+        "sessions": 440,
+        "totalUsers": 371,
+        "engagedSessions": 298,
+        "keyEvents": 49,
+        "engagementRate": 0.677,
+        "keyEventRate": 0.111,
+        "bounceRate": 0.34,
+        "qualifiedSessionRate": 0.677,
+        "qualityLabel": "qualified",
+        "valueScore": 35.0
+      }
+    ],
+    "internalSiteSearchTerms": [
+      {
+        "searchTerm": "african safari itinerary",
+        "eventCount": 62,
+        "totalUsers": 51
+      },
+      {
+        "searchTerm": "botswana",
+        "eventCount": 31,
+        "totalUsers": 28
+      }
+    ]
   },
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-03",
-    "source": "ga4 + gsc",
+    "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "United States",
+    "marketLabel": "United States",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/search-console`
+
+Optional query: `days_back=<7|30|90...>&country=United States|all`.
+
+```json
+{
+  "data": {
+    "searchConsoleConnected": false,
+    "connectionMessage": "Search Console is not connected yet. Connect it to unlock query impressions, CTR, and rankings.",
+    "dataMode": "proxy",
+    "topQueries": [],
+    "organicLandingPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "landingPage": "/destinations/botswana",
+        "sessions": 760,
+        "totalUsers": 598,
+        "engagementRate": 0.612,
+        "keyEvents": 29,
+        "avgSessionDurationSeconds": null
+      }
+    ],
+    "internalSiteSearchTerms": [
+      {
+        "searchTerm": "botswana safari cost",
+        "eventCount": 33,
+        "totalUsers": 26
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-03",
+    "source": "gsc + ga4",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "partial",
     "isStale": false,
@@ -884,16 +1002,25 @@ Response:
     {
       "insightId": "improve-low-engagement-page",
       "priority": "high",
-      "title": "Improve a high-traffic landing page with low engagement",
-      "summary": "/destinations is attracting traffic but engagement is trailing. This is likely a messaging or page intent mismatch.",
+      "category": "content",
+      "focusArea": "fix",
+      "title": "Fix a high-traffic landing page before buying more traffic",
+      "summary": "/welcome/australia/campaign/gday is bringing in volume, but user intent is not being converted into engagement.",
+      "targetLabel": "/welcome/australia/campaign/gday",
+      "targetPath": "/welcome/australia/campaign/gday",
+      "ownerHint": "marketing",
+      "primaryMetricLabel": "Engagement Rate",
+      "impactScore": 94,
+      "confidenceScore": 89,
       "evidencePoints": [
-        "Sessions: 910",
-        "Engagement rate: 58.1%"
+        "Sessions: 29867",
+        "Engagement rate: 3.9%",
+        "Key events: 0"
       ],
       "recommendedActions": [
-        "Refresh above-the-fold value proposition and CTA hierarchy.",
-        "Align headline and hero copy to the intent of top entry channels.",
-        "Run two headline+CTA variants for one business week and compare key events."
+        "Rewrite the headline, hero value proposition, and primary CTA to match the acquisition intent landing here.",
+        "Reduce above-the-fold distraction and give one obvious next step.",
+        "Treat this page as a live experiment candidate for one-week copy and CTA testing."
       ]
     }
   ],
@@ -903,6 +1030,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,
@@ -945,6 +1074,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,
@@ -995,6 +1126,40 @@ Response:
       }
     ],
     "itineraryPages": [],
+    "lookbookPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "pagePath": "/about/lookbooks",
+        "pageTitle": "Lookbooks",
+        "screenPageViews": 980,
+        "sessions": 721,
+        "totalUsers": 612,
+        "engagedSessions": 514,
+        "keyEvents": 46,
+        "engagementRate": 0.713,
+        "keyEventRate": 0.064,
+        "avgSessionDurationSeconds": 118.7,
+        "qualityScore": 0.329,
+        "isItineraryPage": false
+      }
+    ],
+    "destinationPages": [
+      {
+        "snapshotDate": "2026-03-03",
+        "pagePath": "/destinations/botswana",
+        "pageTitle": "Botswana",
+        "screenPageViews": 1430,
+        "sessions": 1094,
+        "totalUsers": 884,
+        "engagedSessions": 826,
+        "keyEvents": 91,
+        "engagementRate": 0.755,
+        "keyEventRate": 0.083,
+        "avgSessionDurationSeconds": 164.2,
+        "qualityScore": 0.397,
+        "isItineraryPage": false
+      }
+    ],
     "allPages": []
   },
   "pagination": null,
@@ -1003,6 +1168,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,
@@ -1031,7 +1198,30 @@ Response:
         "keyEventRate": 0.114
       }
     ],
-    "topCountries": []
+    "topCountries": [],
+    "demographics": [
+      {
+        "snapshotDate": "2026-03-03",
+        "ageBracket": "25-34",
+        "gender": "female",
+        "sessions": 488,
+        "totalUsers": 401,
+        "engagedSessions": 371,
+        "keyEvents": 57,
+        "engagementRate": 0.76
+      }
+    ],
+    "devices": [
+      {
+        "snapshotDate": "2026-03-03",
+        "deviceCategory": "mobile",
+        "sessions": 1640,
+        "totalUsers": 1388,
+        "engagedSessions": 1186,
+        "keyEvents": 171,
+        "engagementRate": 0.723
+      }
+    ]
   },
   "pagination": null,
   "meta": {
@@ -1039,6 +1229,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,
@@ -1080,6 +1272,8 @@ Response:
     "source": "ga4",
     "timeWindow": "30d",
     "calculationVersion": "v1",
+    "marketScope": "all",
+    "marketLabel": "All markets",
     "currency": null,
     "dataStatus": "live",
     "isStale": false,

@@ -56,7 +56,7 @@ Error envelope:
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
 - FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure` and run endpoints
-- Marketing web analytics: `/marketing/web-analytics/overview|search|ai-insights|page-activity|geo|events|health|sync/run`
+- Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|ai-insights|page-activity|geo|events|health|sync/run`
 - AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
 
 ## Data and Rollup Model
@@ -136,24 +136,42 @@ Error envelope:
 - Runtime state and snapshot tables:
   - `public.marketing_web_analytics_daily`
   - `public.marketing_web_analytics_channels_daily`
+  - `public.marketing_web_analytics_country_daily`
   - `public.marketing_web_analytics_landing_pages_daily`
   - `public.marketing_web_analytics_events_daily`
   - `public.marketing_web_analytics_page_activity_daily`
   - `public.marketing_web_analytics_geo_daily`
+  - `public.marketing_web_analytics_demographics_daily`
+  - `public.marketing_web_analytics_devices_daily`
+  - `public.marketing_web_analytics_internal_search_daily`
+  - `public.marketing_web_analytics_overview_period_summaries`
   - `public.marketing_web_analytics_sync_runs`
   - migrations:
     - `supabase/migrations/0077_create_marketing_web_analytics_runtime_tables.sql`
     - `supabase/migrations/0078_expand_marketing_web_analytics_dimension_storage.sql`
     - `supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
-- Search Console is optional/deferred in v1; `/marketing/web-analytics/search` surfaces a partial status when not connected.
+    - `supabase/migrations/0086_harden_marketing_analytics_canonical_facts.sql`
+- Search Console is optional/deferred in v1; `/marketing/web-analytics/search-console` surfaces partial status when not connected.
 - Deep-dive endpoints:
-  - `/marketing/web-analytics/page-activity` for best/worst pages, itinerary-page filtering, and quality scoring
-  - `/marketing/web-analytics/geo` for country/region/city marketing performance
+  - `/marketing/web-analytics/page-activity` for best/worst pages, itinerary-page filtering, quality scoring, and dedicated lookbook/destination page slices via deterministic path-contains classification
+  - `/marketing/web-analytics/geo` for country/region/city performance plus audience demographics (`userAgeBracket`, `userGender`) and device-category breakdowns
   - `/marketing/web-analytics/events` for event catalog definitions and conversion classification
+  - `/marketing/web-analytics/search` now includes source/medium mix, referral source leaders, value-ranked sources, and explicit traffic-quality signals (`bounceRate`, `qualifiedSessionRate`, `qualityLabel`) in addition to landing pages and internal site-search demand
+  - `/marketing/web-analytics/search-console` provides Search Console connection status plus SEO proxy analytics (`organicLandingPages`, `internalSiteSearchTerms`) while query-level GSC ingestion remains deferred
+  - `/marketing/web-analytics/ai-insights` now returns structured action-engine output (`category`, `focusArea`, `targetLabel`, `ownerHint`, `impactScore`, `confidenceScore`) for direct marketer/sales/AI consumption
+- Scope contract:
+  - All read endpoints accept optional `country` query param.
+  - `country=all` (or omitted) keeps existing snapshot-first `All markets` behavior.
+  - `country=United States` (and other non-`all` values) uses exact GA4 country-filtered reads for overview/search/page-activity/geo/events/AI composition so scoped metrics do not drift from global marts.
+  - Response meta now includes `marketScope` and `marketLabel` to make backend-applied scope explicit to clients.
 - Quality/consolidation notes:
-  - Page-activity ingestion deduplicates by `page_path` before persistence and avoids additive overcounting of non-additive `total_users` segmented rows.
+  - Daily/channel/country storage now persists canonical per-day facts (`date+channel`, `date+country`) and is overwrite-safe for repeated same-day sync runs.
+  - Overview KPI windows (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) are synced into `marketing_web_analytics_overview_period_summaries` so frontend reads do not recompute distinct users by summing daily rows.
+  - Page-activity ingestion is stored at GA4 `pagePath` grain and avoids segmented-row merges that can distort non-additive metrics.
   - Large page-activity and geo writes are chunked in repository upserts to keep sync reliability stable at higher row counts.
   - `/marketing/web-analytics/overview` returns an extended trend window (up to ~800 days) from Supabase snapshots so frontend YoY visualizations do not require live GA4 calls.
+  - Demographics/device/internal-search enrichment is snapshotted during sync for 30-day reads; custom day ranges still use exact same-window GA4 pulls.
+  - AI insight generation now applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
 
 ## Salesforce Read-Only Ingestion
 - Runtime orchestrator: `scripts/sync_salesforce_readonly.py`

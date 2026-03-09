@@ -63,12 +63,13 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `POST /api/v1/fx/transactions` | `features/fx-command/fx-command-page.tsx` | Ledger write path |
 | `GET /api/v1/fx/intelligence` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Intelligence feed |
 | `GET /api/v1/fx/invoice-pressure` | `lib/api/fxServerService.ts`, `lib/api/fxService.ts`, `features/fx-command/useFxCommandData.ts` | Due-window payable pressure sourced from AP rollups |
-| `GET /api/v1/marketing/web-analytics/overview` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Strategic web analytics KPIs and trend context from GA4 |
-| `GET /api/v1/marketing/web-analytics/page-activity` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Page-level behavior (best/worst pages, itinerary-focused breakdown, quality scoring) |
-| `GET /api/v1/marketing/web-analytics/geo` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Geographic performance by country/region/city |
-| `GET /api/v1/marketing/web-analytics/events` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Event catalog with plain-language definitions and conversion classification |
-| `GET /api/v1/marketing/web-analytics/search` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Search and landing-page opportunity surface (GA4-first; GSC-aware) |
-| `GET /api/v1/marketing/web-analytics/ai-insights` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Ranked marketer/sales recommendations from website behavior signals |
+| `GET /api/v1/marketing/web-analytics/overview` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Strategic web analytics KPIs and trend context; optional `country` scope (`United States` / `all`) with canonical summaries in all-market mode |
+| `GET /api/v1/marketing/web-analytics/page-activity` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Page-level behavior (best/worst, itinerary, lookbook, destination breakdowns + quality scoring) with optional `days_back` + `country` scope |
+| `GET /api/v1/marketing/web-analytics/geo` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Geographic performance plus demographics (age/gender) and device-category mix; supports optional `country` scope |
+| `GET /api/v1/marketing/web-analytics/events` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Event catalog with plain-language definitions and conversion classification; supports optional `country` scope |
+| `GET /api/v1/marketing/web-analytics/search` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Source Tracking surface (source/medium mix, referral leaders, value-ranked sources, `bounceRate`, `qualifiedSessionRate`, `qualityLabel`, landing pages, internal site search) with optional `days_back` + `country`; scoped mode uses exact GA4 country-filtered reads |
+| `GET /api/v1/marketing/web-analytics/search-console` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Search Console Insights surface with connection status plus SEO proxy analytics (organic landing pages + demand terms) while query-level GSC ingestion is pending |
+| `GET /api/v1/marketing/web-analytics/ai-insights` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Structured marketer/sales action engine output; optional `country` scope composes from same-scope overview/page/geo/search datasets |
 | `POST /api/fx/rates/run` (frontend route) | `features/fx-command/useFxCommandData.ts` | Server-side proxy for manual FX pull token handling |
 
 ## Backend Endpoints Not Used By Current Frontend Surfaces
