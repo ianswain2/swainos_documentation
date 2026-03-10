@@ -38,6 +38,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/operations`
 - `/ai-insights`
 - `/settings`
+- `/settings/run-logs`
 - `/revenue-bookings` (route exists and redirects to `/itinerary-forecast`)
 
 ## Data Access Pattern
@@ -92,6 +93,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - AI Insights reads briefing/feed/recommendations/history/entity insights
 - Settings and Operations read the canonical data-jobs control-plane APIs:
   - `/api/v1/data-jobs`
+  - `/api/v1/data-jobs/run-feed`
   - `/api/v1/data-jobs/{job_key}`
   - `/api/v1/data-jobs/{job_key}/runs`
   - `/api/v1/data-jobs/health`
@@ -138,6 +140,13 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - rows are grouped by `jobKind` (`Source Ingestion`, `Rollup Refresh`, `Derived Compute`, `Manual Imports`, `Maintenance`)
   - each row shows last-run timestamp and last-run status from `/api/v1/data-jobs/health`
   - recurring schedules display plain-English cadence labels (cron retained as secondary detail)
+- Settings navigation is left-nav driven under `Settings` with explicit children (`Job Controls`, `Run Logs`) instead of a top-page toggle.
+- Settings Run Logs (`/settings/run-logs`) provides a compact cross-job run feed with filters and periodic polling:
+  - reads `/api/v1/data-jobs/run-feed` with optional `job_key` and `run_status`
+  - uses paginated history controls (`Previous`/`Next`) backed by API pagination totals so operators can move beyond recent rows
+  - displays persisted run analytics fields (`durationSeconds`, `outputSizeBytes`) for historical performance analysis
+  - periodic refresh uses a minimal `useEffect` polling loop as an explicit external-system synchronization exception
+  - polling pauses when browser tab is hidden and resumes with immediate refresh on visibility return
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`

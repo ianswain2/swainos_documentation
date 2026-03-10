@@ -1623,6 +1623,56 @@ Optional query: `days_back=<7|30|90...>`.
 }
 ```
 
+### `GET /api/v1/data-jobs/run-feed?page=1&page_size=50&job_key=fx-rates-pull&run_status=failed`
+
+```json
+{
+  "data": [
+    {
+      "id": "b5a96ff4-95c6-4c7f-9ca6-eec19e61763b",
+      "jobId": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
+      "jobKey": "fx-rates-pull",
+      "displayName": "FX Rates Pull",
+      "runKey": "fx-rates-pull:f5188e48-9c2f-4f55-8fbe-67a5e06ec9ff",
+      "runStatus": "failed",
+      "triggerType": "scheduler",
+      "triggerSource": "scheduler_tick",
+      "requestedBy": "system:scheduler",
+      "requestedAt": "2026-03-10T15:15:00.000Z",
+      "startedAt": "2026-03-10T15:15:00.112Z",
+      "finishedAt": "2026-03-10T15:15:03.902Z",
+      "blockedReason": null,
+      "errorCode": "runner_failed",
+      "errorMessage": "fx.rates.pull failed with exit code 1",
+      "durationSeconds": 4,
+      "outputSizeBytes": 128,
+      "output": {
+        "returnCode": 1
+      },
+      "metadata": {},
+      "createdAt": "2026-03-10T15:15:00.112Z",
+      "updatedAt": "2026-03-10T15:15:03.902Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "data_job_runs",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
 ### `POST /api/v1/data-jobs/fx-rates-pull/runs`
 
 Request:
@@ -1654,6 +1704,8 @@ Response:
     "blockedReason": null,
     "errorCode": null,
     "errorMessage": null,
+    "durationSeconds": 4,
+    "outputSizeBytes": 112,
     "output": {
       "returnCode": 0
     },

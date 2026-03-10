@@ -126,6 +126,9 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Retry Backoff (Minutes) | Minimum cooldown interval after a failed recurring run before scheduler re-dispatch. | Integer minutes | `retryBackoffMinutes` | Retry Delay |
 | Scheduler Tick | Canonical scheduler dispatch trigger that selects due recurring jobs. | Operational trigger label | `POST /api/v1/data-jobs/scheduler/tick`, run `triggerType=scheduler` | Cron Runner |
 | Schedule Cadence | Human-readable representation of recurring cron schedule. | Text label | Derived from `scheduleCron` and `scheduleMode` | Raw Cron (as primary label) |
+| Run Logs | Cross-job run stream surface for operators to review execution outcomes and failure reasons with deep pagination history. | Section title | `/settings/run-logs`, `/api/v1/data-jobs/run-feed` | Job Stream |
+| Run Duration | Persisted elapsed runtime per job run for historical analysis. | Seconds | `durationSeconds` (`duration_seconds` in DB) | Runtime |
+| Run Output Size | Persisted serialized output payload size per run for trend analysis and cost signal monitoring. | Bytes | `outputSizeBytes` (`output_size_bytes` in DB) | Payload Size |
 
 ## Supplier Invoice Canonical Terms
 

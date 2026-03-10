@@ -50,7 +50,7 @@ Error envelope:
 - Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|scenarios`
 - Command center core: `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
-- Data jobs control plane: `/data-jobs`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
+- Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
 - Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
 - Itinerary lead flow: `/itinerary-lead-flow`
@@ -151,6 +151,9 @@ Error envelope:
     - adds per-job `retry_backoff_minutes`
     - enforces valid range (`0..10080`)
     - seeds recurring default backoff (`30`) and non-recurring default (`0`)
+  - `0093_data_job_run_metrics_v1.sql`:
+    - adds persisted run analytics fields on `data_job_runs`: `duration_seconds`, `output_size_bytes`
+    - backfills historical rows from `started_at`/`finished_at` and serialized `output` payload size
 - Scheduler model:
   - one fixed scheduler tick endpoint (`POST /api/v1/data-jobs/scheduler/tick`)
   - due-job selection reads `data_jobs.next_run_at`
