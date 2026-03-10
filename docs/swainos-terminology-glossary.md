@@ -81,7 +81,8 @@ This glossary is the canonical source of truth for user-facing terminology acros
 |---|---|---|---|---|
 | Web Analytics Overview | Strategic top-level web performance view for traffic, engagement, and conversion trends. | Section title | `/marketing/web-analytics/overview` payload | Website Summary |
 | Source Tracking | Source/medium and referral performance surface for acquisition quality and value ranking decisions. | Section title | `/marketing/web-analytics/search` payload | Search Performance |
-| Search Console Insights | Search Console readiness and SEO-focused proxy analytics surface. | Section title | `/marketing/web-analytics/search-console` payload | SEO Dashboard (generic) |
+| Search Console Insights | Search-demand and organic-performance workspace powered by canonical Search Console snapshots, with overview, opportunities, challenges, query/page rankings, and diagnostics. | Section title | `/marketing/web-analytics/search-console` payload | SEO Dashboard (generic) |
+| Search Console Page Profile | Dedicated URL drill-down profile for one page path with query, benchmark, and recommendation context. | Section title | `/marketing/web-analytics/search-console/page-profile` payload | URL Detail (generic) |
 | AI Website Insights | Structured action-engine recommendations generated from web analytics signals for marketer/sales actioning. | Section title | `/marketing/web-analytics/ai-insights` payload | AI SEO Tips |
 | Tracking Health | Integration and freshness health payload used for operator diagnostics; not currently surfaced as a primary Marketing tab. | Backend diagnostic concept | `/marketing/web-analytics/health` payload | Data Health (generic) |
 | Page Activity | Page-level behavior surface for identifying best/worst pages, itinerary diagnostics, and lookbook/destination activity. | Section title | `/marketing/web-analytics/page-activity` payload | Content Performance (generic) |
@@ -112,6 +113,19 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Canonical Daily Fact | Marketing snapshot row whose primary key matches the surfaced business grain (for example `snapshotDate + channelName` or `snapshotDate + country`). | Data-model concept | Marketing analytics snapshot tables | Derived Rollup Row |
 | Overview Period Summary | Precomputed KPI window summary used by Overview (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) to avoid distinct-user overcounting from day-level sums. | Data-model concept | `marketing_web_analytics_overview_period_summaries` | On-read Window Math |
 | Market Scope | Explicit market filter context applied to Marketing analytics responses (`all` or country name, e.g. `United States`). | Text + label pair | `meta.marketScope`, `meta.marketLabel`, `country` query param | Region Filter (ambiguous) |
+| Opportunity Type | Canonical Search Console opportunity category shown in table rows. | Enum | `opportunityType` (`low_ctr`, `near_breakout`, `page_refresh`, `destination_gap`) | Opportunity Class |
+| Challenge Type | Canonical Search Console challenge category shown in table rows. | Enum | `challengeType` (`page_ctr_gap`, `ranking_drop`, `coverage_gap`, `intent_mismatch`) | Challenge Class |
+| Rank Band | Position grouping used to make query visibility easier to scan in Search Console surfaces. | Enum-like label | `positionBand`, `positionBandSummary[].bandLabel` | Position Bucket |
+
+## Data Jobs Control Plane Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Last Run | Most recent run timestamp shown in job administration views. | Date-time | `lastStartedAt` (health), `requestedAt` fallback in UI mutation state | Last Executed |
+| Run Status | Latest execution state for a job (`success`, `failed`, `blocked`, etc.). | Enum pill | `lastRunStatus` (health), `runStatus` (run records) | Job Health (ambiguous) |
+| Retry Backoff (Minutes) | Minimum cooldown interval after a failed recurring run before scheduler re-dispatch. | Integer minutes | `retryBackoffMinutes` | Retry Delay |
+| Scheduler Tick | Canonical scheduler dispatch trigger that selects due recurring jobs. | Operational trigger label | `POST /api/v1/data-jobs/scheduler/tick`, run `triggerType=scheduler` | Cron Runner |
+| Schedule Cadence | Human-readable representation of recurring cron schedule. | Text label | Derived from `scheduleCron` and `scheduleMode` | Raw Cron (as primary label) |
 
 ## Supplier Invoice Canonical Terms
 

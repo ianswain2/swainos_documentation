@@ -950,23 +950,148 @@ Optional query: `days_back=<7|30|90...>&country=United States|all`.
 
 ### `GET /api/v1/marketing/web-analytics/search-console`
 
-Optional query: `days_back=<7|30|90...>&country=United States|all`.
+Optional query: `days_back=<7|30|90...>`.
 
 ```json
 {
   "data": {
-    "searchConsoleConnected": false,
-    "connectionMessage": "Search Console is not connected yet. Connect it to unlock query impressions, CTR, and rankings.",
-    "dataMode": "proxy",
-    "topQueries": [],
+    "searchConsoleConnected": true,
+    "connectionMessage": "Search Console is connected and Supabase snapshots are serving US-first search insights with benchmark market comparisons.",
+    "dataMode": "snapshot",
+    "asOfDate": "2026-03-09",
+    "overview": {
+      "totalClicks": 1482,
+      "totalImpressions": 45211,
+      "averageCtr": 0.0328,
+      "averagePosition": 8.74,
+      "clicksDeltaPct": 0.11,
+      "impressionsDeltaPct": 0.07,
+      "ctrDeltaPct": 0.04,
+      "positionDelta": -0.62,
+      "freshnessDays": 1
+    },
+    "topQueries": [
+      {
+        "query": "botswana safari",
+        "clicks": 214,
+        "impressions": 4180,
+        "ctr": 0.0512,
+        "averagePosition": 6.92,
+        "isBranded": false,
+        "intentBucket": "destination_intent",
+        "termType": "short_tail",
+        "positionBand": "4-10"
+      }
+    ],
+    "topPages": [
+      {
+        "pagePath": "/destinations/botswana",
+        "clicks": 308,
+        "impressions": 5330,
+        "ctr": 0.0578,
+        "averagePosition": 6.24
+      }
+    ],
+    "countryBreakdown": [
+      {
+        "label": "United States",
+        "clicks": 840,
+        "impressions": 26010,
+        "ctr": 0.0323,
+        "averagePosition": 8.42
+      }
+    ],
+    "deviceBreakdown": [
+      {
+        "label": "mobile",
+        "clicks": 932,
+        "impressions": 29110,
+        "ctr": 0.0320,
+        "averagePosition": 9.18
+      }
+    ],
+    "opportunities": [
+      {
+        "opportunityId": "low-ctr-query-1",
+        "title": "Improve CTR on high-impression query",
+        "summary": "'african safari tours' has strong demand but weak click-through.",
+        "pagePath": null,
+        "query": "african safari tours",
+        "clicks": 57,
+        "impressions": 2980,
+        "ctr": 0.0191,
+        "averagePosition": 7.31,
+        "priorityScore": 100,
+        "recommendedAction": "Refresh title/meta and align snippet value proposition with search intent.",
+        "opportunityType": "low_ctr"
+      }
+    ],
+    "challenges": [
+      {
+        "challengeId": "page-query-ctr-gap-1",
+        "title": "Page underperforms for high-demand intent",
+        "summary": "/destinations/kenya is receiving impressions but not converting demand into clicks.",
+        "pagePath": "/destinations/kenya",
+        "query": "kenya safari luxury",
+        "clicks": 36,
+        "impressions": 2140,
+        "ctr": 0.0168,
+        "averagePosition": 8.91,
+        "severityScore": 100,
+        "recommendedAction": "Rework on-page headings and SERP snippets, then validate search-intent alignment against top competing pages.",
+        "challengeType": "page_ctr_gap"
+      }
+    ],
+    "marketBenchmarks": [
+      {
+        "marketLabel": "United States",
+        "clicks": 840,
+        "impressions": 26010,
+        "ctr": 0.0323,
+        "averagePosition": 8.42
+      },
+      {
+        "marketLabel": "Australia",
+        "clicks": 171,
+        "impressions": 6930,
+        "ctr": 0.0247,
+        "averagePosition": 9.71
+      }
+    ],
+    "queryIntentBuckets": [
+      {
+        "bucketLabel": "destination_intent",
+        "queryCount": 1291,
+        "clicks": 506,
+        "impressions": 90521,
+        "averageCtr": 0.0056
+      }
+    ],
+    "positionBandSummary": [
+      {
+        "bandLabel": "4-10",
+        "queryCount": 605,
+        "clicks": 278,
+        "impressions": 42210,
+        "averageCtr": 0.0066
+      }
+    ],
+    "issues": [
+      {
+        "issueKey": "search_console_healthy",
+        "label": "Search Console data is healthy",
+        "status": "healthy",
+        "detail": "Search Console snapshots are current and query/page datasets are populated."
+      }
+    ],
     "organicLandingPages": [
       {
-        "snapshotDate": "2026-03-03",
+        "snapshotDate": "2026-03-09",
         "landingPage": "/destinations/botswana",
-        "sessions": 760,
-        "totalUsers": 598,
-        "engagementRate": 0.612,
-        "keyEvents": 29,
+        "sessions": 308,
+        "totalUsers": 308,
+        "engagementRate": 0.0578,
+        "keyEvents": 0,
         "avgSessionDurationSeconds": null
       }
     ],
@@ -980,16 +1105,101 @@ Optional query: `days_back=<7|30|90...>&country=United States|all`.
   },
   "pagination": null,
   "meta": {
-    "asOfDate": "2026-03-03",
-    "source": "gsc + ga4",
+    "asOfDate": "2026-03-09",
+    "source": "gsc + supabase",
     "timeWindow": "30d",
     "calculationVersion": "v1",
-    "marketScope": "all",
-    "marketLabel": "All markets",
+    "marketScope": "United States",
+    "marketLabel": "United States",
     "currency": null,
-    "dataStatus": "partial",
+    "dataStatus": "live",
     "isStale": false,
-    "degraded": true
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/marketing/web-analytics/search-console/page-profile?page_path=<encoded>&days_back=30`
+
+```json
+{
+  "data": {
+    "pagePath": "https://www.swaindestinations.com/destinations/botswana",
+    "asOfDate": "2026-03-09",
+    "overview": {
+      "totalClicks": 308,
+      "totalImpressions": 5330,
+      "averageCtr": 0.0578,
+      "averagePosition": 6.24,
+      "clicksDeltaPct": null,
+      "impressionsDeltaPct": null,
+      "ctrDeltaPct": null,
+      "positionDelta": null,
+      "freshnessDays": 1
+    },
+    "dailyTrend": [
+      {
+        "snapshotDate": "2026-03-08",
+        "clicks": 34,
+        "impressions": 612,
+        "ctr": 0.0556,
+        "averagePosition": 6.19
+      }
+    ],
+    "topQueries": [
+      {
+        "query": "botswana safari",
+        "clicks": 214,
+        "impressions": 4180,
+        "ctr": 0.0512,
+        "averagePosition": 6.92,
+        "isBranded": false,
+        "intentBucket": null,
+        "termType": null,
+        "positionBand": null
+      }
+    ],
+    "marketBenchmarks": [
+      {
+        "marketLabel": "United States",
+        "clicks": 308,
+        "impressions": 5330,
+        "ctr": 0.0578,
+        "averagePosition": 6.24
+      },
+      {
+        "marketLabel": "Australia",
+        "clicks": 57,
+        "impressions": 1110,
+        "ctr": 0.0514,
+        "averagePosition": 7.83
+      }
+    ],
+    "issues": [
+      {
+        "issueKey": "search_console_healthy",
+        "label": "Search Console data is healthy",
+        "status": "healthy",
+        "detail": "Search Console snapshots are current and query/page datasets are populated."
+      }
+    ],
+    "recommendedActions": [
+      "Refresh title/meta to reinforce intent and improve click-through from rank 4-10 positions.",
+      "Align hero copy with high-demand queries and validate against competing SERP snippets."
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-09",
+    "source": "gsc + supabase",
+    "timeWindow": "30d",
+    "calculationVersion": "v1",
+    "marketScope": "United States",
+    "marketLabel": "United States",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
   }
 }
 ```
@@ -1323,6 +1533,144 @@ Optional query: `days_back=<7|30|90...>&country=United States|all`.
     "timeWindow": "rolling",
     "calculationVersion": "v1",
     "currency": null
+  }
+}
+```
+
+## Data Jobs Control Plane
+
+### `GET /api/v1/data-jobs`
+
+```json
+{
+  "data": [
+    {
+      "id": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
+      "jobKey": "fx-rates-pull",
+      "runnerKey": "fx.rates.pull",
+      "displayName": "FX Rates Pull",
+      "jobKind": "source_ingestion",
+      "scheduleMode": "recurring",
+      "enabled": true,
+      "scheduleCron": "*/15 * * * *",
+      "scheduleTimezone": "UTC",
+      "nextRunAt": "2026-03-10T15:00:00Z",
+      "maxRuntimeSeconds": 3600,
+      "freshnessSlaMinutes": 30,
+      "staleAfterMinutes": 60,
+      "timeoutAfterMinutes": null,
+      "retryBackoffMinutes": 30,
+      "owner": "finance",
+      "tags": ["fx", "rates"],
+      "config": {},
+      "createdAt": "2026-03-10T00:00:00Z",
+      "updatedAt": "2026-03-10T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 50,
+    "totalItems": 1,
+    "totalPages": 1
+  },
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "data_jobs",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/data-jobs/health`
+
+```json
+{
+  "data": [
+    {
+      "jobId": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
+      "jobKey": "fx-rates-pull",
+      "displayName": "FX Rates Pull",
+      "jobKind": "source_ingestion",
+      "scheduleMode": "recurring",
+      "enabled": true,
+      "scheduleCron": "*/15 * * * *",
+      "scheduleTimezone": "UTC",
+      "nextRunAt": "2026-03-10T15:15:00Z",
+      "lastRunId": "5f178c1f-bf8d-4da6-a6ae-0b580f2b74f0",
+      "lastRunStatus": "success",
+      "lastStartedAt": "2026-03-10T15:03:08.412Z",
+      "lastFinishedAt": "2026-03-10T15:03:12.094Z",
+      "lastDurationSeconds": 4,
+      "dueNow": false
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "data_job_health_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `POST /api/v1/data-jobs/fx-rates-pull/runs`
+
+Request:
+
+```json
+{
+  "triggerType": "manual",
+  "triggerSource": "fx_command",
+  "requestedBy": "frontend:fx_command",
+  "metadata": {}
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "5f178c1f-bf8d-4da6-a6ae-0b580f2b74f0",
+    "jobId": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
+    "runKey": "fx-rates-pull:f5188e48-9c2f-4f55-8fbe-67a5e06ec9ff",
+    "runStatus": "success",
+    "triggerType": "manual",
+    "triggerSource": "fx_command",
+    "requestedBy": "frontend:fx_command",
+    "requestedAt": "2026-03-10T15:03:08.411Z",
+    "startedAt": "2026-03-10T15:03:08.412Z",
+    "finishedAt": "2026-03-10T15:03:12.094Z",
+    "blockedReason": null,
+    "errorCode": null,
+    "errorMessage": null,
+    "output": {
+      "returnCode": 0
+    },
+    "metadata": {},
+    "createdAt": "2026-03-10T15:03:08.412Z",
+    "updatedAt": "2026-03-10T15:03:12.094Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "data_jobs",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
   }
 }
 ```

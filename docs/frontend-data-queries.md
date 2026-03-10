@@ -68,9 +68,15 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `GET /api/v1/marketing/web-analytics/geo` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Geographic performance plus demographics (age/gender) and device-category mix; supports optional `country` scope |
 | `GET /api/v1/marketing/web-analytics/events` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Event catalog with plain-language definitions and conversion classification; supports optional `country` scope |
 | `GET /api/v1/marketing/web-analytics/search` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Source Tracking surface (source/medium mix, referral leaders, value-ranked sources, `bounceRate`, `qualifiedSessionRate`, `qualityLabel`, landing pages, internal site search) with optional `days_back` + `country`; scoped mode uses exact GA4 country-filtered reads |
-| `GET /api/v1/marketing/web-analytics/search-console` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Search Console Insights surface with connection status plus SEO proxy analytics (organic landing pages + demand terms) while query-level GSC ingestion is pending |
+| `GET /api/v1/marketing/web-analytics/search-console` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | US-first Search Console Insights workspace contract with AI-led overview support, benchmark cards, travel-intent + position-band summaries, typed opportunity/challenge categories, and snapshot freshness semantics sourced from Supabase rollups |
+| `GET /api/v1/marketing/web-analytics/search-console/page-profile` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts`, `app/marketing/search-console-insights/pages/[...pagePath]/page.tsx` | Dedicated URL profile payload for a single page path with KPI overview, trend points, top matching queries, market benchmarks, diagnostics, and recommended actions |
 | `GET /api/v1/marketing/web-analytics/ai-insights` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Structured marketer/sales action engine output; optional `country` scope composes from same-scope overview/page/geo/search datasets |
-| `POST /api/fx/rates/run` (frontend route) | `features/fx-command/useFxCommandData.ts` | Server-side proxy for manual FX pull token handling |
+| `GET /api/v1/data-jobs` | `app/settings/page.tsx`, `app/operations/page.tsx` | Control-plane job inventory for settings and operations surfaces |
+| `PATCH /api/v1/data-jobs/{job_key}` | `features/settings/settings-page.tsx` | Toggle job enabled state and schedule controls |
+| `POST /api/v1/data-jobs/{job_key}/runs` | `features/settings/settings-page.tsx`, `lib/api/fxService.ts`, `lib/api/aiInsightsService.ts` | Canonical manual run trigger for ingestion/compute jobs |
+| `GET /api/v1/data-jobs/{job_key}/runs` | `app/operations/page.tsx` | Per-job run history rendering in operations |
+| `GET /api/v1/data-jobs/health` | `app/operations/page.tsx`, `app/settings/page.tsx` | Fleet-level health, due-state monitoring, and Settings last-run/status rendering |
+| `GET /api/v1/data-job-runs/{run_id}` | `features/operations/operations-page.tsx` (follow-up drilldown surface) | Run detail and step diagnostics |
 
 ## Backend Endpoints Not Used By Current Frontend Surfaces
 
@@ -78,10 +84,6 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 |---|---|
 | `GET /api/v1/debt-service/covenants` | Endpoint is live; current debt page surfaces aggregate covenant status from overview and does not yet render per-covenant snapshot rows. |
 | `GET /api/v1/travel-consultants/{employee_id}/forecast` | Profile endpoint includes forecast section; standalone endpoint is not called by current UI. |
-| `POST /api/v1/ai-insights/run` | Manual/operator trigger; no direct frontend action in module UI. |
-| `POST /api/v1/fx/signals/run` | Manual/operator trigger; no direct frontend action in module UI. |
-| `POST /api/v1/fx/intelligence/run` | Manual/operator trigger; no direct frontend action in module UI. |
-| `POST /api/v1/marketing/web-analytics/sync/run` | Manual/operator trigger; current Marketing UI auto-syncs via backend read path and does not expose a direct run action yet. |
 | `GET /api/v1/marketing/web-analytics/health` | Endpoint remains available for operator diagnostics, but the current Marketing UI intentionally omits the dedicated Tracking Health tab. |
 
 ## Notes
@@ -92,5 +94,7 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 - Debt Service payment posting is user-confirmed from a prefilled prompt; frontend does not auto-post when opening the log-payment flow.
 - Cash Flow module is split into subpages (`/cash-flow`, `/cash-flow/forecast`, `/cash-flow/ap-schedule`, `/cash-flow/scenarios`) and uses risk-first contracts before detail tables.
 - Cash Flow renders per-currency risk/forecast/schedule rows and avoids mixed-currency totals labeled as a single currency.
-- Marketing Web Analytics is GA4-first in v1; Search Console query datasets remain intentionally deferred until `GOOGLE_GSC_SITE_URL` is configured.
+- Search Console Insights is intentionally US-first (no market selector on this route); benchmark markets are always Australia, New Zealand, and South Africa.
+- Search Console page-profile route uses encoded page-path segments (including absolute URLs) and decodes/normalizes path values before backend fetch.
+- Legacy manual run endpoints (`/marketing/web-analytics/sync/run`, `/fx/*/run`, `/ai-insights/run`) are removed in favor of `/api/v1/data-jobs/{job_key}/runs`.
 

@@ -33,6 +33,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/marketing/geography-events`
 - `/marketing/search-performance`
 - `/marketing/search-console-insights`
+- `/marketing/search-console-insights/pages/[...pagePath]`
 - `/marketing/ai-website-insights`
 - `/operations`
 - `/ai-insights`
@@ -86,8 +87,15 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/marketing/web-analytics/events`
   - `/api/v1/marketing/web-analytics/search`
   - `/api/v1/marketing/web-analytics/search-console`
+  - `/api/v1/marketing/web-analytics/search-console/page-profile`
   - `/api/v1/marketing/web-analytics/ai-insights`
 - AI Insights reads briefing/feed/recommendations/history/entity insights
+- Settings and Operations read the canonical data-jobs control-plane APIs:
+  - `/api/v1/data-jobs`
+  - `/api/v1/data-jobs/{job_key}`
+  - `/api/v1/data-jobs/{job_key}/runs`
+  - `/api/v1/data-jobs/health`
+  - `/api/v1/data-job-runs/{run_id}`
 
 ## UX and Composition Notes
 - System shell and navigation live in `components/layout/*`
@@ -119,14 +127,21 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Page Activity for page-level usage behavior, itinerary diagnostics, best/worst ranking, dedicated lookbook/destination activity, and explicit rescue/scale focus cards
   - Geography & Events for geo segmentation, audience demographics, device mix, event meaning transparency, and market-priority focus cards (top-country cards use exact same-window country totals)
   - Source Tracking (route: `/marketing/search-performance`) for source/medium mix, referral analysis, value-ranked source decisions, and explicit traffic-quality scoring (`qualifiedSessionRate`, `bounceRate`, `qualityLabel`) plus landing-page/internal-search demand
-  - Search Console Insights (route: `/marketing/search-console-insights`) for Search Console readiness plus SEO proxy analytics while query-level ingestion is deferred; it is a dedicated left-navigation destination, not a Web Analytics sub-tab
+- Search Console Insights (route: `/marketing/search-console-insights`) is a dedicated tabbed workspace (`Overview`, `Opportunities`, `Challenges`, `Queries`, `Pages`, `Diagnostics`) backed by canonical Search Console snapshots; it remains a dedicated left-navigation destination, not a Web Analytics sub-tab
+  - Overview is AI-led (`What matters this week`) with deterministic action callouts, market benchmark comparison, and compact KPI support cards
+  - Opportunities and Challenges render as clickable tables with explicit typed categories (`opportunityType`, `challengeType`)
+  - Queries is a keyword-visibility workspace with intent/rank-band context and summary chips
+  - Pages links drill down into dedicated page profiles at `/marketing/search-console-insights/pages/[...pagePath]`
   - AI Website Insights for structured marketer/sales action cards with category, focus area, owner hint, target, impact score, and confidence score
-  - Shared `Market` selector (layout-level) defaults to `United States`, supports `All markets`, and preserves `country` + `days` URL state across tab/date navigation for consistent cross-surface scope.
+  - Shared `Market` selector (layout-level) is used on web-analytics routes and preserves `country` + `days` URL state; Search Console Insights is intentionally US-first and hides market selection.
+- Settings page (`/settings`) presents a compact, grouped data-jobs admin surface:
+  - rows are grouped by `jobKind` (`Source Ingestion`, `Rollup Refresh`, `Derived Compute`, `Manual Imports`, `Maintenance`)
+  - each row shows last-run timestamp and last-run status from `/api/v1/data-jobs/health`
+  - recurring schedules display plain-English cadence labels (cron retained as secondary detail)
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`
 - Required: `NEXT_PUBLIC_API_BASE`
-- For FX server proxy route: `API_BASE`, `FX_MANUAL_RUN_TOKEN`
 - Optional: `NEXT_PUBLIC_MAPBOX_TOKEN`
 
 ## Conventions
@@ -134,3 +149,4 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Utility files: `camelCase.ts`
 - No unused imports, dead code, or compatibility shims
 - Contract/display terms align with `docs/swainos-terminology-glossary.md`
+- Legacy manual-run frontend proxy route (`/app/api/fx/rates/run/route.ts`) is removed; manual runs now call `/api/v1/data-jobs/{job_key}/runs`.

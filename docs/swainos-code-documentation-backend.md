@@ -50,14 +50,15 @@ Error envelope:
 - Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|scenarios`
 - Command center core: `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
+- Data jobs control plane: `/data-jobs`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
 - Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
-- FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure` and run endpoints
-- Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|ai-insights|page-activity|geo|events|health|sync/run`
-- AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
+- FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure`
+- Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|search-console/page-profile|ai-insights|page-activity|geo|events|health`
+- AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*`
 
 ## Data and Rollup Model
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
@@ -76,7 +77,7 @@ Error envelope:
 - `/cash-flow/summary|timeseries` uses customer payments + AP payment-calendar rows for historical/net liquidity slices.
 - `/cash-flow/risk-overview|forecast|ap-schedule|scenarios` uses forward AP schedule rows plus projected inflow baseline from trailing customer payment history to flag upcoming cash stress by currency.
 - `/payments-out/summary` reports AP line-based outstanding and near-term due pressure.
-- `/marketing/web-analytics/*` is GA4-first in v1; Search Console query-level analytics is enabled once `GOOGLE_GSC_SITE_URL` is configured.
+- `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; Search Console analytics requires `GOOGLE_GSC_SITE_URL` and service-account access.
 
 ## Debt Service Domain
 - Debt facilities are data-driven rows in `debt_facilities`; no loan constants are embedded in service code.
@@ -128,11 +129,42 @@ Error envelope:
 - `scripts/generate_ai_insights.py`
 - `scripts/sync_marketing_web_analytics.py` (GA4 runtime sync path)
 
+## Data Jobs Control Plane
+- Runtime API routes:
+  - `src/api/data_jobs.py`
+  - `src/api/data_job_runs.py`
+- Core orchestration:
+  - `src/services/data_job_service.py`
+  - `src/repositories/data_job_repository.py`
+  - `src/services/job_runners/*`
+- Supabase control-plane objects (migration `0090_create_data_jobs_control_plane_v1.sql`):
+  - `public.data_jobs`
+  - `public.data_job_dependencies`
+  - `public.data_job_runs`
+  - `public.data_job_run_steps`
+  - `public.data_job_health_v1`
+- Additional control-plane guardrail migrations:
+  - `0091_data_job_run_guardrails_v1.sql`:
+    - enforces one `running` row per job via partial unique index
+    - auto-closes legacy duplicate `running` rows before index creation
+  - `0092_data_job_retry_backoff_v1.sql`:
+    - adds per-job `retry_backoff_minutes`
+    - enforces valid range (`0..10080`)
+    - seeds recurring default backoff (`30`) and non-recurring default (`0`)
+- Scheduler model:
+  - one fixed scheduler tick endpoint (`POST /api/v1/data-jobs/scheduler/tick`)
+  - due-job selection reads `data_jobs.next_run_at`
+  - dependency blocking and run-state locks are applied in service orchestration
+  - stale `running` rows are auto-failed after `max_runtime_seconds`
+  - scheduler-triggered blocked runs advance `next_run_at` to prevent repeated due-job churn
+  - failed recurring jobs honor per-job retry cooldown before re-dispatch
+
 ## Marketing Web Analytics (GA4-First)
 - Runtime API route: `src/api/marketing_web_analytics.py`
 - Service orchestration: `src/services/marketing_web_analytics_service.py`
 - Persistence adapter: `src/repositories/marketing_web_analytics_repository.py`
 - GA4 integration client: `src/integrations/google_analytics_client.py`
+- Search Console integration client: `src/integrations/google_search_console_client.py`
 - Runtime state and snapshot tables:
   - `public.marketing_web_analytics_daily`
   - `public.marketing_web_analytics_channels_daily`
@@ -146,24 +178,37 @@ Error envelope:
   - `public.marketing_web_analytics_internal_search_daily`
   - `public.marketing_web_analytics_overview_period_summaries`
   - `public.marketing_web_analytics_sync_runs`
+  - `public.marketing_search_console_daily`
+  - `public.marketing_search_console_query_daily`
+  - `public.marketing_search_console_page_daily`
+  - `public.marketing_search_console_page_query_daily`
+  - `public.marketing_search_console_country_daily`
+  - `public.marketing_search_console_device_daily`
   - migrations:
     - `supabase/migrations/0077_create_marketing_web_analytics_runtime_tables.sql`
     - `supabase/migrations/0078_expand_marketing_web_analytics_dimension_storage.sql`
     - `supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
     - `supabase/migrations/0086_harden_marketing_analytics_canonical_facts.sql`
-- Search Console is optional/deferred in v1; `/marketing/web-analytics/search-console` surfaces partial status when not connected.
+    - `supabase/migrations/0087_create_search_console_analytics_tables.sql`
+- Search Console ingestion is active and persisted in Supabase canonical facts for query/page/country/device analysis.
+- Search Console Supabase rollups:
+  - `marketing_search_console_insights_rollup_v1` (baseline workspace rollup)
+  - `marketing_search_console_us_workspace_v1` (US-first workspace rollup)
+  - `marketing_search_console_page_profile_v1` (single-page profile rollup)
 - Deep-dive endpoints:
   - `/marketing/web-analytics/page-activity` for best/worst pages, itinerary-page filtering, quality scoring, and dedicated lookbook/destination page slices via deterministic path-contains classification
   - `/marketing/web-analytics/geo` for country/region/city performance plus audience demographics (`userAgeBracket`, `userGender`) and device-category breakdowns
   - `/marketing/web-analytics/events` for event catalog definitions and conversion classification
   - `/marketing/web-analytics/search` now includes source/medium mix, referral source leaders, value-ranked sources, and explicit traffic-quality signals (`bounceRate`, `qualifiedSessionRate`, `qualityLabel`) in addition to landing pages and internal site-search demand
-  - `/marketing/web-analytics/search-console` provides Search Console connection status plus SEO proxy analytics (`organicLandingPages`, `internalSiteSearchTerms`) while query-level GSC ingestion remains deferred
+  - `/marketing/web-analytics/search-console` serves a US-first Search Console workspace: overview, top queries/pages, country+device mix, market benchmarks, query intent buckets, position-band summaries, and deterministic opportunities/challenges/issues from Supabase rollups (with controlled live refresh when stale)
+  - `/marketing/web-analytics/search-console/page-profile` serves single-page URL drill-down data (overview, daily trend, top queries, market benchmarks, diagnostics, recommended actions) from Supabase rollups
   - `/marketing/web-analytics/ai-insights` now returns structured action-engine output (`category`, `focusArea`, `targetLabel`, `ownerHint`, `impactScore`, `confidenceScore`) for direct marketer/sales/AI consumption
 - Scope contract:
-  - All read endpoints accept optional `country` query param.
-  - `country=all` (or omitted) keeps existing snapshot-first `All markets` behavior.
+  - GA4-backed read endpoints accept optional `country` query param.
+  - `country=all` (or omitted) keeps snapshot-first `All markets` behavior for GA4-backed surfaces.
   - `country=United States` (and other non-`all` values) uses exact GA4 country-filtered reads for overview/search/page-activity/geo/events/AI composition so scoped metrics do not drift from global marts.
-  - Response meta now includes `marketScope` and `marketLabel` to make backend-applied scope explicit to clients.
+  - Search Console Insights routes are intentionally US-first and do not accept a market selector parameter.
+  - Response meta includes `marketScope` and `marketLabel` to make backend-applied scope explicit to clients.
 - Quality/consolidation notes:
   - Daily/channel/country storage now persists canonical per-day facts (`date+channel`, `date+country`) and is overwrite-safe for repeated same-day sync runs.
   - Overview KPI windows (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) are synced into `marketing_web_analytics_overview_period_summaries` so frontend reads do not recompute distinct users by summing daily rows.
