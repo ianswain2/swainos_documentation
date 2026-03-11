@@ -3,12 +3,12 @@
 This is the canonical first-release inventory for the ingestion control plane cutover.
 It freezes `jobKey`, `runnerKey`, schedule mode, default cadence, dependencies, and legacy deletion targets.
 
-## Current State (Pre-Migration Execution)
+## Current State (Post-Cutover)
 
-- Control-plane code paths are implemented in backend and frontend.
-- `0090_create_data_jobs_control_plane_v1.sql` is updated with recurring-job `next_run_at` seeding and can be run safely.
-- Scheduler logic now computes true next-run values from cron expressions/timezones and bootstraps recurring jobs that still have null `next_run_at`.
-- Remaining execution step: run migration `0090` in Supabase and perform post-cutover verification checks.
+- Control-plane backend and frontend paths are implemented and active.
+- Supabase migrations for control-plane and guardrails are applied: `0090`, `0091`, `0092`, `0093`.
+- Scheduler computes cron/timezone-aware next-run values, bootstraps recurring jobs, and enforces backoff + stale-run protections.
+- Settings/Operations + Settings Run Logs use canonical control-plane APIs for run history and observability.
 
 ## Schedule Modes
 

@@ -46,6 +46,7 @@ Error envelope:
 
 ## Active Endpoint Families
 - Health: `/health`, `/healthz`, `/health/ready`
+- Auth and access control: `/auth/me`, `/settings/user-access`, `/settings/user-access/{user_id}`, `/settings/user-access/{user_id}/deactivate`, `/settings/user-access/{user_id}/reactivate`
 - AP liquidity: `/ap/summary|aging|payment-calendar`
 - Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|scenarios`
 - Command center core: `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
@@ -58,7 +59,22 @@ Error envelope:
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
 - FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure`
 - Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|search-console/page-profile|ai-insights|page-activity|geo|events|health`
-- AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*`
+- AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
+- Manual run utility endpoints: `/fx/signals/run`, `/ai-insights/run` (token-gated, non-UI primary paths)
+
+## Authentication and Authorization
+- Auth verification boundary: `src/core/auth.py` verifies Supabase bearer tokens against `/auth/v1/user` before route access.
+- Current-user access endpoint: `GET /api/v1/auth/me` returns role, active status, and permission keys.
+- Admin management endpoints: `src/api/settings_user_access.py` provides list/get/update/deactivate/reactivate flows for user access.
+- Access service and repository:
+  - `src/services/auth_access_service.py`
+  - `src/repositories/auth_access_repository.py`
+- Route-level authorization uses `src/api/authz.py` dependencies (`require_permission`, `require_admin`, `require_marketing_permission`).
+- Permission checks are layered: route dependency checks + data-level RLS policies + frontend route/nav filtering.
+- Auto-bootstrap safeguards:
+  - first authenticated access auto-creates missing `user_profiles` row as active `member`
+  - admin list sync ensures auth users missing profile rows are inserted as active `member`
+  - default bootstrap does not grant admin role or module permissions
 
 ## Data and Rollup Model
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)

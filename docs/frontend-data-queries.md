@@ -55,6 +55,11 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `PATCH /api/v1/ai-insights/recommendations/{id}` | `features/ai-insights/useAiInsightsData.ts` | Recommendation status transition |
 | `GET /api/v1/ai-insights/history` | `features/ai-insights/useAiInsightsData.ts` | Historical AI events |
 | `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` | `features/travel-consultant/profile/useTravelConsultantEntityAi.ts`, `components/assistant/assistant-panel.tsx` | Entity-scoped AI context |
+| `GET /api/v1/auth/me` | `lib/auth/getAuthenticatedUser.ts` | SSR-authenticated access resolution (role + permission keys) |
+| `GET /api/v1/settings/user-access` | `app/settings/user-access/page.tsx`, `features/settings/user-access-page.tsx` | Admin user-access list and page bootstrapping |
+| `PUT /api/v1/settings/user-access/{user_id}` | `features/settings/user-access-page.tsx` | Admin role/permission updates |
+| `POST /api/v1/settings/user-access/{user_id}/deactivate` | `features/settings/user-access-page.tsx` | Admin deactivation action |
+| `POST /api/v1/settings/user-access/{user_id}/reactivate` | `features/settings/user-access-page.tsx` | Admin reactivation action |
 | `GET /api/v1/fx/rates` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | FX rate series and metadata |
 | `GET /api/v1/fx/exposure` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Exposure by currency |
 | `GET /api/v1/fx/signals` | `app/fx-command/page.tsx`, `features/fx-command/useFxCommandData.ts` | Buy/wait signals |
@@ -97,5 +102,5 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 - Cash Flow renders per-currency risk/forecast/schedule rows and avoids mixed-currency totals labeled as a single currency.
 - Search Console Insights is intentionally US-first (no market selector on this route); benchmark markets are always Australia, New Zealand, and South Africa.
 - Search Console page-profile route uses encoded page-path segments (including absolute URLs) and decodes/normalizes path values before backend fetch.
-- Legacy manual run endpoints (`/marketing/web-analytics/sync/run`, `/fx/*/run`, `/ai-insights/run`) are removed in favor of `/api/v1/data-jobs/{job_key}/runs`.
+- Frontend manual-run triggers use `/api/v1/data-jobs/{job_key}/runs`; token-gated utility routes (for example `/ai-insights/run`, `/fx/signals/run`) remain backend-available but are not called by current frontend surfaces.
 

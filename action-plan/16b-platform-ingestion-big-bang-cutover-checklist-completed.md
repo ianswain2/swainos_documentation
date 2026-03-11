@@ -5,13 +5,13 @@ Use this checklist as the final go/no-go gate for one-time cutover.
 ## Current State Snapshot
 
 - Implementation status: control-plane backend/frontend wiring is complete.
-- Migration status: `0090_create_data_jobs_control_plane_v1.sql` is prepared but not yet applied in Supabase.
-- Scheduler readiness update: cron/timezone next-run computation and recurring null-`next_run_at` bootstrap are implemented in backend.
+- Migration status: control-plane and follow-on runtime migrations are applied in Supabase (`0090`, `0091`, `0092`, `0093`).
+- Scheduler readiness update: cron/timezone next-run computation, recurring null-`next_run_at` bootstrap, stale-run expiration, conflict blocking, and retry backoff are active.
 
 ## Global Gates
 
 - [x] Canonical control-plane schema exists (`data_jobs`, dependencies, runs, steps, health).
-- [ ] `0090_create_data_jobs_control_plane_v1.sql` has been executed in target Supabase environment.
+- [x] `0090_create_data_jobs_control_plane_v1.sql` has been executed in target Supabase environment.
 - [x] Canonical backend API family exists (`/api/v1/data-jobs*`, `/api/v1/data-job-runs/{run_id}`).
 - [x] Scheduler tick endpoint exists (`POST /api/v1/data-jobs/scheduler/tick`).
 - [x] Settings and Operations surfaces are wired to control-plane endpoints.
@@ -53,8 +53,8 @@ Use this checklist as the final go/no-go gate for one-time cutover.
 
 ## Post-Cutover Verification
 
-- [ ] Execute one scheduler tick in staging and confirm only due recurring jobs dispatch.
-- [ ] Verify dependency-blocked jobs produce `blocked` runs with readable reasons.
-- [ ] Trigger manual runs from `/settings` for at least one job per domain.
-- [ ] Verify `/operations` renders health + run history with live statuses.
-- [ ] Verify no removed endpoint is reachable in staging.
+- [x] Execute one scheduler tick in staging and confirm only due recurring jobs dispatch.
+- [x] Verify dependency-blocked jobs produce `blocked` runs with readable reasons.
+- [x] Trigger manual runs from `/settings` for at least one job per domain.
+- [x] Verify `/operations` renders health + run history with live statuses.
+- [x] Verify no removed endpoint is reachable in staging.

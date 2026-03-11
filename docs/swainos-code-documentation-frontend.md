@@ -17,6 +17,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `apps/web/src/lib/utils`: shared parsing/formatting helpers
 
 ## Route Surface
+- `/login`
+- `/auth/callback`
+- `/unauthorized`
 - `/command-center`
 - `/cash-flow`
 - `/cash-flow/forecast`
@@ -39,6 +42,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/ai-insights`
 - `/settings`
 - `/settings/run-logs`
+- `/settings/user-access`
 - `/revenue-bookings` (route exists and redirects to `/itinerary-forecast`)
 
 ## Data Access Pattern
@@ -46,6 +50,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Server-first route loaders under `features/*/*-server-loader.ts`
 - Shared parallel server loader orchestration in `lib/api/parallelFetch.ts`
 - Envelope handling in `lib/api/httpClient.ts`
+- Supabase clients:
+  - browser: `lib/supabase/browser.ts`
+  - server: `lib/supabase/server.ts`
+- Auth route protection and cookie/session synchronization: `src/proxy.ts` (Next.js proxy file convention)
 - `httpClient` raises typed `ApiClientError` values and wraps network failures with actionable diagnostics (`network_error`), including resolved API base/path context
 - In local development, `httpClient` falls back to `http://127.0.0.1:8000` when `NEXT_PUBLIC_API_BASE` is not set
 - Number normalization in `lib/utils/parseNumber.ts`
@@ -91,6 +99,12 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/marketing/web-analytics/search-console/page-profile`
   - `/api/v1/marketing/web-analytics/ai-insights`
 - AI Insights reads briefing/feed/recommendations/history/entity insights
+- Auth/access reads:
+  - `/api/v1/auth/me` (SSR access resolution path)
+  - `/api/v1/settings/user-access` (admin page server load)
+  - `/api/v1/settings/user-access/{user_id}` (update flows)
+  - `/api/v1/settings/user-access/{user_id}/deactivate`
+  - `/api/v1/settings/user-access/{user_id}/reactivate`
 - Settings and Operations read the canonical data-jobs control-plane APIs:
   - `/api/v1/data-jobs`
   - `/api/v1/data-jobs/run-feed`
@@ -141,6 +155,14 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - each row shows last-run timestamp and last-run status from `/api/v1/data-jobs/health`
   - recurring schedules display plain-English cadence labels (cron retained as secondary detail)
 - Settings navigation is left-nav driven under `Settings` with explicit children (`Job Controls`, `Run Logs`) instead of a top-page toggle.
+- Access navigation controls are permission-aware:
+  - side nav filters routes by permission keys for members
+  - admin users are treated as full-access
+  - unauthorized route access redirects to `/unauthorized`
+- Login flow:
+  - `/login` performs Supabase password sign-in
+  - callback exchange route is `/auth/callback`
+  - protected-route redirects are handled in `proxy.ts`
 - Settings Run Logs (`/settings/run-logs`) provides a compact cross-job run feed with filters and periodic polling:
   - reads `/api/v1/data-jobs/run-feed` with optional `job_key` and `run_status`
   - uses paginated history controls (`Previous`/`Next`) backed by API pagination totals so operators can move beyond recent rows
@@ -150,7 +172,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`
-- Required: `NEXT_PUBLIC_API_BASE`
+- Required:
+  - `NEXT_PUBLIC_API_BASE`
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Optional: `NEXT_PUBLIC_MAPBOX_TOKEN`
 
 ## Conventions
@@ -158,4 +183,4 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Utility files: `camelCase.ts`
 - No unused imports, dead code, or compatibility shims
 - Contract/display terms align with `docs/swainos-terminology-glossary.md`
-- Legacy manual-run frontend proxy route (`/app/api/fx/rates/run/route.ts`) is removed; manual runs now call `/api/v1/data-jobs/{job_key}/runs`.
+- Legacy manual-run frontend proxy route (`/app/api/fx/rates/run/route.ts`) is removed; active frontend manual runs call `/api/v1/data-jobs/{job_key}/runs`.

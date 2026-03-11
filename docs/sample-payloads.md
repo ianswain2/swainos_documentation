@@ -36,6 +36,124 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 }
 ```
 
+## Authentication and Access Control
+
+### `GET /api/v1/auth/me`
+
+```json
+{
+  "data": {
+    "userId": "4d87e6c9-8cae-4f35-b7b4-9d94a2c0b210",
+    "email": "ianswain2@gmail.com",
+    "role": "admin",
+    "isAdmin": true,
+    "isActive": true,
+    "permissionKeys": [
+      "ai_insights",
+      "cash_flow",
+      "command_center",
+      "debt_service",
+      "destination",
+      "fx_command",
+      "itinerary_actuals",
+      "itinerary_forecast",
+      "marketing_web_analytics",
+      "operations",
+      "search_console_insights",
+      "settings_job_controls",
+      "settings_run_logs",
+      "settings_user_access",
+      "travel_agencies",
+      "travel_consultant"
+    ],
+    "canManageAccess": true
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "user_access_summary_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `GET /api/v1/settings/user-access`
+
+```json
+{
+  "data": [
+    {
+      "userId": "4d87e6c9-8cae-4f35-b7b4-9d94a2c0b210",
+      "email": "ianswain2@gmail.com",
+      "role": "admin",
+      "isActive": true,
+      "permissionKeys": [
+        "command_center",
+        "settings_user_access"
+      ],
+      "createdAt": "2026-03-10T20:11:05.218Z",
+      "updatedAt": "2026-03-10T21:44:16.604Z"
+    },
+    {
+      "userId": "a9f87f95-4609-4d2f-8c68-f9979fb3fe6f",
+      "email": "member@example.com",
+      "role": "member",
+      "isActive": true,
+      "permissionKeys": [],
+      "createdAt": "2026-03-10T21:41:04.993Z",
+      "updatedAt": "2026-03-10T21:41:04.993Z"
+    }
+  ],
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "user_access_summary_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
+### `PUT /api/v1/settings/user-access/{user_id}`
+
+Request:
+
+```json
+{
+  "role": "member",
+  "isActive": true,
+  "permissionKeys": ["command_center", "marketing_web_analytics"],
+  "reason": "access_update_by_admin"
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "userId": "a9f87f95-4609-4d2f-8c68-f9979fb3fe6f",
+    "email": "member@example.com",
+    "role": "member",
+    "isActive": true,
+    "permissionKeys": ["command_center", "marketing_web_analytics"],
+    "createdAt": "2026-03-10T21:41:04.993Z",
+    "updatedAt": "2026-03-10T21:47:41.428Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "user_access_summary_v1",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null
+  }
+}
+```
+
 ## Liquidity (AR/AP)
 
 ### `GET /api/v1/payments-out/summary?time_window=90d`
