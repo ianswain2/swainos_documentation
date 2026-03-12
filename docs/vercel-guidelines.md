@@ -64,9 +64,9 @@ Environment naming rules:
 
 - Production frontend hostname is `app.swainos.com`.
 - `swainos.com` should not be treated as the canonical frontend hostname.
-- Root-domain behavior should be explicit and documented as either:
-  - redirecting to `app.swainos.com`, or
-  - serving a minimal noindex holding page outside the main app flow
+- Root-domain behavior should be explicit and documented as:
+  - redirecting to `swaindestinations.com`, or
+  - serving a minimal noindex holding page outside the main app flow until redirect cutover
 - `www` handling should be explicit and documented.
 - Preview deployments should use Vercel-generated preview domains unless there is a strong reason to expose custom preview hostnames.
 - Preview URLs should never become the canonical public URL for production users.

@@ -98,6 +98,7 @@ Error envelope:
 - FX invoice pressure endpoint reads from AP pressure rollups (`ap_pressure_30_60_90_v1`) instead of header-only supplier invoice totals.
 - `/cash-flow/summary|timeseries` uses customer payments + AP payment-calendar rows for historical/net liquidity slices.
 - `/cash-flow/risk-overview|forecast|ap-schedule|scenarios` uses forward AP schedule rows plus projected inflow baseline from trailing customer payment history to flag upcoming cash stress by currency.
+- `/itinerary-trends` and `/itinerary-lead-flow` now fail with explicit `503` error envelopes on repository/query failures (no silent zero-data fallback).
 - `/payments-out/summary` reports AP line-based outstanding and near-term due pressure.
 - `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; Search Console analytics requires `GOOGLE_GSC_SITE_URL` and service-account access.
 
@@ -148,7 +149,7 @@ Error envelope:
 - `scripts/pull_fx_rates.py`
 - `scripts/generate_fx_intelligence.py`
 - `scripts/refresh_fx_exposure.py`
-- `scripts/generate_ai_insights.py`
+- `scripts/generate_ai_insights.py` (manual runner that calls `AiInsightsService.run_manual_generation`)
 - `scripts/sync_marketing_web_analytics.py` (GA4 runtime sync path)
 
 ## Data Jobs Control Plane
@@ -217,6 +218,7 @@ Error envelope:
     - `supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
     - `supabase/migrations/0086_harden_marketing_analytics_canonical_facts.sql`
     - `supabase/migrations/0087_create_search_console_analytics_tables.sql`
+    - `supabase/migrations/0099_allow_marketing_sync_partial_status_v1.sql`
 - Search Console ingestion is active and persisted in Supabase canonical facts for query/page/country/device analysis.
 - Search Console Supabase rollups:
   - `marketing_search_console_insights_rollup_v1` (baseline workspace rollup)
@@ -243,6 +245,7 @@ Error envelope:
   - Large page-activity and geo writes are chunked in repository upserts to keep sync reliability stable at higher row counts.
   - `/marketing/web-analytics/overview` returns an extended trend window (up to ~800 days) from Supabase snapshots so frontend YoY visualizations do not require live GA4 calls.
   - Demographics/device/internal-search enrichment is snapshotted during sync for 30-day reads; custom day ranges still use exact same-window GA4 pulls.
+  - Optional section failures (demographics/devices/internal-search) are now recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
   - AI insight generation now applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
 
 ## Salesforce Read-Only Ingestion

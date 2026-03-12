@@ -6,7 +6,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 ## Production Hosting Topology
 - Canonical frontend hostname: `app.swainos.com`
 - Canonical backend hostname: `api.swainos.com`
-- Root domain behavior: `swainos.com` should either redirect to `app.swainos.com` or serve a minimal noindex holding page
+- Root domain behavior: `swainos.com` should redirect to `swaindestinations.com` (or temporarily serve a minimal noindex holding page until redirect cutover)
 - Production frontend hosting target: Vercel
 - Public edge and DNS authority: Cloudflare
 
@@ -50,7 +50,6 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/settings`
 - `/settings/run-logs`
 - `/settings/user-access`
-- `/revenue-bookings` (route exists and redirects to `/itinerary-forecast`)
 
 ## Data Access Pattern
 - Service modules under `lib/api/*Service.ts`
@@ -61,8 +60,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - browser: `lib/supabase/browser.ts`
   - server: `lib/supabase/server.ts`
 - Auth route protection and cookie/session synchronization: `src/proxy.ts` (Next.js proxy file convention)
+- Public-route matching is centralized in `lib/auth/publicPaths.ts` and shared by proxy/layout/system shell.
 - `httpClient` raises typed `ApiClientError` values and wraps network failures with actionable diagnostics (`network_error`), including resolved API base/path context
-- In local development, `httpClient` falls back to `http://127.0.0.1:8000` when `NEXT_PUBLIC_API_BASE` is not set
+- API base resolution is centralized in `lib/api/apiBase.ts`; client/server callers share one resolver for `NEXT_PUBLIC_API_BASE` and `API_BASE`.
+- In local development, the shared resolver falls back to `http://127.0.0.1:8000` only when explicitly enabled by the caller.
 - Number normalization in `lib/utils/parseNumber.ts`
 - In-flight GET dedupe is enabled
 - GET caching is disabled in non-production and enabled in production unless `skipCache` is set
@@ -184,7 +185,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Recommended for auth/callback clarity: `NEXT_PUBLIC_SITE_URL` (`https://app.swainos.com` in production)
-- Optional: `NEXT_PUBLIC_MAPBOX_TOKEN`
+- Optional:
+  - `NEXT_PUBLIC_MAPBOX_TOKEN`
+  - `API_BASE` (server-side API base override for proxy/server loaders)
 
 ## Conventions
 - Component files: `kebab-case.tsx`

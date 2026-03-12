@@ -58,7 +58,7 @@ Cloudflare is not responsible for:
 - Canonical frontend hostname: `app.swainos.com`
 - Canonical backend hostname: `api.swainos.com`
 - Root domain: `swainos.com`
-- Preferred root behavior: simple redirect to `app.swainos.com`
+- Preferred root behavior: redirect to `swaindestinations.com`
 - Acceptable temporary root behavior: minimal noindex holding page
 - Secondary root alias: `www.swainos.com`
 - API hostname: `api.swainos.com`
@@ -210,8 +210,8 @@ Caching changes must be deliberate and tested against auth/session behavior.
 
 Preferred redirect model:
 
-- `swainos.com` -> `app.swainos.com`
-- `www.swainos.com` -> `app.swainos.com` or `swainos.com`, but choose one durable rule and keep it consistent
+- `swainos.com` -> `swaindestinations.com`
+- `www.swainos.com` -> `swaindestinations.com` or `swainos.com`, but choose one durable rule and keep it consistent
 
 ## Observability And Operations
 
@@ -248,7 +248,7 @@ Define alerts for:
 - production hostnames are proxied
 - `app.swainos.com` is the canonical frontend hostname
 - `api.swainos.com` is the canonical backend hostname
-- `swainos.com` is configured either as a redirect to `app.swainos.com` or as a minimal noindex holding page
+- `swainos.com` is configured as a redirect to `swaindestinations.com` (or temporarily as a minimal noindex holding page until redirect cutover)
 - HTTPS is enforced
 - SSL mode is Full (strict)
 - DNSSEC is enabled after any registrar or nameserver transition is complete
