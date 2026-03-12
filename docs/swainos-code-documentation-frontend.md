@@ -3,6 +3,13 @@
 ## Overview
 SwainOS frontend is a Next.js App Router application with feature-based modules and typed API services.
 
+## Production Hosting Topology
+- Canonical frontend hostname: `app.swainos.com`
+- Canonical backend hostname: `api.swainos.com`
+- Root domain behavior: `swainos.com` should either redirect to `app.swainos.com` or serve a minimal noindex holding page
+- Production frontend hosting target: Vercel
+- Public edge and DNS authority: Cloudflare
+
 ## Stack
 - Next.js + React + TypeScript (strict)
 - Tailwind CSS
@@ -167,15 +174,16 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - reads `/api/v1/data-jobs/run-feed` with optional `job_key` and `run_status`
   - uses paginated history controls (`Previous`/`Next`) backed by API pagination totals so operators can move beyond recent rows
   - displays persisted run analytics fields (`durationSeconds`, `outputSizeBytes`) for historical performance analysis
-  - periodic refresh uses a minimal `useEffect` polling loop as an explicit external-system synchronization exception
+  - periodic refresh uses an adaptive polling loop (`8s` when active runs exist, `20s` when idle) as an explicit external-system synchronization exception
   - polling pauses when browser tab is hidden and resumes with immediate refresh on visibility return
 
 ## Environment
 - Frontend env file: `apps/web/.env.local`
 - Required:
-  - `NEXT_PUBLIC_API_BASE`
+  - `NEXT_PUBLIC_API_BASE` (`https://api.swainos.com` in production)
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Recommended for auth/callback clarity: `NEXT_PUBLIC_SITE_URL` (`https://app.swainos.com` in production)
 - Optional: `NEXT_PUBLIC_MAPBOX_TOKEN`
 
 ## Conventions

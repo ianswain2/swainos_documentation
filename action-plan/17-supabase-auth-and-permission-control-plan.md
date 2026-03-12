@@ -273,7 +273,8 @@ Implement the Supabase schema, invite workflow assumptions, and RLS boundaries r
 
 **Supabase project settings requirements:**
 - Disable public signup in Auth settings.
-- Configure invite/recovery redirect URLs for local and Vercel domains.
+- Configure invite/recovery redirect URLs for local development and the canonical hosted frontend domain.
+- Production callback target should be `https://app.swainos.com/auth/callback`.
 - Confirm invite email template and sender setup for delivery reliability.
 - Validate cookie/JWT configuration against Cloudflare-proxied domain behavior.
 - Restrict redirect URL allowlist to exact trusted domains only (no broad wildcards).
@@ -379,7 +380,7 @@ Add Supabase auth clients, protected app entry, permission-filtered navigation, 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_API_BASE`
-- Optional for clarity in redirects: `NEXT_PUBLIC_SITE_URL`
+- Optional for clarity in redirects: `NEXT_PUBLIC_SITE_URL` (`https://app.swainos.com` in production)
 
 **Required environment variables (backend):**
 - `SUPABASE_URL`
@@ -458,7 +459,7 @@ Validate the full invite-only auth flow, confirm permission enforcement across l
   - authenticated API calls include bearer token for protected endpoints
 - Deployment checks:
   - Vercel environment variables configured correctly
-  - Supabase redirect URLs aligned to deployed domain(s)
+  - Supabase redirect URLs aligned to `https://app.swainos.com/auth/callback` and approved local development callback URLs
   - cookie/session behavior works behind Cloudflare proxying
 
 ### **Cutover and Rollout Sequence**

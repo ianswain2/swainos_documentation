@@ -4,6 +4,12 @@
 SwainOS backend is a FastAPI service with route -> service -> repository layering.  
 Primary focus: deterministic analytics contracts, traceable rollups, and API envelopes used by frontend modules.
 
+## Production Hosting Topology
+- Canonical backend hostname: `api.swainos.com`
+- Expected primary frontend caller: `app.swainos.com`
+- Public edge and DNS authority: Cloudflare
+- Backend should be exposed through the canonical API hostname rather than raw origin URLs
+
 ## Architecture
 - `src/api`: route surfaces and query parsing
 - `src/services`: business logic and aggregation orchestration
@@ -60,7 +66,7 @@ Error envelope:
 - FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure`
 - Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|search-console/page-profile|ai-insights|page-activity|geo|events|health`
 - AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
-- Manual run utility endpoints: `/fx/signals/run`, `/ai-insights/run` (token-gated, non-UI primary paths)
+- Manual run utility endpoints: `/fx/signals/run`, `/ai-insights/run` (strict token-gated, non-UI primary paths)
 
 ## Authentication and Authorization
 - Auth verification boundary: `src/core/auth.py` verifies Supabase bearer tokens against `/auth/v1/user` before route access.
@@ -172,11 +178,13 @@ Error envelope:
     - backfills historical rows from `started_at`/`finished_at` and serialized `output` payload size
 - Scheduler model:
   - one fixed scheduler tick endpoint (`POST /api/v1/data-jobs/scheduler/tick`)
+  - scheduler tick requires `x-scheduler-token` and is blocked when token is missing/invalid
   - due-job selection reads `data_jobs.next_run_at`
   - dependency blocking and run-state locks are applied in service orchestration
   - stale `running` rows are auto-failed after `max_runtime_seconds`
   - scheduler-triggered blocked runs advance `next_run_at` to prevent repeated due-job churn
   - failed recurring jobs honor per-job retry cooldown before re-dispatch
+  - high-cost run and mutation paths are request-rate limited (app-layer + edge-layer)
 
 ## Marketing Web Analytics (GA4-First)
 - Runtime API route: `src/api/marketing_web_analytics.py`
@@ -297,3 +305,14 @@ Error envelope:
 - New terms and metric labels follow `docs/swainos-terminology-glossary.md`
 - No compatibility shims: active contracts are represented directly and refactored when needed
 - AI insights require live model execution (no deterministic fallback contract)
+
+## Runtime Security and Cost Guardrails
+- Production startup requires non-empty values for:
+  - `AI_MANUAL_RUN_TOKEN`
+  - `FX_MANUAL_RUN_TOKEN`
+  - `DATA_JOBS_SCHEDULER_TOKEN`
+- Non-production behavior: manual/scheduler token headers are only enforced when a token is configured; unconfigured local/dev environments are allowed for developer workflows.
+- Production request handling enforces trusted host allowlists before route execution.
+- Subprocess-backed data jobs are bounded by `max_runtime_seconds`; timed-out jobs are force-killed and marked with `runner_timeout_killed`.
+- AI generation enforces run-level budgets (`max model calls`, `max tokens`, `max consultants`) and returns partial-safe status when budget limits are hit.
+- Application-layer rate limits are in-memory and process-local; Cloudflare edge rate limiting remains the global cross-instance enforcement layer.
