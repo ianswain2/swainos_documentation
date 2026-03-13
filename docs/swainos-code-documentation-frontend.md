@@ -131,6 +131,17 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `Expected`
   - `Forecast`
   - `Target (+12% YoY)`
+- Shared table system:
+  - standard table structure/styling is centralized in `apps/web/src/components/ui/table.tsx`
+  - regular list/report tables use shared primitives (`Table`, `TableContainer`, `TableHeader`, `TableBody`, `TableRow`, `TableHeadCell`, `TableCell`)
+  - shared row-display helpers reduce repeated feature-level presentation code:
+    - `TableEntityContent` for primary/secondary row identity
+    - `TableRankBadge` for ranking chips
+    - `TableCountBadge` for compact count/value chips
+    - `TableValuePill` for shared semantic tones (`neutral`, `positive`, `negative`, `warning`)
+  - regular tables use the shared dashboard-style row divider, header, and container chrome by default
+  - matrix-heavy analytical tables continue to use shared `mode="matrix"` structure but retain more custom cell content rules where month-grid/variance behavior is materially different
+  - the heatmap affinity table (`features/sales/charts/agent-affinity-matrix.tsx`) remains an intentional special-case table outside the shared regular table system
 - Debt Service module includes:
   - Creditor-level debt table (`Debt by Creditor`) showing lender, facility, outstanding, and next due values
   - Top-bar manual payment action that opens a prefilled prompt and only posts on explicit confirm
