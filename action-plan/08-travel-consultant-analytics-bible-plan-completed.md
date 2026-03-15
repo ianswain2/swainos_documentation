@@ -5,7 +5,7 @@
 > **Date**: 2026-02-16  
 > **Completion Date**: 2026-02-16
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/src/scripts/`, `SwainOS_FrontEnd/apps/web/src/app/`, `SwainOS_FrontEnd/apps/web/src/features/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwainOS_FrontEnd/apps/web/src/components/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/src/scripts/`, `SwainOS_FrontEnd/apps/web/src/app/`, `SwainOS_FrontEnd/apps/web/src/features/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwainOS_FrontEnd/apps/web/src/components/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: No dedicated Travel Consultant analytics domain, no canonical employee model synced from Salesforce, and no unified KPI/YoY framework split by travel outcomes vs funnel performance dates.  
 **Objective**: Deliver a Travel Consultant analytics system with leaderboard and consultant profile deep-dive that supports monthly + rolling 12-month analysis, year-over-year signals, and compensation-aware performance metrics with a target of 12% growth.
 
@@ -233,8 +233,8 @@ Create and populate consultant identity table, then persist owner linkage on iti
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `SwianOS_Documentation/supabase/migrations/00xx_create_employees.sql` | Create | New employees table + constraints/indexes |
-| `SwianOS_Documentation/supabase/migrations/00xx_add_itinerary_employee_fk.sql` | Create | `itineraries.employee_id` FK + index |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_employees.sql` | Create | New employees table + constraints/indexes |
+| `SwainOS_BackEnd/supabase/migrations/00xx_add_itinerary_employee_fk.sql` | Create | `itineraries.employee_id` FK + index |
 | `SwainOS_BackEnd/src/scripts/*employee*sync*.py` | Create/Modify | Salesforce -> Supabase employee upsert |
 | `SwainOS_BackEnd/src/scripts/*itinerary*upsert*.py` | Modify | Resolve owner external ID to `employee_id` |
 
@@ -292,7 +292,7 @@ Expose fast, consistent consultant analytics APIs for team leaderboard and consu
 | `src/services/travel_consultants_service.py` | Create | KPI assembly, YoY, and signal logic |
 | `src/api/travel_consultants.py` | Create | Route handlers |
 | `src/api/router.py` | Modify | Register new travel consultant routes |
-| `SwianOS_Documentation/supabase/migrations/00xx_mv_travel_consultant_*.sql` | Create | Monthly + rolling12 consultant rollups with naming consistency |
+| `SwainOS_BackEnd/supabase/migrations/00xx_mv_travel_consultant_*.sql` | Create | Monthly + rolling12 consultant rollups with naming consistency |
 
 ### **✅ Validation Checklist**
 - [ ] All endpoints return `{ data, pagination, meta }` envelope pattern

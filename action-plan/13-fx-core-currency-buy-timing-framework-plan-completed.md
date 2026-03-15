@@ -5,7 +5,7 @@
 > **Date**: 2026-02-17  
 > **Completion Date**: 2026-02-18
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/fx-command/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/fx-command/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: Need a complete FX framework that always pulls and stores rates, tracks payable-currency exposure, integrates macro/geopolitical intelligence, and reliably identifies best times to buy without over-engineering or unverifiable AI behavior.  
 **Objective**: Deliver an end-to-end FX framework where `USD` is the funding/base currency and buy decisions are generated for payable currencies (`AUD`, `NZD`, `ZAR`) using deterministic core signals plus structured AI macro/geopolitical analysis (daily and on-demand), with full auditability and validation-gated decision quality before broad automation.
 
@@ -211,13 +211,13 @@ Ensure schema, indexes, views, and RLS fully support pull-store-compute workflow
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/00xx_fx_rates_constraints_and_indexes.sql` | Create/Modify | Add uniqueness and index coverage |
-| `supabase/migrations/00xx_create_fx_signal_runs.sql` | Create | Persist run-level execution outcomes |
-| `supabase/migrations/00xx_create_or_refine_fx_signals.sql` | Create/Modify | Persist recommendation snapshots |
-| `supabase/migrations/00xx_refine_fx_transactions_ledger.sql` | Create/Modify | Enforce ledger semantics and balance-safe constraints |
-| `supabase/migrations/00xx_refine_fx_holdings_rollforward.sql` | Create/Modify | Ensure holdings reconcile from ledger history |
-| `supabase/migrations/00xx_fx_macro_intelligence_foundation.sql` | Create/Modify | Add source/event/run persistence for macro-geopolitical analysis |
-| `supabase/migrations/00xx_fx_rls_policies.sql` | Create/Modify | Align access controls with standards |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_rates_constraints_and_indexes.sql` | Create/Modify | Add uniqueness and index coverage |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_fx_signal_runs.sql` | Create | Persist run-level execution outcomes |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_or_refine_fx_signals.sql` | Create/Modify | Persist recommendation snapshots |
+| `SwainOS_BackEnd/supabase/migrations/00xx_refine_fx_transactions_ledger.sql` | Create/Modify | Enforce ledger semantics and balance-safe constraints |
+| `SwainOS_BackEnd/supabase/migrations/00xx_refine_fx_holdings_rollforward.sql` | Create/Modify | Ensure holdings reconcile from ledger history |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_macro_intelligence_foundation.sql` | Create/Modify | Add source/event/run persistence for macro-geopolitical analysis |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_rls_policies.sql` | Create/Modify | Align access controls with standards |
 
 ### **✅ Validation Checklist**
 - [ ] Migrations are repeatable/idempotent-safe and apply cleanly

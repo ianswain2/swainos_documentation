@@ -4,7 +4,7 @@
 > **Date**: 2026-02-09  
 > **Completion Date**: —
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, Supabase tables (`contacts`, `agencies`, `suppliers`, `itineraries`, `bookings`, `itinerary_items`, `customer_payments`, `supplier_invoices`, `supplier_invoice_lines`, `locations_raw`, `locations`)  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, Supabase tables (`contacts`, `agencies`, `suppliers`, `itineraries`, `bookings`, `itinerary_items`, `customer_payments`, `supplier_invoices`, `supplier_invoice_lines`, `locations_raw`, `locations`)  
 **Primary Issues**: Historical data must be loaded in a safe, repeatable order with external ID mapping.  
 **Objective**: Import historical data into Supabase with stable `external_id` mapping, validated relationships, consistent `contact_type` usage, and agency consortia tagging.
 

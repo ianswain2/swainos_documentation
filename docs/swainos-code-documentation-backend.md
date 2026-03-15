@@ -213,12 +213,12 @@ Error envelope:
   - `public.marketing_search_console_country_daily`
   - `public.marketing_search_console_device_daily`
   - migrations:
-    - `supabase/migrations/0077_create_marketing_web_analytics_runtime_tables.sql`
-    - `supabase/migrations/0078_expand_marketing_web_analytics_dimension_storage.sql`
-    - `supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
-    - `supabase/migrations/0086_harden_marketing_analytics_canonical_facts.sql`
-    - `supabase/migrations/0087_create_search_console_analytics_tables.sql`
-    - `supabase/migrations/0099_allow_marketing_sync_partial_status_v1.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0077_create_marketing_web_analytics_runtime_tables.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0078_expand_marketing_web_analytics_dimension_storage.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0079_add_marketing_page_activity_and_geo_breakdowns.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0086_harden_marketing_analytics_canonical_facts.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0087_create_search_console_analytics_tables.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0099_allow_marketing_sync_partial_status_v1.sql`
 - Search Console ingestion is active and persisted in Supabase canonical facts for query/page/country/device analysis.
 - Search Console Supabase rollups:
   - `marketing_search_console_insights_rollup_v1` (baseline workspace rollup)
@@ -255,7 +255,7 @@ Error envelope:
 - Runtime state storage:
   - `public.salesforce_sync_cursors`
   - `public.salesforce_sync_runs`
-  - migration: `supabase/migrations/0076_create_salesforce_sync_runtime_tables.sql`
+  - migration: `SwainOS_BackEnd/supabase/migrations/0076_create_salesforce_sync_runtime_tables.sql`
 
 ### External Client App Configuration
 - App name: `SwainOS`

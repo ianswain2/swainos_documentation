@@ -5,7 +5,7 @@
 > **Date**: 2026-02-10  
 > **Completion Date**: [YYYY-MM-DD]
 
-**Target Components**: `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwianOS_Documentation/supabase/migrations/`  
+**Target Components**: `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/supabase/migrations/`  
 **Primary Issues**: Live FX data ingestion, supplier exposure aggregation, trade logging (buy/sell), AI insights storage, forecasting pipeline  
 **Objective**: Deliver a complete FX backend that provides live rates, exposure rollups for ZAR/USD/AUD/NZD, durable trade logging, AI insights history, and forecast-ready datasets.
 
@@ -135,9 +135,9 @@ Gaps:
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/00xx_fx_transactions_ext.sql` | Create | Add normalized trade fields |
-| `supabase/migrations/00xx_fx_ai_insights.sql` | Create | Add AI insights table |
-| `supabase/migrations/00xx_fx_forecasts.sql` | Create | Add forecast table |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_transactions_ext.sql` | Create | Add normalized trade fields |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_ai_insights.sql` | Create | Add AI insights table |
+| `SwainOS_BackEnd/supabase/migrations/00xx_fx_forecasts.sql` | Create | Add forecast table |
 | `docs/swainos-code-documentation-backend.md` | Update | Document FX schema and storage decisions |
 
 ### **✅ Validation Checklist**
@@ -173,7 +173,7 @@ Implement ingestion pipelines for FX rates and exposure rollups.
 | File | Action | Description |
 |------|--------|-------------|
 | `src/integrations/fx_rates/*` | Create | Provider client + ingestion job |
-| `supabase/migrations/00xx_mv_fx_exposure.sql` | Modify | Adjust exposure logic if needed |
+| `SwainOS_BackEnd/supabase/migrations/00xx_mv_fx_exposure.sql` | Modify | Adjust exposure logic if needed |
 | `src/repositories/fx_repository.py` | Modify | Support filters for currency scope |
 
 ### **✅ Validation Checklist**
@@ -281,8 +281,8 @@ Finalize API contracts for FX and ensure consistent documentation + testing.
 ## 🔗 **RELATED DOCUMENTATION**
 
 - **[Frontend Buildout Plan](./05-frontend-initial-buildout-plan.md)** - Frontend reference
-- **[Supabase Schema](../supabase/migrations/0001_initial_schema.sql)** - FX table definitions
-- **[Materialized Views](../supabase/migrations/0003_materialized_views.sql)** - Exposure view
+- **[Supabase Schema](../../SwainOS_BackEnd/supabase/migrations/0001_initial_schema.sql)** - FX table definitions
+- **[Materialized Views](../../SwainOS_BackEnd/supabase/migrations/0003_materialized_views.sql)** - Exposure view
 
 ---
 

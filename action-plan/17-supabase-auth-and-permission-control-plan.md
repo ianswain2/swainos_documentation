@@ -4,7 +4,7 @@
 > **Status**: 🚀 READY TO IMPLEMENT  
 > **Date**: 2026-03-10
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/core/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_FrontEnd/apps/web/src/app/`, `SwainOS_FrontEnd/apps/web/src/components/layout/`, `SwainOS_FrontEnd/apps/web/src/features/settings/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/constants/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/core/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_FrontEnd/apps/web/src/app/`, `SwainOS_FrontEnd/apps/web/src/components/layout/`, `SwainOS_FrontEnd/apps/web/src/features/settings/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/constants/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: SwainOS currently has no formal authentication boundary, no invite-only login flow, no user access model for left-navigation modules, and no server-enforced authorization contract for protected routes or APIs.  
 **Objective**: Implement a lean, production-ready Supabase authentication and authorization foundation for a small invite-only user base, with admin override, per-module permissions, route/API protection, and documentation-aligned contracts.
 
@@ -243,7 +243,7 @@ Implement the Supabase schema, invite workflow assumptions, and RLS boundaries r
 - optional helper view: `user_access_summary_v1`
 
 **Migration location and numbering:**
-- Add new migrations in `SwianOS_Documentation/supabase/migrations/`.
+- Add new migrations in `SwainOS_BackEnd/supabase/migrations/`.
 - Start from the next available sequence after `0095`.
 - Keep filename pattern aligned to existing standards (example: `0096_create_auth_access_domain_v1.sql`).
 
@@ -523,7 +523,7 @@ Use this gate before coding begins.
 - [ ] Route-to-permission matrix is approved and frozen.
 - [ ] Supabase project settings (signup disabled, redirects configured) are confirmed.
 - [ ] Initial admin bootstrap method is approved.
-- [ ] Migration sequence slot is reserved in `supabase/migrations`.
+- [ ] Migration sequence slot is reserved in `SwainOS_BackEnd/supabase/migrations/`.
 - [ ] Backend ownership is assigned (`auth`, `settings user access`, permission helper).
 - [ ] Frontend ownership is assigned (`login`, `middleware`, shell/nav filtering).
 - [ ] QA matrix includes admin, constrained-member, and inactive-user scenarios.

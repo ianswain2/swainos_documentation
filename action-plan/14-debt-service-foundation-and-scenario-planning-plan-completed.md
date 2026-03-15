@@ -5,7 +5,7 @@
 > **Date**: 2026-02-27  
 > **Completion Date**: 2026-02-27
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_FrontEnd/apps/web/src/features/debt-service/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_FrontEnd/apps/web/src/features/debt-service/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: Debt Service currently has placeholder UI and starter schema only; there is no production debt domain for schedule generation, payment logging, DSCR monitoring, covenant tracking, or early-payoff simulation.  
 **Objective**: Build the canonical debt-servicing data model and API/UI foundation so SwainOS can track scheduled and actual principal/interest payments, auto-update balances in Supabase, and evaluate payoff/prepayment options against broader cash-flow constraints.
 
@@ -189,9 +189,9 @@ Create normalized Supabase schema that supports debt terms, generated schedules,
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/00xx_create_debt_service_domain_v1.sql` | Create | Canonical debt tables/constraints/indexes |
-| `supabase/migrations/00xx_create_debt_service_views_v1.sql` | Create | Debt KPI and schedule summary views |
-| `supabase/migrations/00xx_debt_rls_policies_v1.sql` | Create/Modify | Debt domain RLS controls |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_debt_service_domain_v1.sql` | Create | Canonical debt tables/constraints/indexes |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_debt_service_views_v1.sql` | Create | Debt KPI and schedule summary views |
+| `SwainOS_BackEnd/supabase/migrations/00xx_debt_rls_policies_v1.sql` | Create/Modify | Debt domain RLS controls |
 
 ### **✅ Validation Checklist**
 - [x] Migrations apply cleanly and are idempotent-safe where practical.

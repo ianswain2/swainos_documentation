@@ -4,7 +4,7 @@
 > **Status**: ⏸️ PARKED (NOT STARTED)  
 > **Date**: 2026-03-06
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/src/integrations/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/src/integrations/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: Current budgeting schema is too flat for versioned planning, QuickBooks actuals are not yet operationalized for budget variance, and there is no AI-ready budget context layer linked to broader platform decisions.  
 **Objective**: Ship a fast, production-usable budget vs actual flow in SwainOS with versioned planning, deterministic QuickBooks mapping, and platform-ready data contracts.
 

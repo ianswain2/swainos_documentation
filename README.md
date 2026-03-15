@@ -1,12 +1,12 @@
 # SwainOS Documentation
 
 ## Overview
-Project documentation repository for product scope, technical contracts, data mappings, action plans, and Supabase migration history.
+Project documentation repository for product scope, technical contracts, data mappings, action plans, and references to backend-owned Supabase migration history.
 
 ## Structure
 - `docs/`: product and engineering reference documents
 - `action-plan/`: execution plans and action log
-- `supabase/migrations/`: ordered SQL migrations
+- backend-owned migrations live in `SwainOS_BackEnd/supabase/migrations/`
 
 ## Core Documents
 - `docs/swainos-code-documentation-backend.md`

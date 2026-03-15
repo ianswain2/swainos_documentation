@@ -4,7 +4,7 @@
 > **Status**: ✅ COMPLETED  
 > **Date**: 2026-02-17
 
-**Target Components**: `SwianOS_Documentation/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/ai-insights/`, `SwainOS_FrontEnd/apps/web/src/features/command-center/`, `SwainOS_FrontEnd/apps/web/src/features/travel-consultant/`, `SwainOS_FrontEnd/apps/web/src/components/assistant/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
+**Target Components**: `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/scripts/`, `SwainOS_FrontEnd/apps/web/src/features/ai-insights/`, `SwainOS_FrontEnd/apps/web/src/features/command-center/`, `SwainOS_FrontEnd/apps/web/src/features/travel-consultant/`, `SwainOS_FrontEnd/apps/web/src/components/assistant/`, `SwainOS_FrontEnd/apps/web/src/lib/api/`, `SwainOS_FrontEnd/apps/web/src/lib/types/`, `SwianOS_Documentation/docs/`  
 **Primary Issues**: AI surfaces are scaffolded but not powered by a persistent insight pipeline, structured recommendation queue, or domain-level explainable evidence model.  
 **Objective**: Deliver a scalable AI-native insights platform where deterministic analytics and OpenAI synthesis produce actionable, auditable, role-aware insights across Command Center, AI Insights, and module-level embeds (including travel consultant intelligence).
 
@@ -168,12 +168,12 @@ Implement schema and view foundations that make AI computation fast, auditable, 
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/00xx_create_ai_insight_events.sql` | Create | Core AI insight event table + indexes |
-| `supabase/migrations/00xx_create_ai_recommendation_queue.sql` | Create | Action queue with ownership/status |
-| `supabase/migrations/00xx_create_ai_briefings_daily.sql` | Create | Persisted command-center briefing snapshots |
-| `supabase/migrations/00xx_create_ai_context_views.sql` | Create | Domain context views for compact LLM input |
-| `supabase/migrations/00xx_ai_rls_policies.sql` | Create/Modify | RLS + role policy alignment for AI tables |
-| `supabase/migrations/00xx_ai_indexes.sql` | Create | Query/performance indexes by domain, status, entity, recency |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_ai_insight_events.sql` | Create | Core AI insight event table + indexes |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_ai_recommendation_queue.sql` | Create | Action queue with ownership/status |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_ai_briefings_daily.sql` | Create | Persisted command-center briefing snapshots |
+| `SwainOS_BackEnd/supabase/migrations/00xx_create_ai_context_views.sql` | Create | Domain context views for compact LLM input |
+| `SwainOS_BackEnd/supabase/migrations/00xx_ai_rls_policies.sql` | Create/Modify | RLS + role policy alignment for AI tables |
+| `SwainOS_BackEnd/supabase/migrations/00xx_ai_indexes.sql` | Create | Query/performance indexes by domain, status, entity, recency |
 
 **Implementation Steps:**
 1. Create AI tables with strict typed columns and jsonb evidence payloads.

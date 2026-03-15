@@ -5,7 +5,7 @@
 > **Date**: 2026-02-17  
 > **Completion Date**: 2026-02-17
 
-**Target Components**: `SwainOS_BackEnd/src/api/**`, `SwainOS_BackEnd/src/services/**`, `SwainOS_BackEnd/src/repositories/**`, `SwainOS_BackEnd/src/schemas/**`, `SwianOS_Documentation/supabase/migrations/**`, `SwainOS_FrontEnd/apps/web/src/features/sales/**`, `SwainOS_FrontEnd/apps/web/src/features/travel-consultant/**`, `SwainOS_FrontEnd/apps/web/src/lib/api/**`, `SwainOS_FrontEnd/apps/web/src/lib/types/**`, `SwianOS_Documentation/docs/**`  
+**Target Components**: `SwainOS_BackEnd/src/api/**`, `SwainOS_BackEnd/src/services/**`, `SwainOS_BackEnd/src/repositories/**`, `SwainOS_BackEnd/src/schemas/**`, `SwainOS_BackEnd/supabase/migrations/**`, `SwainOS_FrontEnd/apps/web/src/features/sales/**`, `SwainOS_FrontEnd/apps/web/src/features/travel-consultant/**`, `SwainOS_FrontEnd/apps/web/src/lib/api/**`, `SwainOS_FrontEnd/apps/web/src/lib/types/**`, `SwianOS_Documentation/docs/**`  
 **Primary Issues**: SwainOS has strong travel consultant analytics but does not yet provide first-class Travel Agency and Travel Agent analytics, search, profile drill-down, and relationship insight parity.  
 **Objective**: Deliver complete Travel Agency + Travel Agent analytics with backend-first execution (Supabase rollups, API surface, services, schemas), followed by full frontend rollout with consultant-parity UX and canonical naming, with no unresolved data-contract unknowns at build start.
 
@@ -193,7 +193,7 @@ Create schema and rollups that support fast leaderboard/profile/search reads for
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/0048_create_travel_trade_agent_agency_rollups.sql` | Create | New entities, assignment table, rollups, indexes, refresh function |
+| `SwainOS_BackEnd/supabase/migrations/0048_create_travel_trade_agent_agency_rollups.sql` | Create | New entities, assignment table, rollups, indexes, refresh function |
 | `scripts/refresh_travel_trade_rollups.py` | Create | Rollup refresh runner and basic execution logging |
 | `docs/swainos-code-documentation-backend.md` | Modify | Record migration artifacts and rollup catalog |
 

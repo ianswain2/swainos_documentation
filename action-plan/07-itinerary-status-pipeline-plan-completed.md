@@ -5,7 +5,7 @@
 > **Date**: 2026-02-10  
 > **Completion Date**: 2026-02-10
 
-**Target Components**: `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwianOS_Documentation/supabase/migrations/`, `SwainOS_FrontEnd/apps/web/src/features/revenue-bookings/`  
+**Target Components**: `SwainOS_BackEnd/src/api/`, `SwainOS_BackEnd/src/repositories/`, `SwainOS_BackEnd/src/services/`, `SwainOS_BackEnd/src/schemas/`, `SwainOS_BackEnd/supabase/migrations/`, `SwainOS_FrontEnd/apps/web/src/features/revenue-bookings/`  
 **Primary Issues**: Pipeline trends based on “days” are insufficient; need status-driven monthly pipeline views with date-range controls.  
 **Objective**: Deliver a status-driven itinerary pipeline (monthly buckets + status counts) with 3/6/12-month filters and API contracts aligned to naming conventions.
 
@@ -97,7 +97,7 @@ Create a materialized view that aggregates itineraries by month and status.
 **Files to Create/Modify:**
 | File | Action | Description |
 |------|--------|-------------|
-| `supabase/migrations/00xx_mv_itinerary_status_trends.sql` | Create | Materialized view for status trends |
+| `SwainOS_BackEnd/supabase/migrations/00xx_mv_itinerary_status_trends.sql` | Create | Materialized view for status trends |
 
 ### **✅ Validation Checklist**
 - [ ] View builds and refreshes successfully
