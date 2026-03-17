@@ -759,6 +759,8 @@ Response:
 
 ### `GET /api/v1/travel-agents/leaderboard`
 
+Usage note: Travel Agencies UI uses this payload for top-performance bars and rankings tables; standalone top summary KPI cards were intentionally removed during frontend declutter.
+
 ```json
 {
   "data": {
