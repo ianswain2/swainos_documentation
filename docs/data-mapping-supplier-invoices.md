@@ -10,7 +10,7 @@
 - Line parent table: `public.supplier_invoice_bookings` (`external_id` conflict target, Salesforce `a29`).
 - Child table: `public.supplier_invoice_lines` (`external_id` conflict target).
 - Parent linkage: `supplier_invoice_lines.supplier_invoice_booking_id` resolved from
-  `supplier_invoice_external_id` -> `supplier_invoice_bookings.external_id`.
+  `supplier_invoice_booking_external_id` -> `supplier_invoice_bookings.external_id`.
 - Required integrity rule: each line must include at least one recognized parent key
   (booking-parent preferred; legacy invoice-parent fields retained for transition compatibility).
 
@@ -46,10 +46,10 @@
 | Import Field | Supabase Field | Type | Required | Mapping Notes |
 | --- | --- | --- | --- | --- |
 | `external_id` | `external_id` | text | yes | Natural key for upsert conflict resolution |
-| `supplier_invoice_external_id` | `supplier_invoice_booking_id` (resolver input) | text -> uuid | yes | Resolve from `supplier_invoice_bookings.external_id` |
-| `supplier_invoice_booking_external_id` | `supplier_invoice_booking_external_id` | text | no | Hydrated from `supplier_invoice_external_id` for explicit parent lineage |
+| `supplier_invoice_external_id` | `supplier_invoice_id` (resolver input) | text -> uuid | no | Optional direct invoice-header external ID when Salesforce exposes it |
+| `supplier_invoice_booking_external_id` | `supplier_invoice_booking_id` (resolver input) | text -> uuid | yes | Resolve from `supplier_invoice_bookings.external_id`; canonical required parent path |
 | `supplier_invoice_booking_id` | `supplier_invoice_booking_id` | uuid | no | Parent booking UUID |
-| `supplier_invoice_id` | `supplier_invoice_id` | uuid | no | Legacy invoice-parent UUID retained for compatibility only |
+| `supplier_invoice_id` | `supplier_invoice_id` | uuid | no | Optional direct invoice-parent UUID retained for compatibility and downstream joins |
 | `itinerary_item_external_id` | `itinerary_item_id` (resolver input) | text -> uuid | no | Resolve from `itinerary_items.external_id` |
 | `itinerary_item_id` | `itinerary_item_id` | uuid | no | Use when pre-resolved |
 | `itinerary_external_id` | `itinerary_id` (resolver input) | text -> uuid | no | Resolve from `itineraries.external_id` |
