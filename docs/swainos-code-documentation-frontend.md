@@ -127,6 +127,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 
 ## UX and Composition Notes
 - System shell and navigation live in `components/layout/*`
+- `PageShell` now provides layout spacing and optional action controls only; route-level title/subtitle header chrome has been intentionally removed across tabs to reduce vertical clutter.
 - Assistant panel uses module/entity context and entity AI endpoint when entity context is present
 - Itinerary lead-flow panel is rendered on itinerary actuals, not itinerary forecast
 - Chart containers use fluid `ResponsiveContainer` rendering; shell enforces `min-w-0` and overflow guards for responsive stability
@@ -161,6 +162,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Overview answers `Are we at risk?`, `When is first risk?`, and `Why?`
   - Forecast and AP Schedule provide drill-down tables by currency and horizon
   - Scenarios page is read-only and does not mutate baseline data
+- Travel Agencies page emphasizes workflow over duplicated summary chrome:
+  - top controls: period + Top-N toggles
+  - primary surfaces: unified search, top-performance bars, and agent/agency ranking tables
+  - removed: standalone top summary KPI card strip (Top Agent/Agency + Top-N aggregates)
 - Marketing module is split into strategic operator tabs:
   - Web Analytics Overview for KPI + trend direction (DoD/MoM/YoY) plus visual trend graphs (30d line trend, 6-month MoM bars, 12-month YoY sessions comparison, and a rolling 12-month horizontal sessions+YoY indicator table); KPI windows are served from synced canonical period summaries (not client-side rollups)
   - Page Activity for page-level usage behavior, itinerary diagnostics, best/worst ranking, dedicated lookbook/destination activity, and explicit rescue/scale focus cards

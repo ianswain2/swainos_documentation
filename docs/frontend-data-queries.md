@@ -40,11 +40,11 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `features/itinerary-actuals/useItineraryActualsYoy.ts` | Actuals channel production |
 | `GET /api/v1/travel-consultants/leaderboard` | `features/travel-consultant/leaderboard/useTravelConsultantLeaderboard.ts` | Consultant ranking and highlights |
 | `GET /api/v1/travel-consultants/{employee_id}/profile` | `features/travel-consultant/profile/useTravelConsultantProfile.ts` | Consultant detail and embedded forecast section |
-| `GET /api/v1/travel-agents/leaderboard` | `features/sales/useTravelAgentsLeaderboard.ts` | Agent ranking |
+| `GET /api/v1/travel-agents/leaderboard` | `features/sales/useTravelAgentsLeaderboard.ts`, `features/sales/travel-agencies-page.tsx` | Agent ranking data for top-performance bars and rankings table |
 | `GET /api/v1/travel-agents/{agent_id}/profile` | `features/sales/useTravelAgentProfile.ts` | Agent profile |
-| `GET /api/v1/travel-agencies/leaderboard` | `features/sales/useTravelAgenciesLeaderboard.ts` | Agency ranking |
+| `GET /api/v1/travel-agencies/leaderboard` | `features/sales/useTravelAgenciesLeaderboard.ts`, `features/sales/travel-agencies-page.tsx` | Agency ranking data for top-performance bars and rankings table |
 | `GET /api/v1/travel-agencies/{agency_id}/profile` | `features/sales/useTravelAgencyProfile.ts` | Agency profile |
-| `GET /api/v1/travel-trade/search` | `features/sales/useTravelTradeSearch.ts` | Unified trade search |
+| `GET /api/v1/travel-trade/search` | `features/sales/useTravelTradeSearch.ts`, `features/sales/travel-agencies-page.tsx` | Unified trade search |
 | `GET /api/v1/itinerary-destinations/summary` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Current-year booked destination KPI summary and top-country ranking |
 | `GET /api/v1/itinerary-destinations/trends` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Monthly destination trend by selected country/city scope |
 | `GET /api/v1/itinerary-destinations/breakdown` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Country and city booked production breakdown |
@@ -105,4 +105,5 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 - Frontend manual-run triggers use `/api/v1/data-jobs/{job_key}/runs`; token-gated utility routes (for example `/ai-insights/run`, `/fx/signals/run`) remain backend-available but are not called by current frontend surfaces.
 - Salesforce operators should use the same query surfaces with `job_key=salesforce-readonly-sync` filters; no frontend surface calls Salesforce directly.
 - Salesforce run diagnostics are read from `GET /api/v1/data-job-runs/{run_id}` where subprocess output includes parsed script JSON (`output.parsed`) for `windowStart`, `upperBound`, object metrics, and API counter snapshots.
+- Recent frontend declutter removed Travel Agencies top summary KPI cards and route-level page header chrome; no endpoint contracts changed for these UI removals.
 

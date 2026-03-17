@@ -342,6 +342,7 @@ Error envelope:
 - New terms and metric labels follow `docs/swainos-terminology-glossary.md`
 - No compatibility shims: active contracts are represented directly and refactored when needed
 - AI insights require live model execution (no deterministic fallback contract)
+- Frontend declutter changes (route header removal, Travel Agencies KPI-card removal) are UI-only and do not change backend endpoint or payload contracts.
 
 ## Runtime Security and Cost Guardrails
 - Production startup requires non-empty values for:
