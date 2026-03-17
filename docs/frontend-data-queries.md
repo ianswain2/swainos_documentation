@@ -103,4 +103,6 @@ Purpose: canonical list of frontend-to-backend query contracts in active use.
 - Search Console Insights is intentionally US-first (no market selector on this route); benchmark markets are always Australia, New Zealand, and South Africa.
 - Search Console page-profile route uses encoded page-path segments (including absolute URLs) and decodes/normalizes path values before backend fetch.
 - Frontend manual-run triggers use `/api/v1/data-jobs/{job_key}/runs`; token-gated utility routes (for example `/ai-insights/run`, `/fx/signals/run`) remain backend-available but are not called by current frontend surfaces.
+- Salesforce operators should use the same query surfaces with `job_key=salesforce-readonly-sync` filters; no frontend surface calls Salesforce directly.
+- Salesforce run diagnostics are read from `GET /api/v1/data-job-runs/{run_id}` where subprocess output includes parsed script JSON (`output.parsed`) for `windowStart`, `upperBound`, object metrics, and API counter snapshots.
 

@@ -143,6 +143,22 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Strict FK Resolver | Import mode that derives FK UUIDs from external IDs and ignores incoming FK UUID columns. | Operational mode | `--strict-fk-resolver` in import scripts | Auto-link mode |
 | Unresolved FK Export | Reconciliation artifact listing unresolved external IDs after strict resolution pass. | CSV output | `--export-unresolved-csv` output | Error export |
 
+## Salesforce Sync Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| System Modstamp Cursor | Incremental extraction cursor from Salesforce record mutation timestamp. | UTC datetime | `SystemModstamp`, `lastSystemmodstamp` (stored cursor) | Last Sync Date (ambiguous) |
+| Window Start | Lower bound used for current run extraction after overlap policy. | UTC datetime | `windowStart`, `salesforce_sync_runs.window_start` | Start Date (generic) |
+| Upper Bound | Single run-level extraction ceiling (`now - settle lag`) shared across objects. | UTC datetime | `upperBound`, `salesforce_sync_cursors.last_completed_upper_bound` | Pull End Date |
+| Overlap Window | Intentional replay window to absorb late-arriving writes between runs. | Minutes | `overlap_minutes` (runtime config), documented default `60` | Duplicate Pull Buffer |
+| Settle Lag | Safety delay before extraction upper bound to avoid in-flight transaction churn. | Minutes | `--upper-bound-lag-minutes` (default `5`) | Ingestion Delay (generic) |
+| API Limits Preflight | Run-start check that blocks extraction when org API usage is over threshold. | Percent threshold + usage snapshot | `/limits` -> `DailyApiRequests`, `apiLimits.dailyApiRequests.usedPercent` | Limit Check |
+| Blocked Sync Run | Non-failed operational stop caused by deterministic guardrail (for example API budget threshold or active lock). | Run status | `blocked`, `blockedReason` | Soft Failure |
+| Object Metrics | Per-object ingest summary captured for each sync run. | Structured JSON object | `objectMetrics.*` (`extracted`, `staged`, `loaded`, `skippedUnresolved`, `csv_bytes`) | Script Stats |
+| Bulk API Counters | Salesforce Bulk API request activity counters for cost/behavior visibility. | Integer counters | `jobsCreated`, `pollsMade`, `resultPagesRead` | API Ping Count |
+| Unresolved Reference Export | CSV artifact of unresolved strict foreign-key lookups for replay/backfill workflows. | CSV file path + row count | `--export-unresolved-csv`, unresolved rows in script metrics | FK Error Dump |
+| Soft Delete Mapping | Policy that maps source deletions without hard-deleting warehouse records. | Boolean flag semantics | Salesforce `IsDeleted` -> destination `isDeleted` | Delete Mirror |
+
 ## Canonical UI Title and Control Patterns
 
 | Surface Type | Canonical Pattern | Example |

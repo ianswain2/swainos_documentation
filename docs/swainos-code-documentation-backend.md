@@ -255,7 +255,9 @@ Error envelope:
 - Runtime state storage:
   - `public.salesforce_sync_cursors`
   - `public.salesforce_sync_runs`
-  - migration: `SwainOS_BackEnd/supabase/migrations/0076_create_salesforce_sync_runtime_tables.sql`
+  - migrations:
+    - `SwainOS_BackEnd/supabase/migrations/0076_create_salesforce_sync_runtime_tables.sql`
+    - `SwainOS_BackEnd/supabase/migrations/0103_salesforce_sync_runtime_and_dependency_hardening.sql`
 
 ### External Client App Configuration
 - App name: `SwainOS`
@@ -284,23 +286,55 @@ Error envelope:
   - `docs/data-mapping-user.md`
   - `docs/data-mapping-itinerary.md`
   - `docs/data-mapping-itinerary-items.md`
+  - `docs/data-mapping-supplier-invoices.md`
 
 ### Sync Semantics
-- Incremental cursor: `SystemModstamp + Id` tie-break.
+- Scheduler cadence: hourly (`0 * * * *`).
+- Limits preflight: read `/limits` before extraction and block the run when `DailyApiRequests` usage is `>= 85%`.
+- Window watermarking:
+  - bootstrap start: `2026-02-01T00:00:00Z`
+  - overlap: `60` minutes
+  - settle lag: `5` minutes
+- Deterministic cursor state is still recorded as `SystemModstamp + Id` per object, with `last_completed_upper_bound` tracking the last finished extraction window.
 - Extract mode: Bulk API 2.0 `queryAll`.
 - Delete handling: map Salesforce `IsDeleted` into destination soft-delete behavior.
+- Validated Salesforce object API names in sandbox:
+  - agencies/suppliers source: `Account`
+  - employees source: `User` (active mapping intentionally excludes unavailable sandbox fields `Salary__c` and `Commission_Rate__c`)
+  - itineraries source: `KaptioTravel__Itinerary__c`
+  - itinerary items source: `KaptioTravel__Itinerary_Item__c`
+  - supplier invoice chain: `KaptioTravel__SupplierInvoice__c`, `KaptioTravel__SupplierInvoiceBooking__c`, `KaptioTravel__SupplierInvoiceLine__c`
 - Load order per run:
   1. agencies
   2. suppliers
   3. employees
   4. itineraries
   5. itinerary_items
+  6. supplier_invoices
+  7. supplier_invoice_bookings
+  8. supplier_invoice_lines
+- Unresolved-reference policy:
+  - itinerary items export unresolved itinerary/supplier references for retry while skipping unresolved strict rows
+  - supplier invoice headers/bookings preserve optional unresolved related references and export them for backfill
+  - supplier invoice lines require booking-parent resolution and may preserve optional unresolved itinerary/item/supplier references for later reconciliation
 
 ### API Safety and Failure Behavior
 - Singleton lock prevents overlapping scheduled runs.
 - Conservative polling and per-run API budgets are enforced.
 - No automatic retries; failures stop current run and continue next scheduled interval.
-- Endpoint allowlist blocks non-Bulk/token Salesforce API paths.
+- Endpoint allowlist blocks non-Bulk/token/limits Salesforce API paths.
+- Loop-prevention design is first-principles and deterministic:
+  - each run computes one `upperBound` and never chases in-run writes
+  - each object window start is derived from `last_completed_upper_bound - overlap` (or bootstrap) rather than from transient partial progress
+  - blocked/failed runs do not auto-retry inside the same process and therefore cannot spin in a tight Salesforce ping loop
+- Run observability is persisted and emitted:
+  - object-level metrics include `extracted`, `staged`, `loaded`, unresolved/duplicate skip counts, `csv_bytes`, and `window_start`
+  - counters include `jobsCreated`, `pollsMade`, and `resultPagesRead`
+  - terminal JSON status payloads (`success`/`blocked`) are parsed into `data_job_runs.output.parsed` for operator inspection
+- Successful `salesforce-readonly-sync` runs fan out dependent `system_managed` rollups:
+  - `travel-trade-rollups-refresh`
+  - `consultant-ai-rollups-refresh`
+  - `fx-exposure-refresh`
 
 ## Contract Rules
 - Query params remain `snake_case`
