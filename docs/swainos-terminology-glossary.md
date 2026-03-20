@@ -31,7 +31,7 @@ This glossary is the canonical source of truth for user-facing terminology acros
 |---|---|---|---|---|
 | Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `bookedRevenue`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (ambiguous) |
 | Gross Profit | Profit from itinerary activity. | Currency | `grossProfitAmount`, `expectedGrossProfitAmount`, `forecastGrossProfitAmount`, `targetGrossProfitAmount` | Commission Income, Income, Net |
-| Booked Itineraries | Count of closed-won itineraries attributed to the selected travel period window. | Integer | `bookedItinerariesCount` | Traveled Itineraries, Traveled Files |
+| Booked Itineraries | Count of closed-won itineraries attributed to the selected **travel-period** window. | Integer | `bookedItinerariesCount` | When the UI labels **Traveled Itineraries**, use that only for travel-start scoped KPIs; do not mix with lead-created windows |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
 | Booked Revenue | Closed-won revenue for selected period in consultant and leaderboard contexts. | Currency | `bookedRevenue` | Revenue (generic) |
@@ -42,11 +42,12 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Close Rate | Closed won divided by (closed won + closed lost). | Percent | `closeRate` | Win Rate (unless explicitly same formula) |
 | Speed to Close (Days) | Average days from lead creation to booking close. | Days (`d`) | `avgSpeedToBookDays` | Avg Speed to Book, Lead Time |
 | YoY Variance % | Year-over-year percent change vs comparable prior period. | Signed Percent | `yoyToDateVariancePct`, `ytdVariancePct`, derived YoY delta fields | YoY to-date (without %) |
+| PY comparison (inline) | Prior-year-to-date comparison for the **same elapsed calendar span** (e.g. Jan 1–today last year) shown as a secondary line under a current-period value; may include a signed delta percent. | Text + percent | `priorYear` object on channel rows (`itineraryCount`, `grossAmount`, `grossProfitAmount`, …) | PYTD label in UI (use **PY** per product copy) |
 | Target Variance % | Percent variance against strategic target trajectory. | Signed Percent | `growthTargetVariancePct`, `growthGapPct`, `totalGrowthGapPct` | Growth Gap (without %) |
 | Supplier Liability | Outstanding supplier AP from payable line rollups. | Currency | `totalOutstandingAmount`, `due30dAmount` | Supplier Payables, Open Supplier Liability |
 | Deposit Liability | Outstanding customer receivable/deposit posture in current window. | Currency | `outstandingDeposits`, `availableCashAfterLiability` | Open Deposit Liability |
 | Net Liquidity (AR/AP) | Net liquidity after combining cash window with customer receivable and supplier AP liabilities. | Currency | Derived UI metric (`netCashTotal + outstandingDeposits - totalOutstandingAmount`) | Cash Position (ambiguous) |
-| Deposit Coverage % | Deposits received divided by deposits targeted/required. | Percent | Derived from deposit timeline summary | Deposit Health (generic) |
+| ~~Deposit Coverage %~~ (retired) | Previously: deposits received vs targeted. **Removed** from active API + UI; DB may still store deposit rollups for operations. | — | — | Deposit Health (generic); do not resurrect in user copy |
 | Cash Risk Status | Risk classification for upcoming cash posture by currency. | Enum (`healthy`, `watch`, `at_risk`) | `riskStatus` | Cash Health Flag |
 | First Risk Date | Earliest date where projected cash violates risk rule by currency. | Date | `firstRiskDate` | First Breach Date |
 | Cash Buffer Threshold | Operating cash reserve threshold used in risk scoring. | Currency | `cashBufferAmount` | Reserve Floor |
@@ -167,7 +168,7 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Section header | Title Case, noun-oriented | `Recommendation Queue` |
 | Filter label | Singular noun or noun phrase | `Domain`, `Severity`, `Status` |
 | Metric toggle label | Canonical metric names only | `Gross Profit`, `Gross Revenue`, `Margin Amount`, `PAX` |
-| Time window toggle | Short window token or explicit period name | `3m`, `6m`, `12m`, `This Year` |
+| Time window toggle | Short window token or explicit period name | `3m`, `6m`, `12m`, `This Year` (many analytics routes now use **fixed** windows from the server loader—only add toggles when product requires them) |
 | Empty-state copy | Plain, deterministic, no metric synonym drift | `No recommendations matched current filters.` |
 
 ## Specific Mapping Guidance
@@ -202,11 +203,12 @@ This glossary is the canonical source of truth for user-facing terminology acros
 - Is backend field naming mapped clearly when different from display text?
 - Are AI-generated summaries using canonical display terms?
 
-## Linked Standards
-- `docs/swainos-code-documentation-frontend.md`
-- `docs/swainos-code-documentation-backend.md`
-- `docs/frontend-data-queries.md`
-- `docs/sample-payloads.md`
+## Related documentation
+
+- [Frontend code documentation](swainos-code-documentation-frontend.md)
+- [Backend code documentation](swainos-code-documentation-backend.md)
+- [Frontend data queries](frontend-data-queries.md)
+- [Sample payloads](sample-payloads.md)
 
 ## Rename Ledger
 

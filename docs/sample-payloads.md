@@ -7,6 +7,7 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 - Query params: `snake_case`
 - JSON fields: `camelCase`
 - Dates: ISO 8601
+- **Dashboard snapshots** return composite `data` objects (see below); individual domain shapes match their standalone endpoints.
 
 ## Error Envelope
 
@@ -150,6 +151,73 @@ Response:
     "timeWindow": "",
     "calculationVersion": "v1",
     "currency": null
+  }
+}
+```
+
+## Dashboard snapshots
+
+### `GET /api/v1/dashboard-snapshots/command-center`
+
+Abbreviated: nested values mirror standalone service shapes (camelCase in JSON). Partial failures populate `sectionErrors` and may set `warning` / `error` inside `data`.
+
+```json
+{
+  "data": {
+    "cashFlowSummaries": [
+      {
+        "currencyCode": "USD",
+        "cashInTotal": 1200000.0,
+        "cashOutTotal": 980000.0,
+        "netCashTotal": 220000.0
+      }
+    ],
+    "depositsSummaries": [],
+    "paymentsSummaries": [],
+    "forecast": [],
+    "itineraryLeadFlow": { "timeline": [] },
+    "itineraryOutlook": { "summary": {}, "timeline": [], "closeRatio": 0.0 },
+    "itineraryActuals": { "years": [], "timeline": [], "yearSummaries": [] },
+    "debtOverview": { "asOfDate": "2026-03-14", "facilityCount": 0 },
+    "briefing": null,
+    "warning": null,
+    "error": null,
+    "sectionErrors": {}
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-14",
+    "source": "command_center_snapshot_v1",
+    "timeWindow": "30d+12m",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
+### `GET /api/v1/dashboard-snapshots/cash-flow`
+
+```json
+{
+  "data": {
+    "riskOverview": [],
+    "forecast3m": [],
+    "forecast12m": [],
+    "scenarios": []
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-14",
+    "source": "cash_flow_snapshot_v1",
+    "timeWindow": "12m",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
   }
 }
 ```
@@ -697,15 +765,72 @@ Response:
 }
 ```
 
+### `GET /api/v1/itinerary-revenue/actuals-channels-comparison?period_type=year&year=2026`
+
+Travel Agencies channel tables use this contract. Each row may include `priorYear` with **true prior-year-to-date** metrics (Jan 1 through the same calendar date last year), aligned to the active period window.
+
+```json
+{
+  "data": {
+    "topConsortia": [
+      {
+        "label": "Virtuoso",
+        "itineraryCount": 128,
+        "paxCount": 402,
+        "grossAmount": 12000000.0,
+        "grossProfitAmount": 2100000.0,
+        "marginAmount": 9900000.0,
+        "tradeCommissionAmount": 180000.0,
+        "priorYear": {
+          "itineraryCount": 110,
+          "paxCount": 355,
+          "grossAmount": 10100000.0,
+          "grossProfitAmount": 1750000.0,
+          "tradeCommissionAmount": 150000.0
+        }
+      }
+    ],
+    "topTradeAgencies": [
+      {
+        "label": "Northstar Travel",
+        "itineraryCount": 44,
+        "paxCount": 120,
+        "grossAmount": 920000.0,
+        "grossProfitAmount": 168000.0,
+        "marginAmount": 752000.0,
+        "tradeCommissionAmount": 42000.0,
+        "priorYear": {
+          "itineraryCount": 38,
+          "paxCount": 101,
+          "grossAmount": 801000.0,
+          "grossProfitAmount": 142000.0,
+          "tradeCommissionAmount": 36000.0
+        }
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-14",
+    "source": "mv_itinerary_consortia_actuals_monthly,mv_itinerary_trade_agency_actuals_monthly",
+    "timeWindow": "year",
+    "calculationVersion": "v3",
+    "currency": null
+  }
+}
+```
+
 ## Travel Consultant
 
 ### `GET /api/v1/travel-consultants/leaderboard`
+
+Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31.
 
 ```json
 {
   "data": {
     "periodStart": "2026-01-01",
-    "periodEnd": "2026-12-31",
+    "periodEnd": "2026-03-14",
     "periodType": "year",
     "domain": "travel",
     "sortBy": "booked_revenue",
@@ -746,7 +871,7 @@ Response:
   },
   "pagination": null,
   "meta": {
-    "asOfDate": "2026-02-26",
+    "asOfDate": "2026-03-14",
     "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly",
     "timeWindow": "year",
     "calculationVersion": "v1",
@@ -759,13 +884,13 @@ Response:
 
 ### `GET /api/v1/travel-agents/leaderboard`
 
-Usage note: Travel Agencies UI uses this payload for top-performance bars and rankings tables; standalone top summary KPI cards were intentionally removed during frontend declutter.
+Usage note: Travel Agencies UI uses this payload for top-performance bars and rankings tables (fixed current-year query from the route loader). Standalone top summary KPI cards were removed earlier. For current-year requests, `periodEnd` is **today**, not year-end.
 
 ```json
 {
   "data": {
     "periodStart": "2026-01-01",
-    "periodEnd": "2026-12-31",
+    "periodEnd": "2026-03-14",
     "periodType": "year",
     "sortBy": "gross_profit",
     "sortOrder": "desc",
@@ -791,11 +916,65 @@ Usage note: Travel Agencies UI uses this payload for top-performance bars and ra
   },
   "pagination": null,
   "meta": {
-    "asOfDate": "2026-02-26",
+    "asOfDate": "2026-03-14",
     "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup",
     "timeWindow": "year",
     "calculationVersion": "v1",
     "currency": null
+  }
+}
+```
+
+### `GET /api/v1/travel-agents/{agent_id}/profile` (abbreviated)
+
+Agent profiles pair **lead-created** KPIs (`kpis.*`) with **travel-period** operational lists (`bookedItineraries`, `currentTravelingFiles`, `topOpenItineraries`). Arrays omitted here are still returned (often empty).
+
+```json
+{
+  "data": {
+    "agent": {
+      "agentId": "62f8c8de-10ac-4a32-a8f1-f05f32b4f4f6",
+      "agentExternalId": "003A000001ABC123",
+      "agentName": "Taylor Morgan",
+      "agentEmail": "taylor.morgan@agency.com",
+      "agencyId": "98f0ea5f-7f79-4f06-9f0d-14dbf63a7736",
+      "agencyExternalId": "001A000001ZZZ123",
+      "agencyName": "Northstar Travel"
+    },
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-03-14",
+    "periodType": "year",
+    "kpis": {
+      "leadsCount": 1,
+      "convertedLeadsCount": 0,
+      "bookedItinerariesCount": 1,
+      "grossAmount": 42000.0,
+      "grossProfitAmount": 9100.0,
+      "conversionRate": 0.0
+    },
+    "bookedItineraries": [
+      {
+        "itineraryId": "6f2c2b2a-1111-2222-3333-444455556666",
+        "itineraryNumber": "IT-204481",
+        "itineraryName": "Botswana Luxury Safari",
+        "itineraryStatus": "Closed Won",
+        "travelConsultantName": "Alex Taylor",
+        "travelStartDate": "2026-04-12",
+        "travelEndDate": "2026-04-22",
+        "closeDate": "2026-02-02",
+        "createdAt": "2026-01-05",
+        "grossAmount": 42000.0,
+        "grossProfitAmount": 9100.0
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-14",
+    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup,travel_agent_consultant_affinity_monthly_rollup,itineraries",
+    "timeWindow": "year",
+    "calculationVersion": "v1",
+    "currency": "USD"
   }
 }
 ```
@@ -1806,6 +1985,47 @@ Request:
 }
 ```
 
+Response (shape matches other `POST .../runs` enqueue responses):
+
+```json
+{
+  "data": {
+    "id": "5f178c1f-bf8d-4da6-a6ae-0b580f2b74f0",
+    "jobId": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
+    "runKey": "fx-rates-pull:f5188e48-9c2f-4f55-8fbe-67a5e06ec9ff",
+    "runStatus": "success",
+    "triggerType": "manual",
+    "triggerSource": "fx_command",
+    "requestedBy": "frontend:fx_command",
+    "requestedAt": "2026-03-10T15:03:08.411Z",
+    "startedAt": "2026-03-10T15:03:08.412Z",
+    "finishedAt": "2026-03-10T15:03:12.094Z",
+    "blockedReason": null,
+    "errorCode": null,
+    "errorMessage": null,
+    "durationSeconds": 4,
+    "outputSizeBytes": 112,
+    "output": {
+      "returnCode": 0
+    },
+    "metadata": {},
+    "createdAt": "2026-03-10T15:03:08.412Z",
+    "updatedAt": "2026-03-10T15:03:12.094Z"
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-10",
+    "source": "data_jobs",
+    "timeWindow": "",
+    "calculationVersion": "v1",
+    "currency": null,
+    "dataStatus": "live",
+    "isStale": false,
+    "degraded": false
+  }
+}
+```
+
 ### `GET /api/v1/data-job-runs/{run_id}` (Salesforce sync detail example)
 
 ```json
@@ -1952,43 +2172,9 @@ Request:
 }
 ```
 
-Response:
+## Related documentation
 
-```json
-{
-  "data": {
-    "id": "5f178c1f-bf8d-4da6-a6ae-0b580f2b74f0",
-    "jobId": "5309debe-a33f-4574-8ce4-b6d98884b5a6",
-    "runKey": "fx-rates-pull:f5188e48-9c2f-4f55-8fbe-67a5e06ec9ff",
-    "runStatus": "success",
-    "triggerType": "manual",
-    "triggerSource": "fx_command",
-    "requestedBy": "frontend:fx_command",
-    "requestedAt": "2026-03-10T15:03:08.411Z",
-    "startedAt": "2026-03-10T15:03:08.412Z",
-    "finishedAt": "2026-03-10T15:03:12.094Z",
-    "blockedReason": null,
-    "errorCode": null,
-    "errorMessage": null,
-    "durationSeconds": 4,
-    "outputSizeBytes": 112,
-    "output": {
-      "returnCode": 0
-    },
-    "metadata": {},
-    "createdAt": "2026-03-10T15:03:08.412Z",
-    "updatedAt": "2026-03-10T15:03:12.094Z"
-  },
-  "pagination": null,
-  "meta": {
-    "asOfDate": "2026-03-10",
-    "source": "data_jobs",
-    "timeWindow": "",
-    "calculationVersion": "v1",
-    "currency": null,
-    "dataStatus": "live",
-    "isStale": false,
-    "degraded": false
-  }
-}
-```
+- [Frontend data queries](frontend-data-queries.md) — who calls which route
+- [Backend code documentation](swainos-code-documentation-backend.md) — services, rollups, endpoint families
+- [Frontend code documentation](swainos-code-documentation-frontend.md) — loaders and route structure
+- [Terminology glossary](swainos-terminology-glossary.md) — naming and display terms

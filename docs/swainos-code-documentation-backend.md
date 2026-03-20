@@ -1,8 +1,9 @@
 # SwainOS Backend Code Documentation
 
 ## Overview
-SwainOS backend is a FastAPI service with route -> service -> repository layering.  
-Primary focus: deterministic analytics contracts, traceable rollups, and API envelopes used by frontend modules.
+
+SwainOS backend is a FastAPI service with route → service → repository layering.  
+Focus: deterministic analytics contracts, traceable rollups, and API envelopes consumed by the Next.js app.
 
 ## Production Hosting Topology
 - Canonical backend hostname: `api.swainos.com`
@@ -54,12 +55,13 @@ Error envelope:
 - Health: `/health`, `/healthz`, `/health/ready`
 - Auth and access control: `/auth/me`, `/settings/user-access`, `/settings/user-access/{user_id}`, `/settings/user-access/{user_id}/deactivate`, `/settings/user-access/{user_id}/reactivate`
 - AP liquidity: `/ap/summary|aging|payment-calendar`
-- Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|scenarios`
-- Command center core: `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
+- Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|ap-monthly-outflow|scenarios`
+- Dashboard snapshots (SSR bundles, optional server-side cache): `/dashboard-snapshots/command-center`, `/dashboard-snapshots/cash-flow`
+- Command center backing reads (also reachable directly; primary web client uses snapshot): `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
-- Itinerary revenue: `/itinerary-revenue/outlook|deposits|conversion|channels|actuals-yoy|actuals-channels`
+- Itinerary revenue: `/itinerary-revenue/outlook|conversion|actuals-yoy|actuals-channels|actuals-channels-comparison` (deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
@@ -86,6 +88,7 @@ Error envelope:
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups are keyed by travel period
+- `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics is refreshed via `refresh_travel_trade_rollups_v1()`
 - FX exposure is refreshed via `refresh_fx_exposure_v1()`
@@ -115,9 +118,10 @@ Error envelope:
 - Payment posting blocks backdated entries in the live posting path to protect snapshot chronology.
 
 ## Core Materialized Views
+- `mv_itinerary_pipeline_stages` (itinerary pipeline by travel month and derived stage; refreshed with itinerary revenue rollup jobs)
 - `mv_itinerary_revenue_monthly`
 - `mv_itinerary_revenue_weekly`
-- `mv_itinerary_deposit_monthly`
+- `mv_itinerary_deposit_monthly` (retained for operational/refresh paths; not exposed via current itinerary-revenue HTTP contract)
 - `mv_itinerary_consortia_monthly`
 - `mv_itinerary_trade_agency_monthly`
 - `mv_itinerary_consortia_actuals_monthly`
@@ -127,6 +131,9 @@ Error envelope:
 - `mv_travel_consultant_profile_monthly`
 - `mv_travel_consultant_funnel_monthly`
 - `mv_travel_consultant_compensation_monthly`
+
+## Core analytics views (standard views on rollups)
+- `itinerary_pipeline_conversion_monthly_v1` — monthly conversion / pipeline snapshot derived from `mv_itinerary_pipeline_stages` (`observed_close_ratio` = confirmed path ÷ (open quoted + confirmed + lost))
 
 ## AI Context Views
 - `ai_context_command_center_v1`
@@ -342,7 +349,8 @@ Error envelope:
 - New terms and metric labels follow `docs/swainos-terminology-glossary.md`
 - No compatibility shims: active contracts are represented directly and refactored when needed
 - AI insights require live model execution (no deterministic fallback contract)
-- Frontend declutter changes (route header removal, Travel Agencies KPI-card removal) are UI-only and do not change backend endpoint or payload contracts.
+- Travel trade and travel consultant period windows: for `period_type` of `year` or `monthly` when the requested year/month is the **current** calendar year/month, services resolve `period_end` to **today** (not fiscal year-end or month-end) so “YTD” matches calendar reality.
+- Frontend declutter (route header removal, Travel Agencies KPI-card removal, removal of client-side period toggles in favor of route-level fixed queries) is UI/routing-only; backend contracts stay explicit query-param driven for automation and future toggles.
 
 ## Runtime Security and Cost Guardrails
 - Production startup requires non-empty values for:
@@ -354,3 +362,10 @@ Error envelope:
 - Subprocess-backed data jobs are bounded by `max_runtime_seconds`; timed-out jobs are force-killed and marked with `runner_timeout_killed`.
 - AI generation enforces run-level budgets (`max model calls`, `max tokens`, `max consultants`) and returns partial-safe status when budget limits are hit.
 - Application-layer rate limits are in-memory and process-local; Cloudflare edge rate limiting remains the global cross-instance enforcement layer.
+
+## Related documentation
+
+- [Frontend code documentation](swainos-code-documentation-frontend.md) — Next.js structure, loaders, UX notes
+- [Frontend data queries](frontend-data-queries.md) — which app paths call which `/api/v1/*` routes
+- [Sample payloads](sample-payloads.md) — JSON examples
+- [Terminology glossary](swainos-terminology-glossary.md) — display terms and field mapping

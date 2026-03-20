@@ -7,7 +7,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Canonical frontend hostname: `app.swainos.com`
 - Canonical backend hostname: `api.swainos.com`
 - Root domain behavior: `swainos.com` should redirect to `swaindestinations.com` (or temporarily serve a minimal noindex holding page until redirect cutover)
-- Production frontend hosting target: Vercel
+- Production frontend hosting target: **server-rendered Next.js** on a Node-capable platform (Vercel, **Render**, or equivalent). Favor SSR + route-level loaders over client refetch loops for analytics pages.
 - Public edge and DNS authority: Cloudflare
 
 ## Stack
@@ -36,7 +36,11 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/itinerary-forecast`
 - `/itinerary-actuals`
 - `/travel-consultant`
+- `/travel-consultant/[employeeId]` (profile)
 - `/travel-agencies`
+- `/travel-agencies/agents/[agentId]`
+- `/travel-agencies/agencies/[agencyId]`
+- `/destination`
 - `/fx-command`
 - `/marketing`
 - `/marketing/page-activity`
@@ -54,6 +58,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 ## Data Access Pattern
 - Service modules under `lib/api/*Service.ts`
 - Server-first route loaders under `features/*/*-server-loader.ts`
+- Aggregated SSR reads via `lib/api/dashboardSnapshotsService.ts` (`/api/v1/dashboard-snapshots/*`) for command center and cash-flow bundles
 - Shared parallel server loader orchestration in `lib/api/parallelFetch.ts`
 - Envelope handling in `lib/api/httpClient.ts`
 - Supabase clients:
@@ -69,33 +74,36 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - GET caching is disabled in non-production and enabled in production unless `skipCache` is set
 
 ## Feature Contracts
-- Itinerary forecast reads:
-  - `/api/v1/itinerary-revenue/outlook`
-  - `/api/v1/itinerary-revenue/deposits`
-  - `/api/v1/itinerary-revenue/conversion`
-  - `/api/v1/itinerary-revenue/channels`
-  - `/api/v1/itinerary-revenue/actuals-yoy` (for Booked This Year card)
-- Itinerary actuals reads:
-  - `/api/v1/itinerary-revenue/actuals-yoy`
-  - `/api/v1/itinerary-revenue/actuals-channels`
-  - `/api/v1/itinerary-lead-flow`
-- Command center reads:
-  - cash-flow, deposits, payments-out, booking-forecasts, itinerary-lead-flow, itinerary outlook/actuals/deposits
-- Cash-flow module reads dedicated risk-first endpoints:
-  - `/api/v1/cash-flow/risk-overview`
-  - `/api/v1/cash-flow/forecast`
-  - `/api/v1/cash-flow/ap-schedule`
-  - `/api/v1/cash-flow/scenarios` (read-only)
-- Command center keeps existing lightweight cash-flow summary contract:
-  - `/api/v1/cash-flow/summary`
+- **Command center** reads a single bundle:
+  - `GET /api/v1/dashboard-snapshots/command-center` (cash summaries, deposits, payments-out, booking forecasts, itinerary lead flow, outlook, actuals YoY, debt overview, briefing)
+- **Cash-flow** overview / forecast / scenarios read:
+  - `GET /api/v1/dashboard-snapshots/cash-flow`
+- **Cash-flow** drill-downs that still call granular APIs:
+  - `GET /api/v1/cash-flow/ap-schedule` (paginated)
+  - `GET /api/v1/cash-flow/ap-monthly-outflow` (overview chart)
+- Itinerary **forecast** (`itinerary-forecast-server-loader.ts`): parallel loads
+  - `GET /api/v1/itinerary-revenue/outlook` (`12m`, `monthly`)
+  - `GET /api/v1/itinerary-revenue/conversion` (same window/grain)
+  - UI is server-snapshot driven (`ItineraryForecastCockpit`); no itinerary forecast client refresh hook. Outlook chart metric is fixed to **Gross Profit** in the UI.
+- Itinerary **actuals** (`itinerary-actuals-server-loader.ts`):
+  - `GET /api/v1/itinerary-revenue/actuals-yoy` (`years_back=3`)
+  - `GET /api/v1/itinerary-revenue/actuals-channels` (current calendar year by default)
+  - `GET /api/v1/itinerary-lead-flow` (`36m`)
+  - `GET /api/v1/itinerary-revenue/outlook` (`12m`, `monthly`) for contextual outlook strip/chart
+  - Client hook `useItineraryActualsYoy` **hydrates from the server snapshot** (matrix math / display helpers), not a replacement network layer.
+- **Travel Agencies** list (`travel-trade-server-loader.ts` + `app/travel-agencies/page.tsx`):
+  - `GET /api/v1/travel-agencies/leaderboard`, `GET /api/v1/travel-agents/leaderboard` with fixed current-year query + `top_n=10`
+  - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade tables with inline **PY** comparison
+  - `useTravelTradeSearch` remains the only client-side trade search hook
+- **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks).
+- **Travel agent/agency profiles**: `travel-trade-server-loader.ts`; agent profile includes `bookedItineraries` for the bottom detail table; KPI labels distinguish **lead-created** vs **travel-period** metrics.
 - Debt service reads:
   - `/api/v1/debt-service/overview`
   - `/api/v1/debt-service/facilities`
   - `/api/v1/debt-service/schedule`
   - `/api/v1/debt-service/payments` (GET/POST)
   - `/api/v1/debt-service/scenarios` and `/api/v1/debt-service/scenarios/run`
-- Travel consultant pages read leaderboard/profile endpoints
-- Travel agencies pages read agent/agency leaderboards, profiles, and trade search
+- Destination analytics: `itinerary-destinations/*` via `features/sales/destination-server-loader.ts` and `app/destination/page.tsx`
 - FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
 - Marketing Web Analytics reads:
   - `/api/v1/marketing/web-analytics/overview`
@@ -106,7 +114,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/marketing/web-analytics/search-console`
   - `/api/v1/marketing/web-analytics/search-console/page-profile`
   - `/api/v1/marketing/web-analytics/ai-insights`
-- AI Insights reads briefing/feed/recommendations/history/entity insights
+- AI Insights reads feed/recommendations/history/entity insights client-side; **daily briefing** for Command Center is loaded server-side as part of `dashboard-snapshots/command-center` (not a separate browser call on that route)
 - Auth/access reads:
   - `/api/v1/auth/me` (SSR access resolution path)
   - `/api/v1/settings/user-access` (admin page server load)
@@ -154,18 +162,18 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Initial server-load failure path returns a safe snapshot with user-visible error state instead of route crash
   - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service currently uses compact `1rem` values)
   - Event-driven refresh and mutation handlers (`useState`, `useMemo`, `useTransition`) without `useEffect`-driven synchronization logic
-- Cash Flow + Command Center liability posture includes explicit AR/AP semantics:
-  - Supplier liabilities from AP line-based rollups (`payments-out` and AP endpoints)
-  - Customer receivable/deposit posture from deposits summary
-  - AR/AP-adjusted liquidity displayed as a first-class metric
+- Cash Flow + Command Center liability posture (AR/AP semantics):
+  - **Command center** uses the dashboard snapshot only: cash, deposits, and payments-out summaries are embedded in `dashboard-snapshots/command-center` (not extra client calls on that route).
+  - **AP** pages and cash-flow drill-downs use granular `/api/v1/ap/*` and `/api/v1/cash-flow/*` routes as documented in `frontend-data-queries.md`.
+  - AR/AP-adjusted liquidity remains a first-class command-center metric in the UI.
 - Cash Flow module is split into overview + detail routes with decision-first order:
   - Overview answers `Are we at risk?`, `When is first risk?`, and `Why?`
   - Forecast and AP Schedule provide drill-down tables by currency and horizon
   - Scenarios page is read-only and does not mutate baseline data
 - Travel Agencies page emphasizes workflow over duplicated summary chrome:
-  - top controls: period + Top-N toggles
-  - primary surfaces: unified search, top-performance bars, and agent/agency ranking tables
-  - removed: standalone top summary KPI card strip (Top Agent/Agency + Top-N aggregates)
+  - **no** period / Top-N / entity-mode toggles (fixed current-year server query); operators change behavior by editing route defaults/server loader if needed
+  - primary surfaces: unified search, channel performance (consortia + trade with PY comparison), top-performance bars, agent/agency ranking tables
+  - removed earlier: standalone top summary KPI card strip (Top Agent/Agency + Top-N aggregates)
 - Marketing module is split into strategic operator tabs:
   - Web Analytics Overview for KPI + trend direction (DoD/MoM/YoY) plus visual trend graphs (30d line trend, 6-month MoM bars, 12-month YoY sessions comparison, and a rolling 12-month horizontal sessions+YoY indicator table); KPI windows are served from synced canonical period summaries (not client-side rollups)
   - Page Activity for page-level usage behavior, itinerary diagnostics, best/worst ranking, dedicated lookbook/destination activity, and explicit rescue/scale focus cards
@@ -216,3 +224,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - No unused imports, dead code, or compatibility shims
 - Contract/display terms align with `docs/swainos-terminology-glossary.md`
 - Legacy manual-run frontend proxy route (`/app/api/fx/rates/run/route.ts`) is removed; active frontend manual runs call `/api/v1/data-jobs/{job_key}/runs`.
+
+## Related documentation
+
+- [Backend code documentation](swainos-code-documentation-backend.md) — FastAPI layering, rollups, endpoint families
+- [Frontend data queries](frontend-data-queries.md) — endpoint ↔ caller map for the web app
+- [Sample payloads](sample-payloads.md) — example envelopes and bodies
+- [Terminology glossary](swainos-terminology-glossary.md) — labels and naming governance
