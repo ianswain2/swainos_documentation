@@ -61,7 +61,7 @@ Error envelope:
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
-- Itinerary revenue: `/itinerary-revenue/outlook|conversion|actuals-yoy|actuals-channels|actuals-channels-comparison` (deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
+- Itinerary revenue: `/itinerary-revenue/outlook|conversion|actuals-yoy|actuals-channels|actuals-channels-comparison` (`actuals-channels-comparison` now reads month-grain booking-pace materialized views; deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
@@ -73,12 +73,14 @@ Error envelope:
 ## Authentication and Authorization
 - Auth verification boundary: `src/core/auth.py` verifies Supabase bearer tokens against `/auth/v1/user` before route access.
 - Current-user access endpoint: `GET /api/v1/auth/me` returns role, active status, and permission keys.
+- **Password sign-in is not a FastAPI route.** The Next.js app performs Supabase password authentication via same-origin `POST /api/auth/login` (see frontend code documentation), which sets browser session cookies. This backend never receives raw passwords for that flow; it only validates issued access tokens on subsequent `Authorization: Bearer …` API calls.
 - Admin management endpoints: `src/api/settings_user_access.py` provides list/get/update/deactivate/reactivate flows for user access.
 - Access service and repository:
   - `src/services/auth_access_service.py`
   - `src/repositories/auth_access_repository.py`
 - Route-level authorization uses `src/api/authz.py` dependencies (`require_permission`, `require_admin`, `require_marketing_permission`).
 - Permission checks are layered: route dependency checks + data-level RLS policies + frontend route/nav filtering.
+- In-process API rate limiting (`src/api/rate_limits.py`, `src/core/rate_limit.py`) applies to selected **expensive run** and **mutation** endpoints (e.g. manual AI/FX runs, data-jobs scheduler tick), not to browser password sign-in. Distributed login abuse and direct hits to Supabase Auth endpoints remain governed by Supabase project settings and edge/WAF controls.
 - Auto-bootstrap safeguards:
   - first authenticated access auto-creates missing `user_profiles` row as active `member`
   - admin list sync ensures auth users missing profile rows are inserted as active `member`
@@ -350,6 +352,8 @@ Error envelope:
 - No compatibility shims: active contracts are represented directly and refactored when needed
 - AI insights require live model execution (no deterministic fallback contract)
 - Travel trade and travel consultant period windows: for `period_type` of `year` or `monthly` when the requested year/month is the **current** calendar year/month, services resolve `period_end` to **today** (not fiscal year-end or month-end) so “YTD” matches calendar reality.
+- Booking-pace contracts use `travel_start_date` as the cohort year/month and `close_date` month <= as-of month as the inclusion rule. Current-year comparisons use current-month cutoff; prior-year comparisons use the same month in the prior year.
+- Travel consultant `yoyToDateVariancePct` / `ytdVariancePct` and travel-trade profile YoY series use booking-pace semantics; itinerary actuals endpoints remain travel-period.
 - Frontend declutter (route header removal, Travel Agencies KPI-card removal, removal of client-side period toggles in favor of route-level fixed queries) is UI/routing-only; backend contracts stay explicit query-param driven for automation and future toggles.
 
 ## Runtime Security and Cost Guardrails

@@ -3,7 +3,8 @@
 Purpose: canonical request/response examples for active frontend/backend contracts.
 
 ## Conventions
-- Response envelope: `{ data, pagination, meta }`
+- Response envelope: `{ data, pagination, meta }` for **FastAPI** (`/api/v1/...`) success responses.
+- Same-origin **Next.js App Router** handlers under `/api/...` (not `/api/v1`) may return a slimmer `{ data: … }` success body or `{ error: { code, message, … } }` on failure—see `POST /api/auth/login` below. These are not Python backend routes.
 - Query params: `snake_case`
 - JSON fields: `camelCase`
 - Dates: ISO 8601
@@ -38,6 +39,68 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 ```
 
 ## Authentication and Access Control
+
+### `POST /api/auth/login` (Next.js — same origin as the web app)
+
+Request:
+
+```json
+{
+  "email": "member@example.com",
+  "password": "••••••••"
+}
+```
+
+Success (`200`): session cookies are set on the response; body is intentionally minimal:
+
+```json
+{
+  "data": {
+    "success": true
+  }
+}
+```
+
+Failure examples (JSON body only; status matches `4xx`/`5xx`):
+
+```json
+{
+  "error": {
+    "code": "invalid_request",
+    "message": "Email and password are required."
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "code": "invalid_credentials",
+    "message": "Invalid email or password."
+  }
+}
+```
+
+```json
+{
+  "error": {
+    "code": "too_many_attempts",
+    "message": "Too many sign in attempts. Please try again shortly.",
+    "retryAfterSeconds": 60
+  }
+}
+```
+
+`429` responses may also include a `Retry-After` header (seconds) aligned with `retryAfterSeconds`.
+
+```json
+{
+  "error": {
+    "code": "service_unavailable",
+    "message": "Sign in is temporarily unavailable."
+  }
+}
+```
 
 ### `GET /api/v1/auth/me`
 
@@ -767,7 +830,7 @@ Response:
 
 ### `GET /api/v1/itinerary-revenue/actuals-channels-comparison?period_type=year&year=2026`
 
-Travel Agencies channel tables use this contract. Each row may include `priorYear` with **true prior-year-to-date** metrics (Jan 1 through the same calendar date last year), aligned to the active period window.
+Travel Agencies channel tables use this contract. Each row may include `priorYear` with booking-pace comparison values: same travel cohort window, but only itineraries booked (`close_date`) on or before the matching as-of cutoff.
 
 ```json
 {
@@ -812,7 +875,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "mv_itinerary_consortia_actuals_monthly,mv_itinerary_trade_agency_actuals_monthly",
+    "source": "mv_itinerary_consortia_booking_pace_monthly,mv_itinerary_trade_agency_booking_pace_monthly",
     "timeWindow": "year",
     "calculationVersion": "v3",
     "currency": null
@@ -824,7 +887,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
 
 ### `GET /api/v1/travel-consultants/leaderboard`
 
-Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31.
+Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. `yoyToDateVariancePct` is booking-pace based (`close_date` month cutoff, prior-year same-month baseline).
 
 ```json
 {
@@ -872,7 +935,7 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly",
+    "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly,mv_travel_consultant_booking_pace_monthly",
     "timeWindow": "year",
     "calculationVersion": "v1",
     "currency": "USD"
@@ -971,7 +1034,7 @@ Agent profiles pair **lead-created** KPIs (`kpis.*`) with **travel-period** oper
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup,travel_agent_consultant_affinity_monthly_rollup,itineraries",
+    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup,travel_agent_consultant_affinity_monthly_rollup,itineraries,contacts,itinerary_status_reference",
     "timeWindow": "year",
     "calculationVersion": "v1",
     "currency": "USD"

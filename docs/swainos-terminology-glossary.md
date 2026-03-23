@@ -34,14 +34,14 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Booked Itineraries | Count of closed-won itineraries attributed to the selected **travel-period** window. | Integer | `bookedItinerariesCount` | When the UI labels **Traveled Itineraries**, use that only for travel-start scoped KPIs; do not mix with lead-created windows |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
-| Booked Revenue | Closed-won revenue for selected period in consultant and leaderboard contexts. | Currency | `bookedRevenue` | Revenue (generic) |
+| Booked Revenue | Closed-won revenue for selected scope. For booking-pace comparisons, include only itineraries with `close_date` on/before the as-of cutoff. | Currency | `bookedRevenue` | Revenue (generic) |
 | Booked Item Value | Total booked destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` | Item Value, Destination Revenue |
 | Destination Country | Country rollup dimension for destination analytics. | Text | `country`, `locationCountry` | Country (when entity context is unclear) |
 | Destination City | City rollup dimension nested under destination country analytics. | Text | `city`, `locationCity` | City (when entity context is unclear) |
 | Conversion Rate | Closed won divided by total leads. | Percent | `conversionRate` | Conversion (when not clearly rate) |
 | Close Rate | Closed won divided by (closed won + closed lost). | Percent | `closeRate` | Win Rate (unless explicitly same formula) |
 | Speed to Close (Days) | Average days from lead creation to booking close. | Days (`d`) | `avgSpeedToBookDays` | Avg Speed to Book, Lead Time |
-| YoY Variance % | Year-over-year percent change vs comparable prior period. | Signed Percent | `yoyToDateVariancePct`, `ytdVariancePct`, derived YoY delta fields | YoY to-date (without %) |
+| YoY Variance % | Year-over-year percent change vs comparable prior period. On consultant/travel-trade profile comparisons this is **booking pace** (same-month close-date cutoff), not pure travel-period YTD. | Signed Percent | `yoyToDateVariancePct`, `ytdVariancePct`, derived YoY delta fields | YoY to-date (without %) |
 | PY comparison (inline) | Prior-year-to-date comparison for the **same elapsed calendar span** (e.g. Jan 1–today last year) shown as a secondary line under a current-period value; may include a signed delta percent. | Text + percent | `priorYear` object on channel rows (`itineraryCount`, `grossAmount`, `grossProfitAmount`, …) | PYTD label in UI (use **PY** per product copy) |
 | Target Variance % | Percent variance against strategic target trajectory. | Signed Percent | `growthTargetVariancePct`, `growthGapPct`, `totalGrowthGapPct` | Growth Gap (without %) |
 | Supplier Liability | Outstanding supplier AP from payable line rollups. | Currency | `totalOutstandingAmount`, `due30dAmount` | Supplier Payables, Open Supplier Liability |
@@ -202,6 +202,15 @@ This glossary is the canonical source of truth for user-facing terminology acros
 - Is amount vs percent explicit?
 - Is backend field naming mapped clearly when different from display text?
 - Are AI-generated summaries using canonical display terms?
+
+## Application Access (Sign-in and routing)
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Sign in | Authenticate to SwainOS with provisioned credentials; UI route is `/login`. | Action label + page title | — | Log in (variant spelling OK in prose only if consistent with product) |
+| Session | Browser-held Supabase session after successful sign-in (cookie-based in the Next.js app). | — | — | Token in `localStorage` (not used for SwainOS web auth) |
+| Unauthorized | User is signed in but lacks module permission or admin-only route access. | Page title `/unauthorized` | — | Forbidden (HTTP term; use for API errors, not primary user page name) |
+| User access | Admin-managed role and module permission mapping stored in SwainOS (`user_profiles` / settings APIs), layered on top of Supabase authentication. | — | `role`, `permissionKeys`, `isActive` on `GET /api/v1/auth/me` | Permissions (ambiguous without “user access” context) |
 
 ## Related documentation
 

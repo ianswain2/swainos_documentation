@@ -7,7 +7,8 @@ Purpose: canonical map of **which frontend modules call which backend routes** (
 Table paths such as `lib/...` and `features/...` are relative to **`apps/web/src/`** in the frontend repo.
 
 ## Conventions
-- API envelope: `{ data, pagination, meta }`
+- API envelope: `{ data, pagination, meta }` for **FastAPI** responses under `NEXT_PUBLIC_API_BASE` (`/api/v1/...`).
+- Same-origin **Next.js route handlers** under `apps/web/src/app/api/**` (e.g. `POST /api/auth/login`) use a slim JSON shape documented in `sample-payloads.md`; they are not prefixed with `/api/v1` and are not served by the Python backend.
 - Query params: `snake_case`
 - Response JSON fields: `camelCase`
 - Numeric payloads are normalized in `apps/web/src/lib/utils/parseNumber.ts`
@@ -41,14 +42,14 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `GET /api/v1/itinerary-revenue/conversion` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts` | Conversion timeline (`itinerary_pipeline_conversion_monthly_v1` + service projections) |
 | `GET /api/v1/itinerary-revenue/actuals-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Multi-year Jan–Dec matrix + year summaries (loader uses `years_back=3`) |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Consortia + trade channel actuals for selected calendar year (default current year) |
-| `GET /api/v1/itinerary-revenue/actuals-channels-comparison` | `lib/api/itineraryRevenueService.ts`, `features/sales/travel-trade-server-loader.ts` | Same channel rollups with **prior-year-to-date** comparison fields (`priorYear` on each row) for Travel Agencies |
+| `GET /api/v1/itinerary-revenue/actuals-channels-comparison` | `lib/api/itineraryRevenueService.ts`, `features/sales/travel-trade-server-loader.ts` | Travel Agencies booking-pace channels for the selected travel cohort (`travel_start_date` in window) using month-grain booking cutoff (`close_date` month <= as-of month) with prior-year same-month comparison (`priorYear`) |
 | `GET /api/v1/itinerary-lead-flow` | `lib/api/itineraryLeadFlowService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Lead-flow trend (loader uses `36m` window) — command center consumes lead flow only via dashboard snapshot |
-| `GET /api/v1/travel-consultants/leaderboard` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant ranking — route hard-codes current-year YTD query |
-| `GET /api/v1/travel-consultants/{employee_id}/profile` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant profile — route hard-codes current-year YTD query |
+| `GET /api/v1/travel-consultants/leaderboard` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant ranking — route hard-codes current-year query; `yoyToDateVariancePct` uses booking-pace month-cutoff comparisons |
+| `GET /api/v1/travel-consultants/{employee_id}/profile` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant profile — route hard-codes current-year query; `ytdVariancePct` uses booking-pace month-cutoff comparisons |
 | `GET /api/v1/travel-agents/leaderboard` | `lib/api/travelAgentsService.ts`, `features/sales/travel-trade-server-loader.ts` | Agent leaderboard — Travel Agencies route hard-codes current calendar year + `top_n=10` |
-| `GET /api/v1/travel-agents/{agent_id}/profile` | `lib/api/travelAgentsService.ts`, `features/sales/travel-trade-server-loader.ts` | Agent profile (includes `bookedItineraries` for travel-period table) — hard-coded current-year window |
+| `GET /api/v1/travel-agents/{agent_id}/profile` | `lib/api/travelAgentsService.ts`, `features/sales/travel-trade-server-loader.ts` | Agent profile (includes travel-period `bookedItineraries` table). YoY chart series uses booking-pace month-cutoff comparisons |
 | `GET /api/v1/travel-agencies/leaderboard` | `lib/api/travelAgenciesService.ts`, `features/sales/travel-trade-server-loader.ts` | Agency leaderboard — same fixed window as agents |
-| `GET /api/v1/travel-agencies/{agency_id}/profile` | `lib/api/travelAgenciesService.ts`, `features/sales/travel-trade-server-loader.ts` | Agency profile — hard-coded current-year window |
+| `GET /api/v1/travel-agencies/{agency_id}/profile` | `lib/api/travelAgenciesService.ts`, `features/sales/travel-trade-server-loader.ts` | Agency profile — hard-coded current-year window; YoY chart series uses booking-pace month-cutoff comparisons |
 | `GET /api/v1/travel-trade/search` | `features/sales/useTravelTradeSearch.ts`, `features/sales/travel-agencies-page.tsx` | Unified trade search |
 | `GET /api/v1/itinerary-destinations/summary` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Booked destination KPI summary |
 | `GET /api/v1/itinerary-destinations/trends` | `features/sales/destination-server-loader.ts`, `features/sales/destination-page.tsx` | Monthly destination trend |
@@ -59,6 +60,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `PATCH /api/v1/ai-insights/recommendations/{id}` | `features/ai-insights/useAiInsightsData.ts` | Recommendation status transition |
 | `GET /api/v1/ai-insights/history` | `features/ai-insights/useAiInsightsData.ts` | Historical AI events |
 | `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` | `features/travel-consultant/profile/useTravelConsultantEntityAi.ts`, `components/assistant/assistant-panel.tsx` | Entity-scoped AI context |
+| `POST /api/auth/login` | `app/login/page.tsx` | Same-origin password sign-in; server route sets Supabase session cookies and applies app-layer throttle (`lib/auth/loginRateLimit.ts`) |
 | `GET /api/v1/auth/me` | `lib/auth/getAuthenticatedUser.ts` | SSR-authenticated access resolution (role + permission keys) |
 | `GET /api/v1/settings/user-access` | `app/settings/user-access/page.tsx`, `features/settings/user-access-page.tsx` | Admin user-access list and page bootstrapping |
 | `PUT /api/v1/settings/user-access/{user_id}` | `features/settings/user-access-page.tsx` | Admin role/permission updates |
@@ -114,15 +116,15 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 | `GET /api/v1/itinerary-revenue/deposits` | **Removed** from the API; deposit MVs may still exist for jobs/ops. |
 
 ## Fixed analytics windows (current product behavior)
-- **Travel Agencies** (`/travel-agencies`): current **calendar year** for agent/agency leaderboards and channel comparison; backend travel-trade period windows end at **today** for the active year/month (not year-end/month-end).
-- **Travel Consultant** leaderboard + profiles: current **calendar year YTD** (same period-end rule).
-- **Travel Agent / Agency profiles** (`/travel-agencies/agents/[agentId]`, `/travel-agencies/agencies/[agencyId]`): current **calendar year YTD** for KPIs/trends; agent profile adds **Booked Itineraries In Period** from `bookedItineraries` (closed-won, travel-period scoped).
+- **Travel Agencies** (`/travel-agencies`): current **calendar year** for agent/agency leaderboards plus booking-pace channel comparison (`close_date` month-cutoff; prior-year same-month baseline).
+- **Travel Consultant** leaderboard + profiles: fixed current-year query; YoY variance fields use booking-pace month-cutoff comparisons while travel/funnel KPIs keep their native bases.
+- **Travel Agent / Agency profiles** (`/travel-agencies/agents/[agentId]`, `/travel-agencies/agencies/[agencyId]`): current window KPIs stay lead/travel-period scoped; YoY chart series use booking-pace month-cutoff comparisons; agent profile retains travel-period `bookedItineraries`.
 - **Itinerary Actuals** (`/itinerary-actuals`): fixed **3-year** YoY matrix + lead flow **36m** + **current-year** channel actuals + **12m** outlook context; no channel-scope toggle in UI (loader default `current-year`).
 - **Itinerary Forecast** (`/itinerary-forecast`): fixed **12m** monthly outlook + conversion; outlook chart metric is **Gross Profit** only in UI (no client-side refetch hooks).
 
 ## Operational notes
 - Itinerary revenue surfaces use `grossProfitAmount` as canonical Gross Profit.
-- Itinerary actuals and channel rollups follow **travel-period** reporting semantics unless a screen explicitly states lead-created windows (travel agent KPIs).
+- Itinerary actuals stay **travel-period** reporting. Travel Agencies channel comparison and consultant/agency/agent YoY-variance fields now use booking-pace month-cutoff logic by `close_date`.
 - Itinerary lead-flow panel: **itinerary actuals** (direct API) and **command center** (via dashboard snapshot only).
 - Destination matrix API still carries passenger fields; destination UI hides passenger metrics where noted in product rules.
 - Debt Service payment posting is user-confirmed from a prefilled prompt.
@@ -131,6 +133,7 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - Search Console Insights is US-first; benchmark markets remain Australia, New Zealand, and South Africa.
 - Search Console page-profile route encodes page paths (including absolute URLs) before backend fetch.
 - Manual-run triggers use `POST /api/v1/data-jobs/{job_key}/runs`; token utility routes (`/ai-insights/run`, `/fx/signals/run`) remain backend-only.
+- Sign-in uses `POST /api/auth/login` on the Next.js host only; analytics API traffic continues to use `GET/POST /api/v1/...` on the FastAPI host.
 - Salesforce operators use data-jobs + run detail (`output.parsed`) — no direct Salesforce calls from the web app.
 
 ## Related documentation
