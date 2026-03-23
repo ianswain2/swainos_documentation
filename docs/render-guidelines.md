@@ -1,8 +1,8 @@
 # SwainOS Render Guidelines
 
-> **Version**: v1.0
+> **Version**: v1.1
 > **Status**: Active standard
-> **Date**: 2026-03-12
+> **Date**: 2026-03-23
 
 ## Purpose
 
@@ -28,6 +28,7 @@ These guidelines apply to:
 - Keep Cloudflare as the public edge and DNS authority for `swainos.com`.
 - Keep Supabase Auth as the user identity boundary.
 - Separate frontend-safe config from backend secrets with strict ownership.
+- **Repository vs runtime:** commits on `main` do not automatically mean production Render is running or serving latest code—suspend/resume, failed deploys, and held releases all create gaps. Pair Render state with Vercel (frontend) and Supabase (migrations) when validating behavior.
 
 ## Intended Role In The Stack
 
@@ -186,3 +187,25 @@ After any backend hosting configuration change, verify:
 - Cloudflare security baseline is enabled before public cutover
 - instance sizing and scaling settings match current traffic reality
 - no unapproved autoscaling or surprise paid add-ons are active
+
+## Suspended service and resume (reversal startup) — checklist
+
+Use when bringing the API back after **suspend**, failed deploy, or long idle period. Execute only when deliberately going live; do not treat as routine.
+
+1. **Supabase:** confirm required migrations are applied on the target project (especially MV/RPC changes referenced in `swainos-code-documentation-backend.md`). Run or schedule rollup refresh jobs if stale.
+2. **Render:** resume/unsuspend `swainos-api` (or equivalent); wait for deploy to **live** with passing `/health/ready`.
+3. **Environment:** verify production env vars (tokens, `TRUSTED_HOSTS`, Supabase keys) match the intended project—no drift between “docs” and dashboard.
+4. **DNS / Cloudflare:** confirm `api.swainos.com` points at the intended target and matches proxy vs DNS-only decision (see `cloudflare-guidelines.md`).
+5. **Smoke:** `GET /healthz`, `GET /health/ready`, then authenticated `GET /api/v1/auth/me` from the app; spot-check one analytics read used by Command Center.
+6. **Frontend:** ensure Vercel production has `NEXT_PUBLIC_API_BASE` aimed at the live API and that login + Turnstile (if enabled) still work end-to-end.
+
+## When code is merged but not yet deployed
+
+- Treat `main` as the **contract** source; production may lag until Render (and Vercel) promote a build.
+- Document any intentional **deploy hold** in the action log; operators should not assume feature parity until both app and API deploys complete.
+
+## Related documentation
+
+- [Backend code documentation](swainos-code-documentation-backend.md)
+- [Vercel guidelines](vercel-guidelines.md) — paired frontend deploy state
+- [Cloudflare guidelines](cloudflare-guidelines.md)

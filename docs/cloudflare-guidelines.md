@@ -1,8 +1,8 @@
 # SwainOS Cloudflare Guidelines
 
-> **Version**: v1.0
+> **Version**: v1.1
 > **Status**: Active standard
-> **Date**: 2026-03-11
+> **Date**: 2026-03-23
 
 ## Purpose
 
@@ -109,7 +109,7 @@ Rate limiting should focus on expensive or abuse-sensitive paths first.
 
 Required priority targets:
 
-- auth-sensitive endpoints
+- auth-sensitive endpoints (including **same-origin** Next.js `POST /api/auth/login` on `app.swainos.com`, not only FastAPI `/api/v1/*`)
 - admin or access-management endpoints
 - expensive analytics endpoints
 - manual-run or job-trigger endpoints
@@ -124,6 +124,18 @@ Rules should:
 - be documented with threshold, action, and purpose
 - account for the active Cloudflare plan's rule-count and matching limitations
 - assume a few excess requests may still reach the origin before mitigation is enforced
+
+### SwainOS production patterns (frontend vs API)
+
+**`app.swainos.com` (Next.js on Vercel or equivalent)**
+
+- Avoid **broad geographic skip** rules that disable WAF / bot / security products for large country buckets (for example “allow all US traffic to bypass managed rules”). Prefer narrow, documented exceptions only.
+- Keep a **dedicated rate limit / WAF rule** for credential abuse on `POST /api/auth/login` (managed challenge or block, path-equality). Exact thresholds depend on the Cloudflare plan rule cap; document the live dashboard values when they change.
+- Optional companion signal: **abnormal HTML navigation volume** per IP excluding static and framework asset paths (`/_next/*`, Turnstile/CDN paths as applicable)—use challenge before block for the small invite-only user base.
+
+**`api.swainos.com` (FastAPI on Render)**
+
+- The API record may be configured **DNS-only** (not proxied) so traffic goes **directly to Render**. In that mode, **Cloudflare rate limiting and WAF do not terminate API requests**; protection relies on FastAPI trusted hosts, token-gated run endpoints, Supabase RLS, and in-process limits where implemented. Re-enable proxying if edge enforcement for the API becomes a requirement.
 
 ### SwainOS Required High-Cost API Rules
 
@@ -245,7 +257,8 @@ Define alerts for:
 ## Minimum Production Checklist
 
 - `swainos.com` is active in Cloudflare and serving as the authoritative DNS zone
-- production hostnames are proxied
+- `app.swainos.com` is proxied for edge/WAF/rate-limit enforcement (canonical frontend)
+- `api.swainos.com` uses the **intended** routing model (proxied vs DNS-only); if DNS-only, document that API bypasses Cloudflare edge controls
 - `app.swainos.com` is the canonical frontend hostname
 - `api.swainos.com` is the canonical backend hostname
 - `swainos.com` is configured as a redirect to `swaindestinations.com` (or temporarily as a minimal noindex holding page until redirect cutover)
@@ -258,3 +271,9 @@ Define alerts for:
 - auth flows work through Cloudflare without loops
 - API traffic is reachable only through the intended public hostname
 - origin exposure is minimized and documented
+
+## Related documentation
+
+- [Frontend code documentation](swainos-code-documentation-frontend.md) — login route, Turnstile wiring
+- [Vercel guidelines](vercel-guidelines.md) — frontend origin behind Cloudflare
+- [Render guidelines](render-guidelines.md) — API origin, suspend/resume

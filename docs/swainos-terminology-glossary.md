@@ -211,6 +211,11 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Session | Browser-held Supabase session after successful sign-in (cookie-based in the Next.js app). | — | — | Token in `localStorage` (not used for SwainOS web auth) |
 | Unauthorized | User is signed in but lacks module permission or admin-only route access. | Page title `/unauthorized` | — | Forbidden (HTTP term; use for API errors, not primary user page name) |
 | User access | Admin-managed role and module permission mapping stored in SwainOS (`user_profiles` / settings APIs), layered on top of Supabase authentication. | — | `role`, `permissionKeys`, `isActive` on `GET /api/v1/auth/me` | Permissions (ambiguous without “user access” context) |
+| Settings (admin) | Job Controls, Run Logs, and User Access live under **Settings** in navigation; the entire Settings area is **admin-only** in the app shell (not permission-key gated for members). | Nav label + section | — | Configuration (ambiguous) |
+| Operations | Operator data-jobs and health surface; distinct from Settings—requires `operations` permission for members, full access for admins. | Nav label | `operations` permission key | Jobs (ambiguous) |
+| Under construction (notice) | Temporary product banner: page is still being built and **data may not be accurate**; shown on selected high-risk analytics routes (Command Center, Destination, Cash Flow family, Operations). | `UnderConstructionBanner` title/description | — | Beta (ambiguous); avoid unless product explicitly uses it |
+| Security verification | Human challenge step on sign-in when Turnstile is enabled (widget must complete before submit). | Login UI + API field | `captchaToken` on `POST /api/auth/login` | CAPTCHA (informal) |
+| Temporary Notice | Badge label inside the under-construction banner callout. | UI chrome | — | — |
 
 ## Related documentation
 

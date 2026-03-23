@@ -2,6 +2,8 @@
 
 Purpose: canonical map of **which frontend modules call which backend routes** (live usage, fixed-window behavior, and snapshot bundles).
 
+**Prod / deploy note:** This map describes the app as implemented on `main`. If Vercel or Render are not deploying latest `main` (or the API is suspended), live behavior may differ; confirm deploy status and hostnames before debugging “missing” features.
+
 ## Path convention
 
 Table paths such as `lib/...` and `features/...` are relative to **`apps/web/src/`** in the frontend repo.
@@ -60,9 +62,9 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `PATCH /api/v1/ai-insights/recommendations/{id}` | `features/ai-insights/useAiInsightsData.ts` | Recommendation status transition |
 | `GET /api/v1/ai-insights/history` | `features/ai-insights/useAiInsightsData.ts` | Historical AI events |
 | `GET /api/v1/ai-insights/entities/{entity_type}/{entity_id}` | `features/travel-consultant/profile/useTravelConsultantEntityAi.ts`, `components/assistant/assistant-panel.tsx` | Entity-scoped AI context |
-| `POST /api/auth/login` | `app/login/page.tsx` | Same-origin password sign-in; server route sets Supabase session cookies and applies app-layer throttle (`lib/auth/loginRateLimit.ts`) |
+| `POST /api/auth/login` | `app/login/page.tsx` | Same-origin password sign-in; server route sets Supabase session cookies and applies app-layer throttle (`lib/auth/loginRateLimit.ts`). When `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set, request body must include `captchaToken` (see `sample-payloads.md`). |
 | `GET /api/v1/auth/me` | `lib/auth/getAuthenticatedUser.ts` | SSR-authenticated access resolution (role + permission keys) |
-| `GET /api/v1/settings/user-access` | `app/settings/user-access/page.tsx`, `features/settings/user-access-page.tsx` | Admin user-access list and page bootstrapping |
+| `GET /api/v1/settings/user-access` | `app/settings/user-access/page.tsx`, `features/settings/user-access-page.tsx` | Admin user-access list and page bootstrapping (**admin-only** route; non-admins never reach the page) |
 | `PUT /api/v1/settings/user-access/{user_id}` | `features/settings/user-access-page.tsx` | Admin role/permission updates |
 | `POST /api/v1/settings/user-access/{user_id}/deactivate` | `features/settings/user-access-page.tsx` | Admin deactivation action |
 | `POST /api/v1/settings/user-access/{user_id}/reactivate` | `features/settings/user-access-page.tsx` | Admin reactivation action |
@@ -82,12 +84,12 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `GET /api/v1/marketing/web-analytics/search-console` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Search Console Insights workspace |
 | `GET /api/v1/marketing/web-analytics/search-console/page-profile` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts`, `app/marketing/search-console-insights/pages/[...pagePath]/page.tsx` | Single URL profile |
 | `GET /api/v1/marketing/web-analytics/ai-insights` | `lib/api/marketingService.ts`, `features/marketing/marketing-server-loader.ts` | Structured marketer/sales action engine output |
-| `GET /api/v1/data-jobs` | `app/settings/page.tsx`, `app/operations/page.tsx` | Control-plane job inventory |
-| `GET /api/v1/data-jobs/run-feed` | `app/settings/run-logs/page.tsx`, `features/settings/settings-run-logs-page.tsx` | Cross-job run stream (`job_key`, `run_status`, pagination) |
-| `PATCH /api/v1/data-jobs/{job_key}` | `features/settings/settings-page.tsx` | Toggle job enabled state and schedule controls |
+| `GET /api/v1/data-jobs` | `app/settings/page.tsx`, `app/operations/page.tsx` | Control-plane job inventory (**Settings** path admin-only; **Operations** remains permission-gated) |
+| `GET /api/v1/data-jobs/run-feed` | `app/settings/run-logs/page.tsx`, `features/settings/settings-run-logs-page.tsx` | Cross-job run stream (`job_key`, `run_status`, pagination) (**admin-only** when used from Settings run logs) |
+| `PATCH /api/v1/data-jobs/{job_key}` | `features/settings/settings-page.tsx` | Toggle job enabled state and schedule controls (**admin-only** page) |
 | `POST /api/v1/data-jobs/{job_key}/runs` | `features/settings/settings-page.tsx`, `lib/api/fxService.ts`, `lib/api/aiInsightsService.ts` | Canonical manual run trigger |
 | `GET /api/v1/data-jobs/{job_key}/runs` | `app/operations/page.tsx` | Per-job run history |
-| `GET /api/v1/data-jobs/health` | `app/operations/page.tsx`, `app/settings/page.tsx` | Fleet health + Settings last-run/status |
+| `GET /api/v1/data-jobs/health` | `app/operations/page.tsx`, `app/settings/page.tsx` | Fleet health + Settings last-run/status (**Settings** admin-only) |
 | `GET /api/v1/data-job-runs/{run_id}` | `features/operations/operations-page.tsx` | Run detail and step diagnostics |
 
 ## Typed API clients without route callers
@@ -134,6 +136,7 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - Search Console page-profile route encodes page paths (including absolute URLs) before backend fetch.
 - Manual-run triggers use `POST /api/v1/data-jobs/{job_key}/runs`; token utility routes (`/ai-insights/run`, `/fx/signals/run`) remain backend-only.
 - Sign-in uses `POST /api/auth/login` on the Next.js host only; analytics API traffic continues to use `GET/POST /api/v1/...` on the FastAPI host.
+- **Settings vs Operations:** `/settings`, `/settings/run-logs`, and `/settings/user-access` are **admin-only** in the root layout (`adminOnly` + `role === admin`). `/operations` remains a normal module permission (`operations`); members with that key can use Operations without accessing Settings.
 - Salesforce operators use data-jobs + run detail (`output.parsed`) — no direct Salesforce calls from the web app.
 
 ## Related documentation
@@ -142,3 +145,4 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - [Frontend code documentation](swainos-code-documentation-frontend.md) — App Router structure, SSR loaders
 - [Sample payloads](sample-payloads.md) — example envelopes and JSON shapes
 - [Terminology glossary](swainos-terminology-glossary.md) — canonical labels and field naming
+- [Vercel guidelines](vercel-guidelines.md) / [Render guidelines](render-guidelines.md) — when production may lag `main`

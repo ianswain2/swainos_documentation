@@ -9,6 +9,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Root domain behavior: `swainos.com` should redirect to `swaindestinations.com` (or temporarily serve a minimal noindex holding page until redirect cutover)
 - Production frontend hosting target: **server-rendered Next.js** on a Node-capable platform (Vercel, **Render**, or equivalent). Favor SSR + route-level loaders over client refetch loops for analytics pages.
 - Public edge and DNS authority: Cloudflare
+- **Code vs live parity:** `main` can be ahead of or behind what Vercel/Render are actually serving (suspended services, held deploys, preview-only). Treat docs as describing the **intended** shipped behavior; verify hostnames and dashboard deploy state before assuming production matches latest commits.
 
 ## Stack
 - Next.js + React + TypeScript (strict)
@@ -51,9 +52,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - `/marketing/ai-website-insights`
 - `/operations`
 - `/ai-insights`
-- `/settings`
-- `/settings/run-logs`
-- `/settings/user-access`
+- `/settings` (**admin-only** — layout + `lib/auth/routeAccess.ts`; non-admins are redirected to `/unauthorized`)
+- `/settings/run-logs` (**admin-only**)
+- `/settings/user-access` (**admin-only**)
 
 ## Data Access Pattern
 - Service modules under `lib/api/*Service.ts`
@@ -70,6 +71,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `POST /api/auth/login` (`app/api/auth/login/route.ts`): server-side Supabase password sign-in via `@supabase/ssr`, sets session cookies on the response; applies in-process abuse throttling (`lib/auth/loginRateLimit.ts`) keyed by client IP (prefers `cf-connecting-ip`, then `x-forwarded-for`, then `x-real-ip`) and normalized email, with sliding windows, lockout, stale-bucket pruning, and bounded store size (`LOGIN_MAX_BUCKETS_PER_STORE`, default `10000`). Tunables: `LOGIN_IP_WINDOW_MS`, `LOGIN_IP_MAX_ATTEMPTS`, `LOGIN_EMAIL_WINDOW_MS`, `LOGIN_EMAIL_MAX_ATTEMPTS`, `LOGIN_LOCKOUT_MS`.
   - `lib/auth/nextPath.ts`: shared safe internal `next` path resolution for `/login` query and `/auth/callback` (rejects `//…`, bare hosts, and `/login` loop; falls back to `/command-center`). Rejected callback `next` values log via `lib/observability/authLog.ts`.
   - Login UI (`app/login/page.tsx`) uses same-origin `fetch` to `/api/auth/login` and shows generic failure copy (no raw Supabase error strings); `429` maps to a dedicated “too many attempts” message.
+  - **Cloudflare Turnstile (optional):** when `NEXT_PUBLIC_TURNSTILE_SITE_KEY` is set, the login page renders the Turnstile widget and the client must send `captchaToken` in the JSON body; the route forwards it to Supabase password sign-in (`options.captchaToken`). Missing token → `invalid_captcha`. Server-side verification beyond Supabase is not duplicated in the route.
 - Baseline security headers for HTML responses are defined in `apps/web/next.config.js` (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`, CSP `frame-ancestors`); edge/WAF policy remains the primary production control plane.
 - `httpClient` raises typed `ApiClientError` values and wraps network failures with actionable diagnostics (`network_error`), including resolved API base/path context
 - API base resolution is centralized in `lib/api/apiBase.ts`; client/server callers share one resolver for `NEXT_PUBLIC_API_BASE` and `API_BASE`.
@@ -100,7 +102,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `GET /api/v1/travel-agencies/leaderboard`, `GET /api/v1/travel-agents/leaderboard` with fixed current-year query + `top_n=10`
   - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade booking-pace tables (same-month-cutoff **PY** comparison)
   - `useTravelTradeSearch` remains the only client-side trade search hook
-- **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks). YoY variance fields are booking-pace.
+- **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks). YoY variance fields are booking-pace. Profile **Performance** card no longer duplicates the forecast timeline table (timeline remains available via embedded profile payload / backend; standalone `GET …/forecast` remains unused by UI—see `frontend-data-queries.md`).
 - **Travel agent/agency profiles**: `travel-trade-server-loader.ts`; YoY chart series are booking-pace while KPI labels remain explicit for **lead-created** vs **travel-period** metrics; agent profile includes `bookedItineraries` for the bottom travel-period detail table.
 - Debt service reads:
   - `/api/v1/debt-service/overview`
@@ -200,6 +202,8 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - side nav filters routes by permission keys for members
   - admin users are treated as full-access
   - unauthorized route access redirects to `/unauthorized`
+- **Settings (admin-only product rule):** the `Settings` parent and children (`Job Controls`, `Run Logs`, `User Access`) are marked `adminOnly` in `lib/constants/navigation.ts`. `lib/auth/routeAccess.ts` marks `/settings`, `/settings/run-logs`, and `/settings/user-access` with `adminOnly: true` (longer prefixes are listed before `/settings` so subpaths resolve correctly). Active non-admins no longer see Settings in the shell even if legacy `permissionKeys` still include settings modules.
+- **Under construction notice:** shared `components/ui/under-construction-banner.tsx` (`UnderConstructionBanner`) surfaces a high-visibility “data may not be accurate” callout on **Command Center**, **Destination**, **Cash Flow** (`/cash-flow`, `/cash-flow/forecast`, `/cash-flow/scenarios`, `/cash-flow/ap-schedule`), and **Operations**. It is presentational only (no API coupling).
 - Login flow:
   - `/login` submits credentials to same-origin `POST /api/auth/login` (see Data Access Pattern above); successful responses carry Set-Cookie from Supabase SSR.
   - OAuth/code exchange callback remains `/auth/callback` (`app/auth/callback/route.ts`); `next` is sanitized with `resolveSafeNextPath`.
@@ -222,6 +226,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Recommended for auth/callback clarity: `NEXT_PUBLIC_SITE_URL` (`https://app.swainos.com` in production)
 - Optional:
   - `NEXT_PUBLIC_MAPBOX_TOKEN`
+  - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (when set, login requires Turnstile token; configure matching keys in Supabase Auth → Attack Protection / CAPTCHA and Cloudflare Turnstile)
   - `API_BASE` (server-side API base override for proxy/server loaders)
   - Login throttle tuning (see sign-in bullets): `LOGIN_IP_WINDOW_MS`, `LOGIN_IP_MAX_ATTEMPTS`, `LOGIN_EMAIL_WINDOW_MS`, `LOGIN_EMAIL_MAX_ATTEMPTS`, `LOGIN_LOCKOUT_MS`, `LOGIN_MAX_BUCKETS_PER_STORE`
 
@@ -238,3 +243,6 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - [Frontend data queries](frontend-data-queries.md) — endpoint ↔ caller map for the web app
 - [Sample payloads](sample-payloads.md) — example envelopes and bodies
 - [Terminology glossary](swainos-terminology-glossary.md) — labels and naming governance
+- [Vercel guidelines](vercel-guidelines.md) — frontend deploy, env vars, spend controls
+- [Render guidelines](render-guidelines.md) — API service lifecycle, resume checklist
+- [Cloudflare guidelines](cloudflare-guidelines.md) — edge, DNS, login rate limits

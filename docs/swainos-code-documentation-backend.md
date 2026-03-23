@@ -10,6 +10,7 @@ Focus: deterministic analytics contracts, traceable rollups, and API envelopes c
 - Expected primary frontend caller: `app.swainos.com`
 - Public edge and DNS authority: Cloudflare
 - Backend should be exposed through the canonical API hostname rather than raw origin URLs
+- **Code vs live parity:** `main` may be deployed to Render later than Supabase migrations are applied, or the Render service may be suspended/offline. Booking-pace and other MV-backed routes require migrations `0109`–`0111` (and successful refresh) on the target database before responses match this documentation.
 
 ## Architecture
 - `src/api`: route surfaces and query parsing
@@ -90,6 +91,7 @@ Error envelope:
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups are keyed by travel period
+- `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs **and** the four booking-pace MVs above so travel-trade and consultant booking-pace comparisons stay consistent with the same job chain as itinerary revenue rollups
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics is refreshed via `refresh_travel_trade_rollups_v1()`
@@ -133,6 +135,7 @@ Error envelope:
 - `mv_travel_consultant_profile_monthly`
 - `mv_travel_consultant_funnel_monthly`
 - `mv_travel_consultant_compensation_monthly`
+- **Booking pace (month-grain, closed-won, travel month × close month):** `mv_itinerary_consortia_booking_pace_monthly`, `mv_itinerary_trade_agency_booking_pace_monthly`, `mv_travel_agent_booking_pace_monthly`, `mv_travel_consultant_booking_pace_monthly` (created in `0109_create_booking_pace_monthly_rollups.sql`; refreshed inside `refresh_itinerary_revenue_rollups_v1()` per `0110_extend_itinerary_revenue_refresh_with_booking_pace_rollups.sql`; API-facing privileges tightened in `0111_harden_booking_pace_mv_api_access.sql`)
 
 ## Core analytics views (standard views on rollups)
 - `itinerary_pipeline_conversion_monthly_v1` — monthly conversion / pipeline snapshot derived from `mv_itinerary_pipeline_stages` (`observed_close_ratio` = confirmed path ÷ (open quoted + confirmed + lost))
@@ -373,3 +376,5 @@ Error envelope:
 - [Frontend data queries](frontend-data-queries.md) — which app paths call which `/api/v1/*` routes
 - [Sample payloads](sample-payloads.md) — JSON examples
 - [Terminology glossary](swainos-terminology-glossary.md) — display terms and field mapping
+- [Render guidelines](render-guidelines.md) — FastAPI hosting, health checks, resume-after-suspend
+- [Cloudflare guidelines](cloudflare-guidelines.md) — API proxy vs DNS-only, edge expectations

@@ -42,12 +42,22 @@ Purpose: canonical request/response examples for active frontend/backend contrac
 
 ### `POST /api/auth/login` (Next.js — same origin as the web app)
 
-Request:
+Request (password sign-in):
 
 ```json
 {
   "email": "member@example.com",
   "password": "••••••••"
+}
+```
+
+When **`NEXT_PUBLIC_TURNSTILE_SITE_KEY`** is configured on the Next.js app, the route **requires** a Cloudflare Turnstile token (same contract as Supabase password sign-in CAPTCHA):
+
+```json
+{
+  "email": "member@example.com",
+  "password": "••••••••",
+  "captchaToken": "0.xxx-turnstile-response-token"
 }
 ```
 
@@ -92,6 +102,17 @@ Failure examples (JSON body only; status matches `4xx`/`5xx`):
 ```
 
 `429` responses may also include a `Retry-After` header (seconds) aligned with `retryAfterSeconds`.
+
+```json
+{
+  "error": {
+    "code": "invalid_captcha",
+    "message": "Complete the security verification challenge."
+  }
+}
+```
+
+Returned when Turnstile is required (site key set) but `captchaToken` is missing/empty, or when Supabase rejects the CAPTCHA/Turnstile verification (still surfaced as `invalid_captcha` with generic copy—no raw provider strings to callers).
 
 ```json
 {

@@ -1,8 +1,8 @@
 # SwainOS Vercel Guidelines
 
-> **Version**: v1.0
+> **Version**: v1.1
 > **Status**: Active standard
-> **Date**: 2026-03-11
+> **Date**: 2026-03-23
 
 ## Purpose
 
@@ -81,6 +81,7 @@ Expected frontend-facing variables include:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_MAPBOX_TOKEN` when needed
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` when Cloudflare Turnstile is required on `/login` (must align with Supabase Auth CAPTCHA / Turnstile settings; removing the key disables the widget and server-side captcha requirement)
 
 Server-only variables should be used only if the frontend app explicitly needs them at build time or during secure server execution.
 
@@ -193,11 +194,21 @@ Polling and refresh guidance:
 After any production deployment or hosting configuration change, verify:
 
 - login works
+- when Turnstile is enabled: widget completes, `POST /api/auth/login` succeeds with token, and `invalid_captcha` paths behave as expected
 - auth callback works
 - protected app routes render
 - core dashboard routes load without request loops
 - API calls resolve against the intended backend hostname
 - no unexpected redirect chain exists between Cloudflare and Vercel
+- **admin-only Settings:** non-admin users do not see Settings in nav and receive `/unauthorized` on direct `/settings*` URLs
+
+## Merged code, not yet on production
+
+Common during cost holds or manual deploy pauses:
+
+- `main` may contain features (banners, auth hardening, admin routing) that **Vercel production has not built yet**. Confirm the **Production** deployment’s commit SHA and deploy time in the Vercel dashboard.
+- Preview deployments use preview env vars; do not assume they match production Turnstile or API bases.
+- Coordinate with **Render** (`render-guidelines.md`): a live frontend with a suspended API will surface auth or API errors—check both sides.
 
 ## Operational Alert Thresholds
 
@@ -221,3 +232,9 @@ Frontend hosting alerts should include:
 - preview and generated deployment URLs are appropriately protected
 - login and callback routes are verified after deploy
 - frontend talks only to the canonical API hostname
+
+## Related documentation
+
+- [Frontend code documentation](swainos-code-documentation-frontend.md)
+- [Render guidelines](render-guidelines.md) — API availability and resume checklist
+- [Cloudflare guidelines](cloudflare-guidelines.md)
