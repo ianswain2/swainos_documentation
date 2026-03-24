@@ -138,6 +138,7 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - Sign-in uses `POST /api/auth/login` on the Next.js host only; analytics API traffic continues to use `GET/POST /api/v1/...` on the FastAPI host.
 - **Settings vs Operations:** `/settings`, `/settings/run-logs`, and `/settings/user-access` are **admin-only** in the root layout (`adminOnly` + `role === admin`). `/operations` remains a normal module permission (`operations`); members with that key can use Operations without accessing Settings.
 - Salesforce operators use data-jobs + run detail (`output.parsed`) — no direct Salesforce calls from the web app.
+- Semantic rollup v2 serving views now back travel-trade leaderboard/profile, consultant leaderboard/profile/forecast, and booking-pace channel-comparison reads through unchanged API contracts.
 
 ## Related documentation
 

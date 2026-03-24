@@ -896,7 +896,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "mv_itinerary_consortia_booking_pace_monthly,mv_itinerary_trade_agency_booking_pace_monthly",
+    "source": "vw_channel_consortia_booking_pace_monthly_v2,vw_channel_trade_agency_booking_pace_monthly_v2",
     "timeWindow": "year",
     "calculationVersion": "v3",
     "currency": null
@@ -956,9 +956,9 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "mv_travel_consultant_leaderboard_monthly,mv_travel_consultant_funnel_monthly,mv_travel_consultant_booking_pace_monthly",
+    "source": "vw_travel_consultant_booked_monthly_v2,vw_travel_consultant_lead_monthly_v2,vw_travel_consultant_booking_pace_monthly_v2",
     "timeWindow": "year",
-    "calculationVersion": "v1",
+    "calculationVersion": "v2",
     "currency": "USD"
   }
 }
