@@ -42,6 +42,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `POST /api/v1/debt-service/scenarios/run` | `features/debt-service/debt-service-page.tsx` | Deterministic payoff/interest scenario compare run |
 | `GET /api/v1/itinerary-revenue/outlook` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Forward revenue outlook (forecast page: `12m` + `monthly`; actuals page: `12m` + `monthly` for context) |
 | `GET /api/v1/itinerary-revenue/conversion` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts` | Conversion timeline (`itinerary_pipeline_conversion_monthly_v1` + service projections) |
+| `GET /api/v1/itinerary-revenue/booked-revenue-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts` | Close-date-keyed booked-revenue YoY matrix used by itinerary forecast booked-history surfaces (closed lifecycle: `closed_won` + `closed_active`) |
 | `GET /api/v1/itinerary-revenue/actuals-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Multi-year Jan–Dec matrix + year summaries (loader uses `years_back=3`) |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Consortia + trade channel actuals for selected calendar year (default current year) |
 | `GET /api/v1/itinerary-revenue/actuals-channels-comparison` | `lib/api/itineraryRevenueService.ts`, `features/sales/travel-trade-server-loader.ts` | Travel Agencies booking-pace channels for the selected travel cohort (`travel_start_date` in window) using month-grain booking cutoff (`close_date` month <= as-of month) with prior-year same-month comparison (`priorYear`) |
@@ -119,14 +120,15 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 
 ## Fixed analytics windows (current product behavior)
 - **Travel Agencies** (`/travel-agencies`): current **calendar year** for agent/agency leaderboards plus booking-pace channel comparison (`close_date` month-cutoff; prior-year same-month baseline).
-- **Travel Consultant** leaderboard + profiles: fixed current-year query; YoY variance fields use booking-pace month-cutoff comparisons while travel/funnel KPIs keep their native bases.
+- **Travel Consultant** leaderboard + profiles: fixed current-year query; YoY variance fields use booking-pace month-cutoff comparisons while travel/funnel KPIs keep their native bases. Leaderboard top-summary callouts aggregate from the full returned consultant ranking list (never from UI search-filtered rows); team PYTD YoY uses summed current/prior PYTD revenue fields to stay aligned with row semantics.
 - **Travel Agent / Agency profiles** (`/travel-agencies/agents/[agentId]`, `/travel-agencies/agencies/[agencyId]`): current window KPIs stay lead/travel-period scoped; YoY chart series use booking-pace month-cutoff comparisons; agent profile retains travel-period `bookedItineraries`.
 - **Itinerary Actuals** (`/itinerary-actuals`): fixed **3-year** YoY matrix + lead flow **36m** + **current-year** channel actuals + **12m** outlook context; no channel-scope toggle in UI (loader default `current-year`).
-- **Itinerary Forecast** (`/itinerary-forecast`): fixed **12m** monthly outlook + conversion; outlook chart metric is **Gross Profit** only in UI (no client-side refetch hooks).
+- **Itinerary Forecast** (`/itinerary-forecast`): fixed **12m** monthly outlook + conversion plus booked-revenue YoY (`years_back=5`) for booking-date history surfaces; outlook chart metric is **Gross Profit** only in UI (no client-side refetch hooks).
 
 ## Operational notes
 - Itinerary revenue surfaces use `grossProfitAmount` as canonical Gross Profit.
 - Itinerary actuals stay **travel-period** reporting. Travel Agencies channel comparison and consultant/agency/agent YoY-variance fields now use booking-pace month-cutoff logic by `close_date`.
+- Booking-pace closed-lifecycle reads and booked-revenue-by-close-date reads include both `closed_won` and `closed_active` statuses from `itinerary_status_reference`.
 - Itinerary lead-flow panel: **itinerary actuals** (direct API) and **command center** (via dashboard snapshot only).
 - Destination matrix API still carries passenger fields; destination UI hides passenger metrics where noted in product rules.
 - Debt Service payment posting is user-confirmed from a prefilled prompt.

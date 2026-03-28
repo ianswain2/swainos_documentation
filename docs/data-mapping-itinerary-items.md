@@ -14,6 +14,9 @@
 | `itinerary_external_id` | `itinerary_id` (resolver input) | text -> uuid | no | Resolve from `itineraries.external_id` when UUID missing |
 | `supplier_id` | `supplier_id` | uuid | no | Use when pre-resolved |
 | `supplier_external_id` | `supplier_id` (resolver input) | text -> uuid | no | Resolve from `suppliers.external_id` when UUID missing |
+| `supplier_item_id` | `supplier_item_id` | uuid | no | Use when pre-resolved |
+| `supplier_item_external_id` / `item_external_id` / `KaptioTravel__Item__c` | `supplier_item_id` (resolver input) | text -> uuid | no | Resolve from `supplier_items.external_id` when UUID missing |
+| `supplier_item_external_id` / `item_external_id` / `KaptioTravel__Item__c` | `supplier_item_external_id` | text | no | Preserve source item lookup on itinerary item |
 | `item_name` | `item_name` | text | no | Service/item label |
 | `description` | `item_description` | text | no | Detailed item description |
 | `date_from` | `service_start_date` | date | no | Parse to ISO date |
@@ -45,6 +48,26 @@
 | `created_at` | `created_at` | timestamptz | no | Source created timestamp |
 | `(not in file)` | `updated_at` | timestamptz | no | Null unless provided |
 | `(not in file)` | `synced_at` | timestamptz | no | Sync-job timestamp when available |
+
+## Supplier Item Linkage (Phase 1)
+
+- Itinerary item rows now preserve source item lookup in `itinerary_items.supplier_item_external_id`.
+- UUID FK linkage uses `itinerary_items.supplier_item_id` resolved from `supplier_items.external_id`.
+- Canonical source object for this lookup: `KaptioTravel__Item__c` (Kaptio UI label: Service).
+
+## Supplier Item Linkage (Phase 2 Incremental Sync)
+
+- The Salesforce read-only sync must always include `KaptioTravel__Item__c` in itinerary-item extraction so `supplier_item_external_id` is populated on every incremental run.
+- Sync order enforces dependency availability before itinerary-item ingestion:
+  - `suppliers` -> `supplier_items` -> `itinerary_items`
+- Immediately after `itinerary_items` upsert, resolver stage sets `supplier_item_id` from `supplier_items.external_id` for rows where:
+  - `supplier_item_external_id` is present
+  - `supplier_item_id` is null
+- Incremental sync only runs that resolver when the current run extracted itinerary-item rows; historical reconciliation is separated into DB-native function `backfill_itinerary_item_supplier_links_v1()` and data job `itinerary-item-supplier-links-backfill`.
+- Resolver diagnostics are emitted each run for operations monitoring:
+  - `with_external` (rows with populated `supplier_item_external_id`)
+  - `with_fk` (rows with resolved `supplier_item_id`)
+  - `unresolved` (`with_external` and null FK)
 
 ## Remaining Excluded Source Fields Mapping
 

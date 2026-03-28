@@ -34,7 +34,7 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Booked Itineraries | Count of closed-won itineraries attributed to the selected **travel-period** window. | Integer | `bookedItinerariesCount` | When the UI labels **Traveled Itineraries**, use that only for travel-start scoped KPIs; do not mix with lead-created windows |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
-| Booked Revenue | Closed-won revenue for selected scope. For booking-pace comparisons, include only itineraries with `close_date` on/before the as-of cutoff. | Currency | `bookedRevenue` | Revenue (generic) |
+| Booked Revenue | Close-date keyed booked revenue for selected scope. Closed lifecycle includes `closed_won` and `closed_active`; booking cutoffs still apply where noted. | Currency | `bookedRevenue` | Revenue (generic) |
 | Booked Item Value | Total booked destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` | Item Value, Destination Revenue |
 | Destination Country | Country rollup dimension for destination analytics. | Text | `country`, `locationCountry` | Country (when entity context is unclear) |
 | Destination City | City rollup dimension nested under destination country analytics. | Text | `city`, `locationCity` | City (when entity context is unclear) |
@@ -45,7 +45,7 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | PYTD comparison (inline) | Prior-year comparator shown under the current-period value with signed delta percent. For booking-pace surfaces, comparator uses prior-year same-month close-date cutoff. For full-year booked surfaces, comparator is prior full year. | Text + percent | `priorYear` object on channel rows (`itineraryCount`, `grossAmount`, `grossProfitAmount`, …); `prior*` leaderboard fields | PY same-date |
 | Lead basis | Metrics grouped by itinerary `created_at` month. | Semantic basis | `leadCount`, `convertedLeadsCount`, `closedLostCount` families | Funnel rollup (ambiguous) |
 | Booked basis | Closed-won metrics grouped by itinerary `travel_start_date` month. | Semantic basis | `bookedItinerariesCount`, `grossAmount`, `grossProfitAmount` families | Traveled/booked mixed naming |
-| Booking pace basis | Closed-won travel-month cohort constrained by booking month (`close_date` month <= as-of cutoff month), implemented in semantic v2 booking-pace facts/serving views for travel-trade and channel comparisons. | Semantic basis | booking-pace comparison fields and `priorYear` comparators | YTD (ambiguous without cutoff rule) |
+| Booking pace basis | Closed-lifecycle travel-month cohort (`closed_won` + `closed_active`) constrained by booking month (`close_date` month <= as-of cutoff month), implemented in semantic v2 booking-pace serving views for travel-trade and channel comparisons. | Semantic basis | booking-pace comparison fields and `priorYear` comparators | YTD (ambiguous without cutoff rule) |
 | Target Variance % | Percent variance against strategic target trajectory. | Signed Percent | `growthTargetVariancePct`, `growthGapPct`, `totalGrowthGapPct` | Growth Gap (without %) |
 | Supplier Liability | Outstanding supplier AP from payable line rollups. | Currency | `totalOutstandingAmount`, `due30dAmount` | Supplier Payables, Open Supplier Liability |
 | Deposit Liability | Outstanding customer receivable/deposit posture in current window. | Currency | `outstandingDeposits`, `availableCashAfterLiability` | Open Deposit Liability |
@@ -138,6 +138,8 @@ This glossary is the canonical source of truth for user-facing terminology acros
 
 | Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
 |---|---|---|---|---|
+| Supplier Item | Canonical supplier service/item master record sourced from `KaptioTravel__Item__c` (Kaptio label: Service). | Entity label | `supplierItems[]`, `supplierItemId`, `supplierItemExternalId` | Service (when API object clarity is required), Item Master (informal) |
+| Supplier Item External ID | Source-system external key for supplier item records (`KaptioTravel__Item__c.Id`). | Text key | `supplierItemExternalId`, `supplier_items.external_id`, `itinerary_items.supplier_item_external_id` | Service ID (ambiguous) |
 | Supplier Invoice | Parent payable record from supplier billing feed. | Entity label | `supplierInvoices[]`, `supplierInvoiceId`, `supplierInvoiceExternalId` | Vendor Invoice |
 | Supplier Invoice Booking | Booking-junction parent record used by supplier invoice lines (`a29` object). | Entity label | `supplierInvoiceBookings[]`, `supplierInvoiceBookingId`, `supplierInvoiceBookingExternalId` | Supplier Invoice Booking Junction, Invoice Booking Link |
 | Supplier Invoice Line | Child line item attached to a supplier invoice parent. | Entity label | `supplierInvoiceLines[]`, `supplierInvoiceLineId`, `supplierInvoiceExternalId` | Vendor Invoice Line, AP Line |

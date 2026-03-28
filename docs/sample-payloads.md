@@ -849,9 +849,55 @@ Response:
 }
 ```
 
+### `GET /api/v1/itinerary-revenue/booked-revenue-yoy`
+
+Usage note: booked-revenue YoY is **close-date keyed** and uses the closed lifecycle (`closed_won` + `closed_active`) from `itinerary_status_reference`.
+
+```json
+{
+  "data": {
+    "years": [2024, 2025, 2026],
+    "timeline": [
+      {
+        "year": 2026,
+        "month": 1,
+        "monthLabel": "Jan",
+        "itineraryCount": 31,
+        "paxCount": 97,
+        "grossAmount": 2148920.57,
+        "grossProfitAmount": 489201.14,
+        "marginAmount": 1659719.43,
+        "tradeCommissionAmount": 0.0,
+        "marginPct": 0.7724
+      }
+    ],
+    "yearSummaries": [
+      {
+        "year": 2026,
+        "itineraryCount": 352,
+        "paxCount": 1084,
+        "grossAmount": 13755204.89,
+        "grossProfitAmount": 2918401.66,
+        "marginAmount": 10836803.23,
+        "tradeCommissionAmount": 0.0,
+        "marginPct": 0.7878
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-28",
+    "source": "mv_semantic_booked_revenue_fact_monthly_v2",
+    "timeWindow": "5y",
+    "calculationVersion": "v2",
+    "currency": "USD"
+  }
+}
+```
+
 ### `GET /api/v1/itinerary-revenue/actuals-channels-comparison?period_type=year&year=2026`
 
-Travel Agencies channel tables use this contract. Each row may include `priorYear` with booking-pace comparison values: same travel cohort window, but only itineraries booked (`close_date`) on or before the matching as-of cutoff.
+Travel Agencies channel tables use this contract. Each row may include `priorYear` with booking-pace comparison values: same travel cohort window, but only itineraries booked (`close_date`) on or before the matching as-of cutoff (closed lifecycle: `closed_won` + `closed_active`).
 
 ```json
 {
@@ -908,7 +954,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
 
 ### `GET /api/v1/travel-consultants/leaderboard`
 
-Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. `yoyToDateVariancePct` is booking-pace based (`close_date` month cutoff, prior-year same-month baseline).
+Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. `yoyToDateVariancePct` is booking-pace based (`close_date` month cutoff, prior-year same-month baseline; closed lifecycle includes `closed_won` + `closed_active`). The leaderboard top-summary callouts use the full returned ranking set for team totals and render API-provided `highlights` directly.
 
 ```json
 {

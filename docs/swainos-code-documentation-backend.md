@@ -62,7 +62,7 @@ Error envelope:
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
-- Itinerary revenue: `/itinerary-revenue/outlook|conversion|actuals-yoy|actuals-channels|actuals-channels-comparison` (`actuals-channels-comparison` now reads month-grain booking-pace materialized views; deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
+- Itinerary revenue: `/itinerary-revenue/outlook|conversion|booked-revenue-yoy|actuals-yoy|actuals-channels|actuals-channels-comparison` (`booked-revenue-yoy` reads dedicated close-date semantic booked-revenue facts; `actuals-channels-comparison` reads month-grain booking-pace serving views; deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
@@ -90,7 +90,7 @@ Error envelope:
 ## Data and Rollup Model
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
-- Itinerary revenue rollups are keyed by travel period
+- Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
 - `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
@@ -136,7 +136,7 @@ Error envelope:
 - `mv_travel_consultant_funnel_monthly`
 - `mv_travel_consultant_compensation_monthly`
 - `mv_travel_trade_search_v2` (DB-native trade search index sourced from active travel-agent/travel-agency tables and refreshed by `refresh_semantic_rollups_v2()`)
-- **Booking pace (semantic v2 serving views):** `vw_channel_consortia_booking_pace_monthly_v2`, `vw_channel_trade_agency_booking_pace_monthly_v2`, `vw_travel_agent_booking_pace_monthly_v2`, `vw_travel_consultant_booking_pace_monthly_v2` (derived from `mv_semantic_booking_pace_fact_monthly_v2`)
+- **Booking pace (semantic v2 serving views):** `vw_channel_consortia_booking_pace_monthly_v2`, `vw_channel_trade_agency_booking_pace_monthly_v2`, `vw_travel_agent_booking_pace_monthly_v2`, `vw_travel_consultant_booking_pace_monthly_v2` (served from `vw_semantic_booking_pace_fact_closed_lifecycle_v2`, which extends the baseline fact with `closed_active`)
 
 ## Core analytics views (standard views on rollups)
 - `itinerary_pipeline_conversion_monthly_v1` — monthly conversion / pipeline snapshot derived from `mv_itinerary_pipeline_stages` (`observed_close_ratio` = confirmed path ÷ (open quoted + confirmed + lost))
@@ -151,6 +151,8 @@ Error envelope:
 ## Operational Scripts
 - `scripts/upsert_itineraries.py`
 - `scripts/upsert_itinerary_items.py`
+- `scripts/upsert_supplier_items.py`
+- `scripts/resolve_itinerary_item_supplier_item_links.py`
 - `scripts/upsert_employees.py`
 - `scripts/upsert_customer_payments.py`
 - `scripts/upsert_agencies.py`
@@ -297,6 +299,7 @@ Error envelope:
   - `docs/data-mapping-supplier.md`
   - `docs/data-mapping-user.md`
   - `docs/data-mapping-itinerary.md`
+  - `docs/data-mapping-item.md`
   - `docs/data-mapping-itinerary-items.md`
   - `docs/data-mapping-supplier-invoices.md`
 
@@ -314,19 +317,24 @@ Error envelope:
   - agencies/suppliers source: `Account`
   - employees source: `User` (active mapping intentionally excludes unavailable sandbox fields `Salary__c` and `Commission_Rate__c`)
   - itineraries source: `KaptioTravel__Itinerary__c`
+  - supplier items source: `KaptioTravel__Item__c`
   - itinerary items source: `KaptioTravel__Itinerary_Item__c`
   - supplier invoice chain: `KaptioTravel__SupplierInvoice__c`, `KaptioTravel__SupplierInvoiceBooking__c`, `KaptioTravel__SupplierInvoiceLine__c`
 - Load order per run:
   1. agencies
   2. suppliers
   3. employees
-  4. itineraries
-  5. itinerary_items
-  6. supplier_invoices
-  7. supplier_invoice_bookings
-  8. supplier_invoice_lines
+  4. supplier_items
+  5. itineraries
+  6. itinerary_items
+  7. itinerary-item supplier-item resolver (`resolve_itinerary_item_supplier_item_links.py`) only when the current incremental run extracted itinerary-item rows
+  8. supplier_invoices
+  9. supplier_invoice_bookings
+  10. supplier_invoice_lines
 - Unresolved-reference policy:
   - itinerary items export unresolved itinerary/supplier references for retry while skipping unresolved strict rows
+  - itinerary-item supplier-item resolver emits `with_external`, `with_fk`, `unresolved`, and `unresolved_pct` counters when invoked from the incremental run
+  - historical itinerary-item supplier-item reconciliation is handled by dedicated backfill job `itinerary-item-supplier-links-backfill`, which wraps DB function `backfill_itinerary_item_supplier_links_v1()`
   - supplier invoice headers/bookings preserve optional unresolved related references and export them for backfill
   - supplier invoice lines require booking-parent resolution and may preserve optional unresolved itinerary/item/supplier references for later reconciliation
 
@@ -343,6 +351,7 @@ Error envelope:
   - object-level metrics include `extracted`, `staged`, `loaded`, unresolved/duplicate skip counts, `csv_bytes`, and `window_start`
   - counters include `jobsCreated`, `pollsMade`, and `resultPagesRead`
   - terminal JSON status payloads (`success`/`blocked`) are parsed into `data_job_runs.output.parsed` for operator inspection
+  - active `data_job_run_steps.output` stores throttled live progress snapshots (`latestProgress`, bounded `progressEvents`, bounded `recentLogs`) on a best-effort basis so observability failure does not fail the job itself
 - Successful `salesforce-readonly-sync` runs fan out dependent `system_managed` rollups:
   - `semantic-rollups-v2-refresh`
   - `consultant-ai-rollups-refresh`
@@ -356,7 +365,7 @@ Error envelope:
 - AI insights require live model execution (no deterministic fallback contract)
 - Travel agent and travel agency leaderboard/profile `period_type=year` windows are full calendar year (`Jan 1` through `Dec 31`) for the selected year.
 - Travel consultant leaderboard/profile period windows remain explicit by endpoint logic: travel-period rows use selected window, while booking-pace comparator fields use same-month prior-year cutoff rules.
-- Booking-pace contracts use `travel_start_date` as the cohort year/month and `close_date` month <= as-of month as the inclusion rule. Current-year comparisons use current-month cutoff; prior-year comparisons use the same month in the prior year.
+- Booking-pace contracts use `travel_start_date` as the cohort year/month and `close_date` month <= as-of month as the inclusion rule. Current-year comparisons use current-month cutoff; prior-year comparisons use the same month in the prior year. Closed-lifecycle booking-pace serving views include both `closed_won` and `closed_active`.
 - Travel consultant `yoyToDateVariancePct` / `ytdVariancePct` and travel-trade profile YoY series use booking-pace semantics; itinerary actuals endpoints remain travel-period.
 - Frontend declutter (route header removal, Travel Agencies KPI-card removal, removal of client-side period toggles in favor of route-level fixed queries) is UI/routing-only; backend contracts stay explicit query-param driven for automation and future toggles.
 
@@ -365,7 +374,10 @@ Error envelope:
 - Canonical v2 fact materialized views:
   - `mv_semantic_lead_fact_monthly_v2` (`created_at` month basis)
   - `mv_semantic_booked_fact_monthly_v2` (`travel_start_date` month basis, closed-won)
-  - `mv_semantic_booking_pace_fact_monthly_v2` (`travel_start_date` month + `close_date` booked month)
+  - `mv_semantic_booking_pace_fact_monthly_v2` (`travel_start_date` month + `close_date` booked month, closed-won baseline fact)
+  - `mv_semantic_booked_revenue_fact_monthly_v2` (dedicated close-date booked-revenue fact; closed lifecycle includes `closed_won` + `closed_active`)
+- Closed-lifecycle booking-pace helper view:
+  - `vw_semantic_booking_pace_fact_closed_lifecycle_v2` (unions baseline booking-pace fact with `closed_active` close-date bookings)
 - Search coverage also uses the v2 runtime path: `mv_travel_trade_search_v2` is refreshed alongside semantic v2 rollups.
 - Serving views (`vw_*_v2`) provide domain-focused slices for agents, agencies, consultants, and channel tables without mixing semantic bases in one row.
 - Consultant-serving coverage includes:
@@ -375,7 +387,7 @@ Error envelope:
   - `vw_travel_consultant_booking_pace_monthly_v2`
 - Travel-agent consultant affinity now reads from `vw_travel_agent_consultant_affinity_monthly_v2`.
 - New refresh RPC: `refresh_semantic_rollups_v2()`; wired as a parallel system-managed data job (`semantic-rollups-v2-refresh`).
-- Parity diagnostic view: `vw_semantic_rollup_v2_parity_checks` (totals, top-10 overlap, PYTD pace sanity).
+- Parity diagnostic view: `vw_semantic_rollup_v2_parity_checks` (legacy closed-won baseline checks for totals/top-10/PYTD pace sanity); booked-revenue close-date diagnostics are exposed via `vw_semantic_booked_revenue_v2_checks`.
 - Baseline freeze utility script: `scripts/capture_semantic_rollup_baseline_v1.py` now snapshots v2 serving views to a v2 baseline artifact for parity validation.
 
 ## Runtime Security and Cost Guardrails

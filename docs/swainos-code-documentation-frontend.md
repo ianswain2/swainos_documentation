@@ -91,6 +91,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - Itinerary **forecast** (`itinerary-forecast-server-loader.ts`): parallel loads
   - `GET /api/v1/itinerary-revenue/outlook` (`12m`, `monthly`)
   - `GET /api/v1/itinerary-revenue/conversion` (same window/grain)
+  - `GET /api/v1/itinerary-revenue/booked-revenue-yoy` (`years_back=5`, close-date booked-revenue history)
   - UI is server-snapshot driven (`ItineraryForecastCockpit`); no itinerary forecast client refresh hook. Outlook chart metric is fixed to **Gross Profit** in the UI.
 - Itinerary **actuals** (`itinerary-actuals-server-loader.ts`):
   - `GET /api/v1/itinerary-revenue/actuals-yoy` (`years_back=3`)
@@ -102,8 +103,8 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `GET /api/v1/travel-agencies/leaderboard`, `GET /api/v1/travel-agents/leaderboard` with fixed current-year query + `top_n=10`
   - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade booking-pace tables (same-month-cutoff **PY** comparison)
   - `useTravelTradeSearch` remains the only client-side trade search hook
-- **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks). YoY variance fields are booking-pace. Profile **Performance** card no longer duplicates the forecast timeline table (timeline remains available via embedded profile payload / backend; standalone `GET …/forecast` remains unused by UI—see `frontend-data-queries.md`).
-- **Travel agent/agency profiles**: `travel-trade-server-loader.ts`; YoY chart series are booking-pace while KPI labels remain explicit for **lead-created** vs **travel-period** metrics; agent profile includes `bookedItineraries` for the bottom travel-period detail table.
+- **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks). YoY variance fields are booking-pace (closed lifecycle includes `closed_won` + `closed_active`). Profile **Performance** card no longer duplicates the forecast timeline table (timeline remains available via embedded profile payload / backend; standalone `GET …/forecast` remains unused by UI—see `frontend-data-queries.md`).
+- **Travel agent/agency profiles**: `travel-trade-server-loader.ts`; YoY chart series are booking-pace (closed lifecycle includes `closed_won` + `closed_active`) while KPI labels remain explicit for **lead-created** vs **travel-period** metrics; agent profile includes `bookedItineraries` for the bottom travel-period detail table.
 - Debt service reads:
   - `/api/v1/debt-service/overview`
   - `/api/v1/debt-service/facilities`
