@@ -672,3 +672,5 @@
 2026-03-29 11:42 - Standardized Traveled -> Travel terminology across analytics table labels, supplier rollup MV naming (`0138`), API meta source strings, and core frontend/backend documentation references.
 2026-03-29 11:46 - Diagnosed supplier travel revenue split-brain in live DB: frontend/API read `mv_supplier_travel_revenue_monthly_v1` while refresh RPC was still updating legacy `mv_supplier_traveled_revenue_monthly_v1`; added forward repair migration `0141` to recreate one canonical MV and repoint rollup refreshes.
 2026-03-29 12:03 - Completed quality-audit pass on supplier travel-revenue repair: confirmed runtime references use the canonical MV, no extra runtime supplier rollup objects remain beyond historical migrations, and current validation is blocked by active DB lock contention during refresh/read attempts.
+
+2026-03-29 12:45 - Committed and pushed supplier rollout to `main` on SwainOS_FrontEnd, SwainOS_BackEnd, and SwianOS_Documentation; left local-only paths uncommitted (FrontEnd `.sfdx/`, BackEnd `tmp/` scratch exports).
