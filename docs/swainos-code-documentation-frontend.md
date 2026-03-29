@@ -103,6 +103,11 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `GET /api/v1/travel-agencies/leaderboard`, `GET /api/v1/travel-agents/leaderboard` with fixed current-year query + `top_n=10`
   - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade booking-pace tables (same-month-cutoff **PY** comparison)
   - `useTravelTradeSearch` remains the only client-side trade search hook
+- **Suppliers** rollout (`features/suppliers/suppliers-server-loader.ts` + `app/suppliers/*`):
+  - `GET /api/v1/suppliers/leaderboard` for current-year travel-revenue YTD rankings (with PYTD same-month/day prior cutoff) and location hierarchy filters (`country`, `region`, `city`, `locationQuery`)
+  - `GET /api/v1/suppliers/profiles` for supplier directory/discovery
+  - `GET /api/v1/suppliers/{supplier_id}/profile` for supplier KPIs, YoY series, and top-location mix
+  - module is permission-gated by `suppliers` and wired into left-nav as parent with `Supplier Production` and `Supplier Profiles` children
 - **Travel consultant** leaderboard/profile: `travel-consultant-server-loader.ts` + fixed current-year queries; pages consume `initialSnapshot` directly (no leaderboard/profile refresh hooks). YoY variance fields are booking-pace (closed lifecycle includes `closed_won` + `closed_active`). Profile **Performance** card no longer duplicates the forecast timeline table (timeline remains available via embedded profile payload / backend; standalone `GET …/forecast` remains unused by UI—see `frontend-data-queries.md`).
 - **Travel agent/agency profiles**: `travel-trade-server-loader.ts`; YoY chart series are booking-pace (closed lifecycle includes `closed_won` + `closed_active`) while KPI labels remain explicit for **lead-created** vs **travel-period** metrics; agent profile includes `bookedItineraries` for the bottom travel-period detail table.
 - Debt service reads:

@@ -887,7 +887,7 @@ Usage note: booked-revenue YoY is **close-date keyed** and uses the closed lifec
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-28",
-    "source": "mv_semantic_booked_revenue_fact_monthly_v2",
+    "source": "vw_semantic_booked_revenue_company_monthly_v2",
     "timeWindow": "5y",
     "calculationVersion": "v2",
     "currency": "USD"
@@ -946,6 +946,129 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
     "timeWindow": "year",
     "calculationVersion": "v3",
     "currency": null
+  }
+}
+```
+
+## Suppliers
+
+### `GET /api/v1/suppliers/leaderboard?year=2026&top_n=25&location_query=Australia`
+
+```json
+{
+  "data": {
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-03-29",
+    "year": 2026,
+    "sortBy": "gross_profit",
+    "sortOrder": "desc",
+    "topN": 25,
+    "filters": {
+      "country": "",
+      "region": "",
+      "city": "",
+      "locationQuery": "Australia",
+      "supplierQuery": ""
+    },
+    "rankings": [
+      {
+        "rank": 1,
+        "supplierId": "7fd7cf0a-dca6-4dcb-8da7-364109bf5d57",
+        "supplierExternalId": "a15A000001XyzAb",
+        "supplierName": "Harbour Luxe Collection",
+        "itineraryCount": 38,
+        "itineraryItemCount": 112,
+        "quantity": 172.0,
+        "grossAmount": 2849021.77,
+        "grossProfitAmount": 812944.11,
+        "marginAmount": 2036077.66,
+        "marginPct": 0.7146,
+        "priorItineraryCount": 31,
+        "priorItineraryItemCount": 96,
+        "priorGrossAmount": 2418810.03,
+        "priorGrossProfitAmount": 694100.52,
+        "itineraryCountVariancePct": 0.2258,
+        "grossVariancePct": 0.1779,
+        "grossProfitVariancePct": 0.1712
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-28",
+    "source": "mv_supplier_travel_revenue_monthly_v1",
+    "timeWindow": "2026",
+    "calculationVersion": "v1",
+    "currency": "USD"
+  }
+}
+```
+
+### `GET /api/v1/suppliers/{supplier_id}/profile?year=2026`
+
+```json
+{
+  "data": {
+    "supplier": {
+      "supplierId": "7fd7cf0a-dca6-4dcb-8da7-364109bf5d57",
+      "supplierExternalId": "a15A000001XyzAb",
+      "supplierName": "Harbour Luxe Collection",
+      "supplierCode": "HLC",
+      "supplierType": "Accommodation",
+      "defaultCurrency": "USD",
+      "contactEmail": "ops@harbourluxe.example",
+      "contactPhone": "+1-555-0112",
+      "addressCountry": "Australia"
+    },
+    "periodStart": "2026-01-01",
+    "periodEnd": "2026-03-29",
+    "year": 2026,
+    "kpis": {
+      "itineraryCount": 38,
+      "itineraryItemCount": 112,
+      "quantity": 172.0,
+      "grossAmount": 2849021.77,
+      "grossProfitAmount": 812944.11,
+      "marginAmount": 2036077.66,
+      "marginPct": 0.7146
+    },
+    "yoySeries": [
+      {
+        "metric": "grossRevenue",
+        "currentYear": 2026,
+        "priorYear": 2025,
+        "points": [
+          {
+            "month": 1,
+            "monthLabel": "Jan",
+            "currentYearValue": 430221.5,
+            "priorYearValue": 377002.3
+          }
+        ],
+        "totalCurrentYearValue": 2849021.77,
+        "totalPriorYearValue": 2418810.03,
+        "yoyDeltaPct": 0.1779
+      }
+    ],
+    "topLocations": [
+      {
+        "country": "Australia",
+        "region": "New South Wales",
+        "city": "Sydney",
+        "itineraryCount": 21,
+        "itineraryItemCount": 64,
+        "grossAmount": 1662930.4,
+        "grossProfitAmount": 485322.97
+      }
+    ]
+  },
+  "pagination": null,
+  "meta": {
+    "asOfDate": "2026-03-28",
+    "source": "mv_supplier_travel_revenue_monthly_v1,suppliers",
+    "timeWindow": "2026",
+    "calculationVersion": "v1",
+    "currency": "USD"
   }
 }
 ```
@@ -1014,13 +1137,13 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
 
 ### `GET /api/v1/travel-agents/leaderboard`
 
-Usage note: Travel Agencies UI uses this payload for top-performance bars and rankings tables (fixed current-year query from the route loader). Standalone top summary KPI cards were removed earlier. For current-year requests, `periodEnd` is **today**, not year-end.
+Usage note: Travel Agencies UI uses this payload for top-performance bars and rankings tables (fixed current-year query from the route loader). Standalone top summary KPI cards were removed earlier. For `period_type=year`, service windows are full calendar year (`Jan 1` through `Dec 31`) for the selected year.
 
 ```json
 {
   "data": {
     "periodStart": "2026-01-01",
-    "periodEnd": "2026-03-14",
+    "periodEnd": "2026-12-31",
     "periodType": "year",
     "sortBy": "gross_profit",
     "sortOrder": "desc",
@@ -1047,9 +1170,9 @@ Usage note: Travel Agencies UI uses this payload for top-performance bars and ra
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup",
+    "source": "vw_travel_agent_lead_monthly_v2,vw_travel_agent_booked_monthly_v2",
     "timeWindow": "year",
-    "calculationVersion": "v1",
+    "calculationVersion": "v2",
     "currency": null
   }
 }
@@ -1072,7 +1195,7 @@ Agent profiles pair **lead-created** KPIs (`kpis.*`) with **travel-period** oper
       "agencyName": "Northstar Travel"
     },
     "periodStart": "2026-01-01",
-    "periodEnd": "2026-03-14",
+    "periodEnd": "2026-12-31",
     "periodType": "year",
     "kpis": {
       "leadsCount": 1,
@@ -1101,9 +1224,9 @@ Agent profiles pair **lead-created** KPIs (`kpis.*`) with **travel-period** oper
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "travel_trade_lead_monthly_rollup,travel_trade_booked_itinerary_monthly_rollup,travel_agent_monthly_rollup,travel_agent_consultant_affinity_monthly_rollup,itineraries,contacts,itinerary_status_reference",
+    "source": "vw_travel_agent_lead_monthly_v2,vw_travel_agent_booked_monthly_v2,vw_travel_agent_consultant_affinity_monthly_v2,vw_travel_agent_booking_pace_monthly_v2,itineraries,contacts,itinerary_status_reference",
     "timeWindow": "year",
-    "calculationVersion": "v1",
+    "calculationVersion": "v2",
     "currency": "USD"
   }
 }

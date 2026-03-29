@@ -634,7 +634,41 @@
 2026-03-28 11:45 - Stopped stale Salesforce readonly sync runs, added live per-stage progress emission to the sync script, and updated subprocess job runner streaming so job logs now show object-level export/load/completion progress while the sync is still running.
 2026-03-28 12:02 - Added migration `0129` to introduce `closed_active` status grouping, remap Salesforce lifecycle statuses, keep booked-revenue as a separate close-date rollup, and include both `closed_active` + `closed_won` in booking-pace serving views.
 2026-03-28 12:09 - Ran quality-audit-pass on itinerary actuals/forecast UI updates; validated naming/layout changes against frontend table conventions and repository guidelines, ran frontend lint, and hardened native `details/summary` help icon rendering for WebKit marker consistency.
+2026-03-28 15:08 - Diagnosed itinerary-forecast booked-revenue zeros as backend pagination truncation (`_select_all` requesting 5000 while Supabase caps at 1000), fixed repository paging to 1000-step iteration, and verified booked-revenue YOY totals now populate 2024-2026 correctly after semantic rollup refresh.
+2026-03-28 15:31 - Completed big-bang rollup read hardening cutover: added shared deterministic Supabase full-scan pagination helper, replaced truncation-prone analytics repository reads, introduced `vw_semantic_booked_revenue_company_monthly_v2` serving view with endpoint source cutover, and added regression tests for multi-page completeness plus booked-revenue read-path correctness.
+2026-03-28 16:12 - Quality-audit follow-up hardening: upgraded paginated analytics reads to composite deterministic ordering, standardized remaining marketing analytics Supabase read paths onto full-scan pagination, and added booked-revenue YoY endpoint contract regression coverage before migration apply.
 2026-03-28 12:13 - Reworked Salesforce readonly sync execution path and observability: persisted live progress into data job step output, constrained resolver work to unresolved records, skipped resolver when itinerary-item extraction is empty, and verified the run advances through supplier invoice headers/bookings/lines on the patched backend.
 2026-03-28 12:14 - Ran quality-audit pass for closed-lifecycle rollup changes and updated frontend/backend documentation to align route contracts and terminology with `closed_active` + `closed_won` booked metrics.
 2026-03-28 14:55 - Added forward-fix migration `0131` to align `vw_semantic_rollup_v2_parity_checks` booking-pace truth logic with closed lifecycle semantics (`closed_won` + `closed_active`) after applied migrations `0128`/`0129`/`0130`.
 2026-03-28 12:47 - Hardened data-job progress persistence to be throttled and non-fatal, added a dedicated itinerary-item supplier-link backfill job on top of the existing DB backfill function, updated linkage architecture docs, and verified the backend change set with targeted data-job service tests.
+2026-03-28 16:30 - Spot-checked code/docs parity and corrected Travel Agents sample payload contract details (year window semantics, v2 source objects, and calculationVersion) to match current backend behavior.
+2026-03-28 16:45 - Reordered itinerary-forecast Booking Pace presentation: moved Booking Pace panel above Pipeline Health and switched matrix table order to show Booked Gross Profit above Booked Gross Revenue.
+2026-03-28 17:13 - Stopped local SwainOS frontend/backend dev servers and verified ports 3000 and 8000 are no longer listening.
+2026-03-28 20:14 - Restarted local frontend/backend dev servers and finalized itinerary-forecast layout ordering: Travel Revenue Outlook matrix now renders directly beneath the forecast chart with months ordered current-to-future left-to-right.
+2026-03-28 20:28 - Flipped Pipeline Health table month ordering to left-to-right chronological (current/near months first, furthest months to the right) for itinerary-forecast consistency.
+2026-03-28 20:38 - Corrected travel consultant leaderboard table semantics: retitled Booked Rankings to Traveled Rankings and replaced misaligned Created/Won/Lost columns with travel-aligned Itineraries, PAX, and Margin %.
+2026-03-28 20:41 - Shut down local frontend/backend dev servers for end-of-day pause and verified ports 3000 and 8000 are no longer listening.
+2026-03-29 08:38 - Restarted local frontend/backend dev servers and confirmed readiness at http://127.0.0.1:3000 and http://127.0.0.1:8000 for continued implementation work.
+2026-03-29 09:14 - Implemented Supplier phase-1 rollout: added supplier traveled-revenue rollup/migration, backend supplier analytics endpoints, supplier nav/routes/pages, and refreshed architecture/contracts docs with QA checks.
+2026-03-29 09:20 - Quality-audit hardening pass: corrected supplier traveled-revenue semantics to true current-year YTD (`service_start/travel_start <= current_date`) and aligned prior-year comparisons to PYTD cutoff across supplier services/docs.
+2026-03-29 10:33 - Updated Supplier UX contract: moved profile monthly revenue matrix to horizontal month columns and converted Supplier Profiles to search-first across all suppliers via new `/api/v1/suppliers/search` endpoint.
+2026-03-29 10:36 - Shifted supplier travel metric semantics to active/full-year travel window (includes not-yet-traveled files) via forward migration `0134`, and standardized Supplier UI labels to Travel Gross Revenue / Travel Gross Profit.
+
+2026-03-29 10:39 - Applied supplier profile matrix cleanup (added Total + YoY Change columns to match itinerary-actuals-style reporting) and completed quality-audit pass with frontend/backend lint + supplier service regression tests green.
+
+2026-03-29 10:41 - Added forward migration `0135` to normalize supplier traveled-revenue rollups to canonical USD via deterministic service-date FX lookup with explicit fallback counters, then reran supplier lint/test quality gates.
+
+2026-03-29 10:45 - Added DB-backed hierarchical supplier production filter options (`/api/v1/suppliers/filter-options`) and wired country/region/city typeahead dropdowns with parent-child drill-down behavior on the frontend.
+
+2026-03-29 10:48 - Added forward migration `0136` to align supplier traveled-revenue month attribution to travel-start parity (with service-start fallback) and corrected location hierarchy precedence/option parsing to prevent malformed combined-country filter values.
+
+2026-03-29 10:51 - Ran quality-audit cleanup on supplier rollup/filter work, removed hierarchy-splitting logic that could invent invalid location combinations, and revalidated with backend/frontend lint plus supplier service tests.
+
+2026-03-29 11:19 - Updated Suppliers nav hierarchy to sibling tabs (`Supplier Overview` + `Supplier Profiles`), added overview insight panels/primary-country spotlights, and added forward migration `0137` to include closed-lifecycle active months in supplier traveled-revenue rollups for 2026 month coverage parity.
+
+2026-03-29 11:28 - Added forward migration `0139` to enforce supplier travel-revenue period attribution on itinerary item `service_start_date` only (no travel-date fallback) and broaden status inclusion to all non-filtered, non-closed_lost lifecycle statuses for active month coverage.
+
+2026-03-29 11:32 - Added forward migration `0140` to fix supplier travel-revenue MV name drift (`traveled` vs `travel`) so APIs read the updated rollup, and constrained inclusion to the approved itinerary item status set with service_start_date-only attribution.
+2026-03-29 11:42 - Standardized Traveled -> Travel terminology across analytics table labels, supplier rollup MV naming (`0138`), API meta source strings, and core frontend/backend documentation references.
+2026-03-29 11:46 - Diagnosed supplier travel revenue split-brain in live DB: frontend/API read `mv_supplier_travel_revenue_monthly_v1` while refresh RPC was still updating legacy `mv_supplier_traveled_revenue_monthly_v1`; added forward repair migration `0141` to recreate one canonical MV and repoint rollup refreshes.
+2026-03-29 12:03 - Completed quality-audit pass on supplier travel-revenue repair: confirmed runtime references use the canonical MV, no extra runtime supplier rollup objects remain beyond historical migrations, and current validation is blocked by active DB lock contention during refresh/read attempts.

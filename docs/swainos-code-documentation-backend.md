@@ -20,6 +20,7 @@ Focus: deterministic analytics contracts, traceable rollups, and API envelopes c
 - `src/core`: config, error handling, Supabase client, structured logging, request context
 - `src/shared`: response envelope and time helpers
 - `scripts`: ingestion/upsert and refresh workflows
+- Analytics repository read standard: `SupabaseClient.select_all_pages(...)` with deterministic composite `order` clauses for full-result pagination safety (avoid silent Supabase row-cap truncation and unstable offset traversal on ties)
 
 ## API Envelope
 All successful responses use:
@@ -62,10 +63,11 @@ Error envelope:
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
-- Itinerary revenue: `/itinerary-revenue/outlook|conversion|booked-revenue-yoy|actuals-yoy|actuals-channels|actuals-channels-comparison` (`booked-revenue-yoy` reads dedicated close-date semantic booked-revenue facts; `actuals-channels-comparison` reads month-grain booking-pace serving views; deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
+- Itinerary revenue: `/itinerary-revenue/outlook|conversion|booked-revenue-yoy|actuals-yoy|actuals-channels|actuals-channels-comparison` (`booked-revenue-yoy` reads company-month close-date serving view `vw_semantic_booked_revenue_company_monthly_v2` sourced from semantic booked-revenue facts; `actuals-channels-comparison` reads month-grain booking-pace serving views; deposit timeline and standalone channel ranking routes were removed from the public API; DB may still retain `mv_itinerary_deposit_monthly` for jobs)
 - Itinerary lead flow: `/itinerary-lead-flow`
 - Travel consultant: `/travel-consultants/leaderboard|{employee_id}/profile|{employee_id}/forecast`
 - Travel trade: `/travel-agents/*`, `/travel-agencies/*`, `/travel-trade/search`
+- Supplier analytics: `/suppliers/leaderboard|profiles|{supplier_id}/profile`
 - FX: `/fx/rates|exposure|signals|transactions|holdings|intelligence|invoice-pressure`
 - Marketing web analytics: `/marketing/web-analytics/overview|search|search-console|search-console/page-profile|ai-insights|page-activity|geo|events|health`
 - AI insights: `/ai-insights/briefing|feed|recommendations|history|entities/*|run`
@@ -91,7 +93,8 @@ Error envelope:
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
-- `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
+- Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD)
+- `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs plus supplier travel rollup views; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics reads from semantic v2 serving views refreshed via `refresh_semantic_rollups_v2()`
@@ -130,6 +133,7 @@ Error envelope:
 - `mv_itinerary_trade_agency_monthly`
 - `mv_itinerary_consortia_actuals_monthly`
 - `mv_itinerary_trade_agency_actuals_monthly`
+- `mv_supplier_travel_revenue_monthly_v1`
 - `mv_itinerary_lead_flow_monthly`
 - `mv_travel_consultant_leaderboard_monthly`
 - `mv_travel_consultant_profile_monthly`
@@ -376,6 +380,8 @@ Error envelope:
   - `mv_semantic_booked_fact_monthly_v2` (`travel_start_date` month basis, closed-won)
   - `mv_semantic_booking_pace_fact_monthly_v2` (`travel_start_date` month + `close_date` booked month, closed-won baseline fact)
   - `mv_semantic_booked_revenue_fact_monthly_v2` (dedicated close-date booked-revenue fact; closed lifecycle includes `closed_won` + `closed_active`)
+- Booked revenue company-month serving view:
+  - `vw_semantic_booked_revenue_company_monthly_v2` (pre-aggregated month totals consumed by `/itinerary-revenue/booked-revenue-yoy`)
 - Closed-lifecycle booking-pace helper view:
   - `vw_semantic_booking_pace_fact_closed_lifecycle_v2` (unions baseline booking-pace fact with `closed_active` close-date bookings)
 - Search coverage also uses the v2 runtime path: `mv_travel_trade_search_v2` is refreshed alongside semantic v2 rollups.
