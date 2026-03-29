@@ -93,7 +93,7 @@ Error envelope:
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
-- Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD)
+- Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level itinerary counts are resolved through RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
 - `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs plus supplier travel rollup views; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
@@ -197,9 +197,12 @@ Error envelope:
     - backfills historical rows from `started_at`/`finished_at` and serialized `output` payload size
 - Scheduler model:
   - one fixed scheduler tick endpoint (`POST /api/v1/data-jobs/scheduler/tick`)
-  - scheduler tick requires `x-scheduler-token` and is blocked when token is missing/invalid
+  - scheduler tick is machine-authenticated by `x-scheduler-token` and does not depend on human permission JWTs
   - due-job selection reads `data_jobs.next_run_at`
   - dependency blocking and run-state locks are applied in service orchestration
+  - optional dependencies (`required=false`) are not blocking; stale gating honors `allow_stale_dependency`
+  - dependency freshness is resolved from the latest successful dependency run
+  - scheduler loop isolates per-job failures and continues dispatching later due jobs
   - stale `running` rows are auto-failed after `max_runtime_seconds`
   - scheduler-triggered blocked runs advance `next_run_at` to prevent repeated due-job churn
   - failed recurring jobs honor per-job retry cooldown before re-dispatch

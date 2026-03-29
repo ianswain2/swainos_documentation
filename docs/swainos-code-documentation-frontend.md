@@ -104,7 +104,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade booking-pace tables (same-month-cutoff **PY** comparison)
   - `useTravelTradeSearch` remains the only client-side trade search hook
 - **Suppliers** rollout (`features/suppliers/suppliers-server-loader.ts` + `app/suppliers/*`):
-  - `GET /api/v1/suppliers/leaderboard` for current-year travel-revenue YTD rankings (with PYTD same-month/day prior cutoff) and location hierarchy filters (`country`, `region`, `city`, `locationQuery`)
+  - `GET /api/v1/suppliers/leaderboard` for current-year travel-revenue YTD rankings (with PYTD same-month/day prior cutoff) and location hierarchy filters (`country`, `region`, `city`, `locationQuery`); itinerary-count KPIs are sourced from backend distinct-itinerary RPCs rather than summed location buckets
   - `GET /api/v1/suppliers/profiles` for supplier directory/discovery
   - `GET /api/v1/suppliers/{supplier_id}/profile` for supplier KPIs, YoY series, and top-location mix
   - module is permission-gated by `suppliers` and wired into left-nav as parent with `Supplier Production` and `Supplier Profiles` children
