@@ -674,3 +674,5 @@
 2026-03-29 12:03 - Completed quality-audit pass on supplier travel-revenue repair: confirmed runtime references use the canonical MV, no extra runtime supplier rollup objects remain beyond historical migrations, and current validation is blocked by active DB lock contention during refresh/read attempts.
 
 2026-03-29 12:45 - Committed and pushed supplier rollout to `main` on SwainOS_FrontEnd, SwainOS_BackEnd, and SwianOS_Documentation; left local-only paths uncommitted (FrontEnd `.sfdx/`, BackEnd `tmp/` scratch exports).
+
+2026-03-29 - Pushed follow-up: migration `0142` supplier distinct itinerary count RPC, suppliers service/repository wiring, data job service/repository changes, tests; frontend run-logs settings and `next-env.d.ts`; documentation sync.
