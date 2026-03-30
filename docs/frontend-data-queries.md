@@ -43,7 +43,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `GET /api/v1/itinerary-revenue/outlook` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Forward revenue outlook (forecast page: `12m` + `monthly`; actuals page: `12m` + `monthly` for context) |
 | `GET /api/v1/itinerary-revenue/conversion` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts` | Conversion timeline (`itinerary_pipeline_conversion_monthly_v1` + service projections) |
 | `GET /api/v1/itinerary-revenue/booked-revenue-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-forecast/itinerary-forecast-server-loader.ts` | Close-date-keyed booked-revenue YoY matrix used by itinerary forecast booked-history surfaces (closed lifecycle: `closed_won` + `closed_active`) |
-| `GET /api/v1/itinerary-revenue/actuals-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Multi-year Jan–Dec matrix + year summaries (loader uses `years_back=3`) |
+| `GET /api/v1/itinerary-revenue/actuals-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Travel-basis YoY matrix by itinerary `travel_start_date` month, using closed lifecycle (`closed_won` + `closed_active`) with forward-year visibility (includes next travel year when data exists; loader requests `years_back=3`) |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Consortia + trade channel actuals for selected calendar year (default current year) |
 | `GET /api/v1/itinerary-revenue/actuals-channels-comparison` | `lib/api/itineraryRevenueService.ts`, `features/sales/travel-trade-server-loader.ts` | Travel Agencies booking-pace channels for the selected travel cohort (`travel_start_date` in window) using month-grain booking cutoff (`close_date` month <= as-of month) with prior-year same-month comparison (`priorYear`) |
 | `GET /api/v1/itinerary-lead-flow` | `lib/api/itineraryLeadFlowService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Lead-flow trend (loader uses `36m` window) — command center consumes lead flow only via dashboard snapshot |
@@ -94,7 +94,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `POST /api/v1/data-jobs/{job_key}/runs` | `features/settings/settings-page.tsx`, `lib/api/fxService.ts`, `lib/api/aiInsightsService.ts` | Canonical manual run trigger |
 | `GET /api/v1/data-jobs/{job_key}/runs` | `app/operations/page.tsx` | Per-job run history |
 | `GET /api/v1/data-jobs/health` | `app/operations/page.tsx`, `app/settings/page.tsx` | Fleet health + Settings last-run/status (**Settings** admin-only) |
-| `GET /api/v1/data-job-runs/{run_id}` | `features/operations/operations-page.tsx` | Run detail and step diagnostics |
+| `GET /api/v1/data-job-runs/{run_id}` | `features/operations/operations-page.tsx`, `features/settings/settings-run-logs-page.tsx` | Run detail with step diagnostics and checkpoint timeline (`checkpoints`) |
 
 ## Typed API clients without route callers
 
@@ -142,7 +142,8 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - Manual-run triggers use `POST /api/v1/data-jobs/{job_key}/runs`; token utility routes (`/ai-insights/run`, `/fx/signals/run`) remain backend-only.
 - Sign-in uses `POST /api/auth/login` on the Next.js host only; analytics API traffic continues to use `GET/POST /api/v1/...` on the FastAPI host.
 - **Settings vs Operations:** `/settings`, `/settings/run-logs`, and `/settings/user-access` are **admin-only** in the root layout (`adminOnly` + `role === admin`). `/operations` remains a normal module permission (`operations`); members with that key can use Operations without accessing Settings.
-- Salesforce operators use data-jobs + run detail (`output.parsed`) — no direct Salesforce calls from the web app.
+- Salesforce operators use data-jobs + run detail (`output.parsed`, `checkpoints`) — no direct Salesforce calls from the web app.
+- Settings run logs gracefully handle historical runs without checkpoints by showing an empty-state path message.
 - Semantic rollup v2 serving views back travel-trade leaderboard/profile, booking-pace channel-comparison reads, and consultant **booked** (close-date) revenue paths; consultant **travel** leaderboard rows are served from `vw_travel_consultant_travel_monthly_v2` (replacing the retired misnamed `vw_travel_consultant_booked_monthly_v2` for that use case). Apply backend migrations `0146`–`0148` (and dependencies) so profile, aliases, and parity checks align.
 
 ## Related documentation

@@ -99,6 +99,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `GET /api/v1/itinerary-lead-flow` (`36m`)
   - `GET /api/v1/itinerary-revenue/outlook` (`12m`, `monthly`) for contextual outlook strip/chart
   - Client hook `useItineraryActualsYoy` **hydrates from the server snapshot** (matrix math / display helpers), not a replacement network layer.
+  - Actuals YoY table headers/help are metric-driven (`Travel {Metric} Year Over Year`) and explicitly travel-basis (`travel_start_date`, closed lifecycle `closed_won` + `closed_active`); year columns follow API-provided years so next-year travel can render when present.
 - **Travel Agencies** list (`travel-trade-server-loader.ts` + `app/travel-agencies/page.tsx`):
   - `GET /api/v1/travel-agencies/leaderboard`, `GET /api/v1/travel-agents/leaderboard` with fixed current-year query + `top_n=10`
   - `GET /api/v1/itinerary-revenue/actuals-channels-comparison` for consortia/trade booking-pace tables (same-month-cutoff **PY** comparison)
@@ -220,6 +221,8 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - uses paginated history controls (`Previous`/`Next`) backed by API pagination totals so operators can move beyond recent rows
   - displays persisted run analytics fields (`durationSeconds`, `outputSizeBytes`) for historical performance analysis
   - Salesforce sync runs expose parsed script output (`output.parsed`) so operators can verify per-object loaded/skipped bytes and API usage snapshot without shell access
+  - expanded run-path panels fetch `/api/v1/data-job-runs/{run_id}` on demand and render durable `checkpoints`, while older runs without checkpoints show an explicit empty state instead of breaking the UI
+  - expanded paths for active runs (`running` / `queued`) are refreshed during the normal polling cycle so checkpoint timelines stay live while the job is still progressing
   - periodic refresh uses an adaptive polling loop (`8s` when active runs exist, `20s` when idle) as an explicit external-system synchronization exception
   - polling pauses when browser tab is hidden and resumes with immediate refresh on visibility return
 

@@ -94,7 +94,7 @@ Error envelope:
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
 - Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level distinct itinerary counts read from `mv_supplier_itinerary_fact_v1` via RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
-- `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs plus supplier travel rollup views; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
+- `refresh_itinerary_revenue_rollups_v1()` now refreshes only itinerary-facing revenue/deposit/channel MVs; supplier-facing refresh work is cut over to `refresh_supplier_revenue_rollups_v1()` for supplier core (`mv_supplier_itinerary_fact_v1`, `mv_supplier_travel_revenue_monthly_v1`) and `refresh_supplier_service_type_revenue_rollups_v1()` for `mv_supplier_service_type_revenue_monthly_v1`, keeping the Salesforce downstream job graph below RPC gateway timeout pressure. Booking-pace comparisons continue reading semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics reads from semantic v2 serving views refreshed via `refresh_semantic_rollups_v2()`
@@ -184,6 +184,7 @@ Error envelope:
   - `public.data_job_dependencies`
   - `public.data_job_runs`
   - `public.data_job_run_steps`
+  - `public.data_job_run_checkpoints`
   - `public.data_job_health_v1`
 - Additional control-plane guardrail migrations:
   - `0091_data_job_run_guardrails_v1.sql`:
@@ -196,6 +197,13 @@ Error envelope:
   - `0093_data_job_run_metrics_v1.sql`:
     - adds persisted run analytics fields on `data_job_runs`: `duration_seconds`, `output_size_bytes`
     - backfills historical rows from `started_at`/`finished_at` and serialized `output` payload size
+  - `0149_create_data_job_run_checkpoints.sql`:
+    - adds append-only run checkpoint timeline table `data_job_run_checkpoints` with ordered sequence per run
+    - persists durable stage transitions (`started`, `exported`, `load_started`, `completed`, `failed`, `skipped`)
+    - applies control-plane-aligned RLS policy (`data_job_run_checkpoints_admin_manage`)
+  - `0151_constrain_data_job_run_checkpoint_status.sql`:
+    - adds DB-level status constraint for `data_job_run_checkpoints.status`
+    - keeps checkpoint schema aligned with the typed API contract and prevents malformed operator/runtime writes
 - Scheduler model:
   - one fixed scheduler tick endpoint (`POST /api/v1/data-jobs/scheduler/tick`)
   - scheduler tick is machine-authenticated by `x-scheduler-token` and does not depend on human permission JWTs
@@ -360,7 +368,11 @@ Error envelope:
   - counters include `jobsCreated`, `pollsMade`, and `resultPagesRead`
   - terminal JSON status payloads (`success`/`blocked`) are parsed into `data_job_runs.output.parsed` for operator inspection
   - active `data_job_run_steps.output` stores throttled live progress snapshots (`latestProgress`, bounded `progressEvents`, bounded `recentLogs`) on a best-effort basis so observability failure does not fail the job itself
+  - durable stage timeline events are persisted in `data_job_run_checkpoints` and returned from `GET /api/v1/data-job-runs/{run_id}` as `checkpoints`
 - Successful `salesforce-readonly-sync` runs fan out dependent `system_managed` rollups:
+  - `itinerary-revenue-rollups-refresh`
+  - `supplier-revenue-rollups-refresh`
+  - `supplier-service-type-rollups-refresh`
   - `semantic-rollups-v2-refresh`
   - `consultant-ai-rollups-refresh`
   - `fx-exposure-refresh`
@@ -374,7 +386,7 @@ Error envelope:
 - Travel agent and travel agency leaderboard/profile `period_type=year` windows are full calendar year (`Jan 1` through `Dec 31`) for the selected year.
 - Travel consultant leaderboard/profile: **travel** rollups use itinerary **`travel_start_date`** month and closed lifecycle (`closed_won` + `closed_active`). **Booked** close-date matrices and profile `ytdVariancePct` use booking-pace / close-date serving views with same-month cutoff rules where implemented.
 - Booking-pace contracts use `travel_start_date` as the cohort year/month and `close_date` month <= as-of month as the inclusion rule. Current-year comparisons use current-month cutoff; prior-year comparisons use the same month in the prior year. Closed-lifecycle booking-pace serving views include both `closed_won` and `closed_active`.
-- Travel consultant leaderboard `traveledYtdVariancePct` compares PYTD **travel revenue** (travel-start basis from `vw_travel_consultant_travel_monthly_v2`). Profile `ytdVariancePct` remains **booking-pace booked revenue** (close-date cohort cutoffs). Travel-trade profile YoY series use booking-pace semantics. Itinerary actuals endpoints remain travel-period.
+- Travel consultant leaderboard `travelYtdVariancePct` compares PYTD **travel revenue** (travel-start basis from `vw_travel_consultant_travel_monthly_v2`). Profile `ytdVariancePct` remains **booking-pace booked revenue** (close-date cohort cutoffs). Travel-trade profile YoY series use booking-pace semantics. Itinerary actuals YoY reads travel-start closed-lifecycle (`closed_won` + `closed_active`) and includes next travel year when data exists.
 - Frontend declutter (route header removal, Travel Agencies KPI-card removal, removal of client-side period toggles in favor of route-level fixed queries) is UI/routing-only; backend contracts stay explicit query-param driven for automation and future toggles.
 
 ## Semantic Rollup v2 (live read paths)

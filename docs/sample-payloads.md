@@ -1077,7 +1077,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
 
 ### `GET /api/v1/travel-consultants/leaderboard`
 
-Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. Primary ranking metrics are **travel-start-date** (`travelRevenue`, `travelGrossProfit`) from `vw_travel_consultant_travel_monthly_v2` (closed lifecycle: `closed_won` + `closed_active`). Default `sort_by` is `travel_revenue` (also `margin_pct`). Funnel fields (`itineraryCreatedCount`, `itineraryWonCount`, …) come from lead views; `traveledYtd*` and `travelGrossProfitVariance*` fields reflect travel-basis PYTD comparisons computed in the service. The leaderboard top-summary callouts use the full returned `travelRankings` set for team totals and render API-provided `highlights` directly.
+Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. Primary ranking metrics are **travel-start-date** (`travelRevenue`, `travelGrossProfit`) from `vw_travel_consultant_travel_monthly_v2` (closed lifecycle: `closed_won` + `closed_active`). Default `sort_by` is `travel_revenue` (also `margin_pct`). Funnel fields (`itineraryCreatedCount`, `itineraryWonCount`, …) come from lead views; `travelYtd*` and `travelGrossProfitVariance*` fields reflect travel-basis PYTD comparisons computed in the service. The leaderboard top-summary callouts use the full returned `travelRankings` set for team totals and render API-provided `highlights` directly.
 
 ```json
 {
@@ -1111,9 +1111,9 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
         "itineraryCreatedVariancePct": 0.1,
         "itineraryWonVariancePct": 0.2222,
         "itineraryLostVariancePct": -0.1667,
-        "traveledYtdVariancePct": 0.117,
-        "traveledYtdCurrentRevenue": 148200.0,
-        "traveledYtdPriorRevenue": 132800.0,
+        "travelYtdVariancePct": 0.117,
+        "travelYtdCurrentRevenue": 148200.0,
+        "travelYtdPriorRevenue": 132800.0,
         "priorTravelGrossProfit": 92000.0,
         "travelGrossProfitVariancePct": 0.1185
       }
@@ -2357,7 +2357,58 @@ Response (shape matches other `POST .../runs` enqueue responses):
       "createdAt": "2026-03-17T13:00:02.292Z",
       "updatedAt": "2026-03-17T13:03:44.008Z"
     },
-    "steps": []
+    "steps": [],
+    "checkpoints": [
+      {
+        "id": "c6384f40-6816-4af8-b014-7f8a4f0ae2dd",
+        "runId": "2fb8bd0e-0bc5-4c8a-96de-f2f2b09b6f32",
+        "stepId": "73fca43e-5198-429c-a0f1-f74bdf8df7d6",
+        "sequence": 1,
+        "checkpointKey": "run_start",
+        "label": "Run started",
+        "status": "started",
+        "recordedAt": "2026-03-17T13:00:02.307Z",
+        "payload": {
+          "jobKey": "salesforce-readonly-sync",
+          "triggerType": "manual",
+          "triggerSource": "settings_job_controls"
+        },
+        "createdAt": "2026-03-17T13:00:02.307Z",
+        "updatedAt": "2026-03-17T13:00:02.307Z"
+      },
+      {
+        "id": "88f39ccd-5a2d-4c72-b0d5-61c54566f00b",
+        "runId": "2fb8bd0e-0bc5-4c8a-96de-f2f2b09b6f32",
+        "stepId": "73fca43e-5198-429c-a0f1-f74bdf8df7d6",
+        "sequence": 2,
+        "checkpointKey": "agencies",
+        "label": "agencies started",
+        "status": "started",
+        "recordedAt": "2026-03-17T13:00:05.111Z",
+        "payload": {
+          "kind": "progress",
+          "stage": "agencies",
+          "status": "started"
+        },
+        "createdAt": "2026-03-17T13:00:05.111Z",
+        "updatedAt": "2026-03-17T13:00:05.111Z"
+      },
+      {
+        "id": "f13dce3f-cd11-4b7e-9fe2-3a6dc6fe4f1d",
+        "runId": "2fb8bd0e-0bc5-4c8a-96de-f2f2b09b6f32",
+        "stepId": "73fca43e-5198-429c-a0f1-f74bdf8df7d6",
+        "sequence": 3,
+        "checkpointKey": "run_terminal",
+        "label": "Run completed",
+        "status": "completed",
+        "recordedAt": "2026-03-17T13:03:44.004Z",
+        "payload": {
+          "runStatus": "success"
+        },
+        "createdAt": "2026-03-17T13:03:44.004Z",
+        "updatedAt": "2026-03-17T13:03:44.004Z"
+      }
+    ]
   },
   "pagination": null,
   "meta": {
