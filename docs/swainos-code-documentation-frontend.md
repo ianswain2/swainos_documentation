@@ -82,7 +82,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 
 ## Feature Contracts
 - **Command center** reads a single bundle:
-  - `GET /api/v1/dashboard-snapshots/command-center` (cash summaries, deposits, payments-out, booking forecasts, itinerary lead flow, outlook, actuals YoY, debt overview, briefing)
+  - `GET /api/v1/dashboard-snapshots/command-center` (booked-revenue close-date snapshot buckets, travel revenue/travel gross profit year summary, top open itineraries, top consultant leaderboard, briefing)
 - **Cash-flow** overview / forecast / scenarios read:
   - `GET /api/v1/dashboard-snapshots/cash-flow`
 - **Cash-flow** drill-downs that still call granular APIs:
@@ -176,10 +176,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Initial server-load failure path returns a safe snapshot with user-visible error state instead of route crash
   - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service currently uses compact `1rem` values)
   - Event-driven refresh and mutation handlers (`useState`, `useMemo`, `useTransition`) without `useEffect`-driven synchronization logic
-- Cash Flow + Command Center liability posture (AR/AP semantics):
-  - **Command center** uses the dashboard snapshot only: cash, deposits, and payments-out summaries are embedded in `dashboard-snapshots/command-center` (not extra client calls on that route).
-  - **AP** pages and cash-flow drill-downs use granular `/api/v1/ap/*` and `/api/v1/cash-flow/*` routes as documented in `frontend-data-queries.md`.
-  - AR/AP-adjusted liquidity remains a first-class command-center metric in the UI.
+- Cash Flow + Command Center posture:
+  - **Command center** uses the dashboard snapshot only and is now focused on executive booking/travel performance (booked revenue + booked gross profit snapshot cards, travel revenue/travel gross profit year cards, top open itineraries, top consultant rankings, briefing).
+  - **AP** pages and cash-flow drill-downs continue using granular `/api/v1/ap/*` and `/api/v1/cash-flow/*` routes as documented in `frontend-data-queries.md`.
 - Cash Flow module is split into overview + detail routes with decision-first order:
   - Overview answers `Are we at risk?`, `When is first risk?`, and `Why?`
   - Forecast and AP Schedule provide drill-down tables by currency and horizon

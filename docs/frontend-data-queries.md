@@ -21,7 +21,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 
 | Endpoint | Used in | Purpose |
 |---|---|---|
-| `GET /api/v1/dashboard-snapshots/command-center` | `lib/api/dashboardSnapshotsService.ts`, `features/command-center/command-center-server-loader.ts` | Command center bundle: cash-flow summaries (30d), deposits + payments-out summaries, booking forecasts, itinerary lead flow (12m), itinerary outlook (12m/monthly), itinerary actuals YoY (3y), debt overview, **plus** `GET /api/v1/ai-insights/briefing` (daily briefing) |
+| `GET /api/v1/dashboard-snapshots/command-center` | `lib/api/dashboardSnapshotsService.ts`, `features/command-center/command-center-server-loader.ts` | Executive command center bundle: booked-revenue snapshot by close date (YTD / month / week / today), travel revenue + travel gross profit summary (current + next year from actuals YoY), top open itineraries, top consultant leaderboard (`travelRankings` top 5), **plus** `GET /api/v1/ai-insights/briefing` (daily briefing) |
 | `GET /api/v1/dashboard-snapshots/cash-flow` | `lib/api/dashboardSnapshotsService.ts`, `features/cash-flow/cash-flow-risk-server-loader.ts` | Cash-flow bundle: risk overview + 3m/12m forecast + scenarios (12m forward window) |
 
 ## Live direct queries (frontend callers)
@@ -33,7 +33,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `GET /api/v1/ap/summary` | `lib/api/apService.ts` | AP open-line/booking/supplier liquidity rollup |
 | `GET /api/v1/ap/aging` | `lib/api/apService.ts` | AP aging buckets by currency |
 | `GET /api/v1/ap/payment-calendar` | `lib/api/apService.ts` | AP payment schedule timeline |
-| `GET /api/v1/debt-service/overview` | `features/debt-service/debt-service-server-loader.ts` | Debt KPI overview (command center embeds the same payload via `dashboard-snapshots/command-center`, not a second browser call) |
+| `GET /api/v1/debt-service/overview` | `features/debt-service/debt-service-server-loader.ts` | Debt KPI overview (Debt Service route only; command center no longer reads debt slices) |
 | `GET /api/v1/debt-service/facilities` | `features/debt-service/debt-service-server-loader.ts` | Facility list and identifiers for debt slices |
 | `GET /api/v1/debt-service/schedule` | `features/debt-service/debt-service-server-loader.ts`, `features/debt-service/debt-service-page.tsx` | Amortization timeline rows |
 | `GET /api/v1/debt-service/payments` | `features/debt-service/debt-service-server-loader.ts`, `features/debt-service/debt-service-page.tsx` | Logged payment ledger entries |
@@ -46,7 +46,7 @@ These endpoints bundle multiple domain reads for SSR and optional backend cachin
 | `GET /api/v1/itinerary-revenue/actuals-yoy` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Travel-basis YoY matrix by itinerary `travel_start_date` month, using closed lifecycle (`closed_won` + `closed_active`) with forward-year visibility (includes next travel year when data exists; loader requests `years_back=3`) |
 | `GET /api/v1/itinerary-revenue/actuals-channels` | `lib/api/itineraryRevenueService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Consortia + trade channel actuals for selected calendar year (default current year) |
 | `GET /api/v1/itinerary-revenue/actuals-channels-comparison` | `lib/api/itineraryRevenueService.ts`, `features/sales/travel-trade-server-loader.ts` | Travel Agencies booking-pace channels for the selected travel cohort (`travel_start_date` in window) using month-grain booking cutoff (`close_date` month <= as-of month) with prior-year same-month comparison (`priorYear`) |
-| `GET /api/v1/itinerary-lead-flow` | `lib/api/itineraryLeadFlowService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Lead-flow trend (loader uses `36m` window) — command center consumes lead flow only via dashboard snapshot |
+| `GET /api/v1/itinerary-lead-flow` | `lib/api/itineraryLeadFlowService.ts`, `features/itinerary-actuals/itinerary-actuals-server-loader.ts` | Lead-flow trend (loader uses `36m` window); command center no longer consumes lead-flow slices |
 | `GET /api/v1/travel-consultants/leaderboard` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant ranking by **travel** metrics: primary read `vw_travel_consultant_travel_monthly_v2` (itinerary **`travel_start_date`** month, closed lifecycle `closed_won` + `closed_active`). Default `sort_by=travel_revenue`. Response lists `travelRankings` with `travelRevenue` and `travelGrossProfit`. Funnel counts and PYTD **travel revenue** / **travel gross profit** variance fields still mix in lead and booking-pace baselines as implemented in the service. |
 | `GET /api/v1/travel-consultants/{employee_id}/profile` | `lib/api/travelConsultantService.ts`, `features/travel-consultant/travel-consultant-server-loader.ts` | Consultant profile: hero KPIs and **travel** rollups use `vw_travel_consultant_profile_monthly_v2` (**travel-start** basis, closed lifecycle). **Booked** (close-date) matrices use `vw_travel_consultant_booked_revenue_monthly_v2` and are capped through the **current calendar year** only (no future-year close dates). Multi-year **travel** matrices include the anchor year plus prior years and **next** calendar year for forward travel. |
 | `GET /api/v1/travel-agents/leaderboard` | `lib/api/travelAgentsService.ts`, `features/sales/travel-trade-server-loader.ts` | Agent leaderboard — Travel Agencies route hard-codes current calendar year + `top_n=10` |
@@ -132,7 +132,7 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 - Itinerary revenue surfaces use `grossProfitAmount` as canonical Gross Profit.
 - Itinerary actuals stay **travel-period** reporting. Travel Agencies channel comparison and consultant/agency/agent YoY-variance fields now use booking-pace month-cutoff logic by `close_date`.
 - Booking-pace closed-lifecycle reads and booked-revenue-by-close-date reads include both `closed_won` and `closed_active` statuses from `itinerary_status_reference`.
-- Itinerary lead-flow panel: **itinerary actuals** (direct API) and **command center** (via dashboard snapshot only).
+- Itinerary lead-flow panel: **itinerary actuals** only.
 - Destination matrix API still carries passenger fields; destination UI hides passenger metrics where noted in product rules.
 - Debt Service payment posting is user-confirmed from a prefilled prompt.
 - Cash Flow subpages: overview/forecast/scenarios hydrate from `dashboard-snapshots/cash-flow`; AP schedule + monthly outflow use dedicated cash-flow routes.

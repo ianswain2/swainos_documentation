@@ -59,7 +59,7 @@ Error envelope:
 - AP liquidity: `/ap/summary|aging|payment-calendar`
 - Cash flow risk suite: `/cash-flow/summary|timeseries|risk-overview|forecast|ap-schedule|ap-monthly-outflow|scenarios`
 - Dashboard snapshots (SSR bundles, optional server-side cache): `/dashboard-snapshots/command-center`, `/dashboard-snapshots/cash-flow`
-- Command center backing reads (also reachable directly; primary web client uses snapshot): `/deposits/*`, `/payments-out/*`, `/booking-forecasts`, `/itinerary-trends`
+- Command center backing reads are assembled in snapshot orchestration from itinerary revenue + consultant services (`bookingsSnapshot`, `travelRevenueSummary`, `topOpenItineraries`, `topConsultants`) and AI briefing; the web client consumes only `/dashboard-snapshots/command-center`.
 - Debt service: `/debt-service/overview|facilities|schedule|payments|covenants|scenarios|scenarios/run`
 - Data jobs control plane: `/data-jobs`, `/data-jobs/run-feed`, `/data-jobs/{job_key}`, `/data-jobs/{job_key}/runs`, `/data-jobs/health`, `/data-jobs/scheduler/tick`, `/data-job-runs/{run_id}`
 - Revenue bookings: `/revenue-bookings`, `/revenue-bookings/{booking_id}`
