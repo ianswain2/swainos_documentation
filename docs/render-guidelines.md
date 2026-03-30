@@ -192,7 +192,7 @@ After any backend hosting configuration change, verify:
 
 Use when bringing the API back after **suspend**, failed deploy, or long idle period. Execute only when deliberately going live; do not treat as routine.
 
-1. **Supabase:** confirm required migrations are applied on the target project (especially MV/RPC changes referenced in `swainos-code-documentation-backend.md`). Run or schedule rollup refresh jobs if stale.
+1. **Supabase:** confirm required migrations are applied on the target project (especially MV/RPC changes referenced in `swainos-code-documentation-backend.md`). For travel-consultant semantics, ensure `0146`–`0148` are present (profile uses **travel-start** closed lifecycle; canonical `vw_travel_consultant_travel_monthly_v2`; legacy `vw_travel_consultant_booked_monthly_v2` removed). Run or schedule rollup refresh jobs if stale.
 2. **Render:** resume/unsuspend `swainos-api` (or equivalent); wait for deploy to **live** with passing `/health/ready`.
 3. **Environment:** verify production env vars (tokens, `TRUSTED_HOSTS`, Supabase keys) match the intended project—no drift between “docs” and dashboard.
 4. **DNS / Cloudflare:** confirm `api.swainos.com` points at the intended target and matches proxy vs DNS-only decision (see `cloudflare-guidelines.md`).

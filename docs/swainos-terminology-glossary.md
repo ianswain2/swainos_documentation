@@ -29,12 +29,15 @@ This glossary is the canonical source of truth for user-facing terminology acros
 
 | Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
 |---|---|---|---|---|
-| Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `bookedRevenue`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (ambiguous) |
+| Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (ambiguous) |
 | Gross Profit | Profit from itinerary activity. | Currency | `grossProfitAmount`, `expectedGrossProfitAmount`, `forecastGrossProfitAmount`, `targetGrossProfitAmount` | Commission Income, Income, Net |
 | Booked Itineraries | Count of closed-won itineraries attributed to the selected **travel-period** window. | Integer | `bookedItinerariesCount` | When the UI labels **Travel Itineraries**, use that only for travel-start scoped KPIs; do not mix with lead-created windows |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
-| Booked Revenue | Close-date keyed booked revenue for selected scope. Closed lifecycle includes `closed_won` and `closed_active`; booking cutoffs still apply where noted. | Currency | `bookedRevenue` | Revenue (generic) |
+| Booked Revenue | Close-date keyed booked revenue for selected scope. Closed lifecycle includes `closed_won` and `closed_active`; booking cutoffs still apply where noted. On travel-consultant **profile** booked matrix only — not the leaderboard primary ranking column. | Currency | `bookedRevenue`, `booked_revenue_amount` (close-date views) | Revenue (generic) |
+| Travel Revenue | Consultant/travel-consultant (and aligned) **travel-start** revenue: month from itinerary **`travel_start_date`**, closed lifecycle `closed_won` + `closed_active`. Includes future travel months for active files. | Currency | `travelRevenue`, `travel_revenue_amount` | Booked Revenue (wrong date basis) |
+| Travel Gross Profit | Same **travel-start** month and lifecycle as Travel Revenue; profit from `itineraries.gross_profit` in scope. | Currency | `travelGrossProfit`, `travel_gross_profit_amount` | Gross Profit (when close-date or ambiguous) |
+| Booked Gross Profit | Close-date **booked** gross profit (booking/close month), used on booked-revenue and booking-pace consultant views. | Currency | `booked_gross_profit_amount` | Travel Gross Profit (wrong basis) |
 | Booked Item Value | Total booked destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` | Item Value, Destination Revenue |
 | Supplier Travel Revenue | Supplier-attributed travel revenue grouped by itinerary-item service/travel period. Current-year supplier surfaces use YTD cutoff (`<= current_date`) with PYTD same-month/day comparator. | Currency | `grossAmount` on `/suppliers/*` payloads | Supplier Revenue (ambiguous without travel basis) |
 | Supplier Location Hierarchy Filter | Hierarchical location filter contract allowing any location lookup by `country`, `region`, `city`, or free-text `locationQuery`; hierarchy normalization prefers `supplier_items -> locations` with itinerary-item fallback fields. | Semantic basis | `/suppliers/leaderboard` query params | Supplier geography search (ambiguous) |
@@ -247,8 +250,12 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | `projectedCommissionIncomeExpected` | `projectedGrossProfitExpected` | Conversion contracts/UI |
 | `projectedCommissionIncomeBestCase` | `projectedGrossProfitBestCase` | Conversion contracts/UI |
 | `projectedCommissionIncomeWorstCase` | `projectedGrossProfitWorstCase` | Conversion contracts/UI |
-| `commissionIncome` | `grossProfit` | Travel consultant contracts/UI |
-| `commission_income_amount` | `gross_profit_amount` | Backend schema/repository/service symbols and response fields |
+| `commissionIncome` | `travelGrossProfit` (consultant travel basis); other modules: `grossProfit` | Travel consultant contracts/UI |
+| `commission_income_amount` | `travel_gross_profit_amount` (consultant travel basis); other paths: `gross_profit_amount` | Backend schema/repository/service |
+| `bookedRankings` | `travelRankings` | Travel consultant leaderboard API + frontend types |
+| Leaderboard `bookedRevenue` / `grossProfit` (travel basis) | `travelRevenue` / `travelGrossProfit` | Travel consultant ranking rows |
+| `sort_by=booked_revenue` | `sort_by=travel_revenue` | Travel consultant leaderboard query param |
+| `vw_travel_consultant_booked_monthly_v2` (leaderboard travel metrics) | `vw_travel_consultant_travel_monthly_v2` | Supabase serving view (legacy view dropped after `0148`) |
 | `avgCommissionIncomePerItinerary` | `avgGrossProfitPerItinerary` | Itinerary actuals contracts/UI |
 | `avgCommissionIncomePerPax` | `avgGrossProfitPerPax` | Itinerary actuals contracts/UI |
 | `directCommissionIncomeAmount` | `directGrossProfitAmount` | Trade vs direct contracts/UI |

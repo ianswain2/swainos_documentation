@@ -1077,7 +1077,7 @@ Travel Agencies channel tables use this contract. Each row may include `priorYea
 
 ### `GET /api/v1/travel-consultants/leaderboard`
 
-Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. `yoyToDateVariancePct` is booking-pace based (`close_date` month cutoff, prior-year same-month baseline; closed lifecycle includes `closed_won` + `closed_active`). The leaderboard top-summary callouts use the full returned ranking set for team totals and render API-provided `highlights` directly.
+Usage note: for `period_type=year` when `year` is the **current** calendar year, services set `periodEnd` to **today** (YTD), not Dec 31. Primary ranking metrics are **travel-start-date** (`travelRevenue`, `travelGrossProfit`) from `vw_travel_consultant_travel_monthly_v2` (closed lifecycle: `closed_won` + `closed_active`). Default `sort_by` is `travel_revenue` (also `margin_pct`). Funnel fields (`itineraryCreatedCount`, `itineraryWonCount`, …) come from lead views; `traveledYtd*` and `travelGrossProfitVariance*` fields reflect travel-basis PYTD comparisons computed in the service. The leaderboard top-summary callouts use the full returned `travelRankings` set for team totals and render API-provided `highlights` directly.
 
 ```json
 {
@@ -1086,9 +1086,9 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
     "periodEnd": "2026-03-14",
     "periodType": "year",
     "domain": "travel",
-    "sortBy": "booked_revenue",
+    "sortBy": "travel_revenue",
     "sortOrder": "desc",
-    "rankings": [
+    "travelRankings": [
       {
         "rank": 1,
         "employeeId": "e2f9f8d2-aaaa-bbbb-cccc-2a2a2a2a2a2a",
@@ -1098,18 +1098,24 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
         "email": "alex@swain.com",
         "itineraryCount": 14,
         "paxCount": 38,
-        "bookedRevenue": 148200.0,
-        "grossProfit": 102900.0,
+        "travelRevenue": 148200.0,
+        "travelGrossProfit": 102900.0,
         "marginAmount": 45300.0,
         "marginPct": 0.3057,
-        "leadCount": 22,
-        "closedWonCount": 11,
-        "closedLostCount": 5,
-        "conversionRate": 0.5,
-        "closeRate": 0.6875,
-        "avgSpeedToBookDays": 31.0,
-        "growthTargetVariancePct": 0.0812,
-        "yoyToDateVariancePct": 0.117
+        "itineraryCreatedCount": 22,
+        "itineraryWonCount": 11,
+        "itineraryLostCount": 5,
+        "priorItineraryCreatedCount": 20,
+        "priorItineraryWonCount": 9,
+        "priorItineraryLostCount": 6,
+        "itineraryCreatedVariancePct": 0.1,
+        "itineraryWonVariancePct": 0.2222,
+        "itineraryLostVariancePct": -0.1667,
+        "traveledYtdVariancePct": 0.117,
+        "traveledYtdCurrentRevenue": 148200.0,
+        "traveledYtdPriorRevenue": 132800.0,
+        "priorTravelGrossProfit": 92000.0,
+        "travelGrossProfitVariancePct": 0.1185
       }
     ],
     "highlights": [
@@ -1125,7 +1131,7 @@ Usage note: for `period_type=year` when `year` is the **current** calendar year,
   "pagination": null,
   "meta": {
     "asOfDate": "2026-03-14",
-    "source": "vw_travel_consultant_booked_monthly_v2,vw_travel_consultant_lead_monthly_v2,vw_travel_consultant_booking_pace_monthly_v2",
+    "source": "vw_travel_consultant_travel_monthly_v2,vw_travel_consultant_lead_monthly_v2",
     "timeWindow": "year",
     "calculationVersion": "v2",
     "currency": "USD"

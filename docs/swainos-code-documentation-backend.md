@@ -93,7 +93,7 @@ Error envelope:
 - Canonical Gross Profit contract key: `grossProfitAmount` (source column: `itineraries.gross_profit`)
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
-- Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level itinerary counts are resolved through RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
+- Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level distinct itinerary counts read from `mv_supplier_itinerary_fact_v1` via RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
 - `refresh_itinerary_revenue_rollups_v1()` refreshes standard itinerary revenue MVs plus supplier travel rollup views; booking-pace comparisons read from semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
@@ -134,6 +134,7 @@ Error envelope:
 - `mv_itinerary_consortia_actuals_monthly`
 - `mv_itinerary_trade_agency_actuals_monthly`
 - `mv_supplier_travel_revenue_monthly_v1`
+- `mv_supplier_itinerary_fact_v1` (supplier distinct-itinerary-count fact grain; refreshed with supplier rollup jobs)
 - `mv_itinerary_lead_flow_monthly`
 - `mv_travel_consultant_leaderboard_monthly`
 - `mv_travel_consultant_profile_monthly`
@@ -371,13 +372,13 @@ Error envelope:
 - No compatibility shims: active contracts are represented directly and refactored when needed
 - AI insights require live model execution (no deterministic fallback contract)
 - Travel agent and travel agency leaderboard/profile `period_type=year` windows are full calendar year (`Jan 1` through `Dec 31`) for the selected year.
-- Travel consultant leaderboard/profile period windows remain explicit by endpoint logic: travel-period rows use selected window, while booking-pace comparator fields use same-month prior-year cutoff rules.
+- Travel consultant leaderboard/profile: **travel** rollups use itinerary **`travel_start_date`** month and closed lifecycle (`closed_won` + `closed_active`). **Booked** close-date matrices and profile `ytdVariancePct` use booking-pace / close-date serving views with same-month cutoff rules where implemented.
 - Booking-pace contracts use `travel_start_date` as the cohort year/month and `close_date` month <= as-of month as the inclusion rule. Current-year comparisons use current-month cutoff; prior-year comparisons use the same month in the prior year. Closed-lifecycle booking-pace serving views include both `closed_won` and `closed_active`.
-- Travel consultant `yoyToDateVariancePct` / `ytdVariancePct` and travel-trade profile YoY series use booking-pace semantics; itinerary actuals endpoints remain travel-period.
+- Travel consultant leaderboard `traveledYtdVariancePct` compares PYTD **travel revenue** (travel-start basis from `vw_travel_consultant_travel_monthly_v2`). Profile `ytdVariancePct` remains **booking-pace booked revenue** (close-date cohort cutoffs). Travel-trade profile YoY series use booking-pace semantics. Itinerary actuals endpoints remain travel-period.
 - Frontend declutter (route header removal, Travel Agencies KPI-card removal, removal of client-side period toggles in favor of route-level fixed queries) is UI/routing-only; backend contracts stay explicit query-param driven for automation and future toggles.
 
 ## Semantic Rollup v2 (live read paths)
-- Semantic split is active for travel-trade leaderboards/profiles, consultant leaderboard/funnel comparators, and itinerary channel comparison booking-pace reads.
+- Semantic split is active for travel-trade leaderboards/profiles, consultant **travel** leaderboard rows (`vw_travel_consultant_travel_monthly_v2`) vs **booked** close-date matrices (`vw_travel_consultant_booked_revenue_monthly_v2`), funnel comparators, and itinerary channel comparison booking-pace reads.
 - Canonical v2 fact materialized views:
   - `mv_semantic_lead_fact_monthly_v2` (`created_at` month basis)
   - `mv_semantic_booked_fact_monthly_v2` (`travel_start_date` month basis, closed-won)
@@ -390,10 +391,12 @@ Error envelope:
 - Search coverage also uses the v2 runtime path: `mv_travel_trade_search_v2` is refreshed alongside semantic v2 rollups.
 - Serving views (`vw_*_v2`) provide domain-focused slices for agents, agencies, consultants, and channel tables without mixing semantic bases in one row.
 - Consultant-serving coverage includes:
-  - `vw_travel_consultant_profile_monthly_v2`
+  - `vw_travel_consultant_profile_monthly_v2` (travel-start; columns include `travel_revenue_amount`, `travel_gross_profit_amount` and legacy `booked_revenue_amount` / `gross_profit_amount` aliases where defined in migrations)
+  - `vw_travel_consultant_travel_monthly_v2` (canonical travel-monthly slice for leaderboard **travel** metrics; supersedes app usage of retired `vw_travel_consultant_booked_monthly_v2`)
   - `vw_travel_consultant_compensation_monthly_v2`
   - `vw_travel_consultant_lead_monthly_v2`
-  - `vw_travel_consultant_booking_pace_monthly_v2`
+  - `vw_travel_consultant_booked_revenue_monthly_v2` (close-date booked revenue + `booked_gross_profit_amount`)
+  - `vw_travel_consultant_booking_pace_monthly_v2` (booking-pace; includes `booked_gross_profit_amount`)
 - Travel-agent consultant affinity now reads from `vw_travel_agent_consultant_affinity_monthly_v2`.
 - New refresh RPC: `refresh_semantic_rollups_v2()`; wired as a parallel system-managed data job (`semantic-rollups-v2-refresh`).
 - Parity diagnostic view: `vw_semantic_rollup_v2_parity_checks` (legacy closed-won baseline checks for totals/top-10/PYTD pace sanity); booked-revenue close-date diagnostics are exposed via `vw_semantic_booked_revenue_v2_checks`.
