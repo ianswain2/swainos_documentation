@@ -162,8 +162,8 @@ Error envelope:
 - `scripts/upsert_customer_payments.py`
 - `scripts/upsert_agencies.py`
 - `scripts/upsert_suppliers.py`
-- `scripts/sync_salesforce_readonly.py`
-- `scripts/validate_salesforce_readonly_permissions.py`
+- `scripts/sync_salesforce_data_ingestion.py`
+- `scripts/validate_salesforce_data_ingestion_permissions.py`
 - `scripts/refresh_consultant_ai_rollups.py`
 - `scripts/pull_fx_rates.py`
 - `scripts/generate_fx_intelligence.py`
@@ -278,9 +278,9 @@ Error envelope:
   - Optional section failures (demographics/devices/internal-search) are now recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
   - AI insight generation now applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
 
-## Salesforce Read-Only Ingestion
-- Runtime orchestrator: `scripts/sync_salesforce_readonly.py`
-- Permission smoke check: `scripts/validate_salesforce_readonly_permissions.py`
+## Salesforce Data Ingestion
+- Runtime orchestrator: `scripts/sync_salesforce_data_ingestion.py`
+- Permission smoke check: `scripts/validate_salesforce_data_ingestion_permissions.py`
 - Client guardrails live in: `src/integrations/salesforce_bulk_client.py`
 - Runtime state storage:
   - `public.salesforce_sync_cursors`
@@ -369,7 +369,7 @@ Error envelope:
   - terminal JSON status payloads (`success`/`blocked`) are parsed into `data_job_runs.output.parsed` for operator inspection
   - active `data_job_run_steps.output` stores throttled live progress snapshots (`latestProgress`, bounded `progressEvents`, bounded `recentLogs`) on a best-effort basis so observability failure does not fail the job itself
   - durable stage timeline events are persisted in `data_job_run_checkpoints` and returned from `GET /api/v1/data-job-runs/{run_id}` as `checkpoints`
-- Successful `salesforce-readonly-sync` runs fan out dependent `system_managed` rollups:
+- Successful `salesforce-data-ingestion-sync` runs fan out dependent `system_managed` rollups:
   - `itinerary-revenue-rollups-refresh`
   - `supplier-revenue-rollups-refresh`
   - `supplier-service-type-rollups-refresh`

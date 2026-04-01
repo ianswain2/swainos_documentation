@@ -143,8 +143,8 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/data-jobs/health`
   - `/api/v1/data-job-runs/{run_id}`
 - Salesforce ingestion operator visibility is frontend-mediated through the same control-plane surfaces (no direct frontend-to-Salesforce calls):
-  - monitor `salesforce-readonly-sync` status from `data-jobs/health` and run-feed filters
-  - trigger manual run replay only through `POST /api/v1/data-jobs/salesforce-readonly-sync/runs`
+  - monitor `salesforce-data-ingestion-sync` status from `data-jobs/health` and run-feed filters
+  - trigger manual run replay only through `POST /api/v1/data-jobs/salesforce-data-ingestion-sync/runs`
   - inspect parsed sync payload fields (`status`, `windowStart`, `upperBound`, object metrics, counters) in run detail views
 
 ## UX and Composition Notes

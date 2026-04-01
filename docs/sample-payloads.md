@@ -2293,7 +2293,7 @@ Response (shape matches other `POST .../runs` enqueue responses):
     "run": {
       "id": "2fb8bd0e-0bc5-4c8a-96de-f2f2b09b6f32",
       "jobId": "dd7d6423-f0b0-4dc2-8f8d-e6e06e1ca221",
-      "runKey": "salesforce-readonly-sync:becf257f-bfac-46dd-88f4-62d12f6ec1aa",
+      "runKey": "salesforce-data-ingestion-sync:becf257f-bfac-46dd-88f4-62d12f6ec1aa",
       "runStatus": "success",
       "triggerType": "manual",
       "triggerSource": "settings_job_controls",
@@ -2310,7 +2310,7 @@ Response (shape matches other `POST .../runs` enqueue responses):
         "returnCode": 0,
         "stdout": "{\"status\":\"success\",\"runId\":\"2fb8bd0e-0bc5-4c8a-96de-f2f2b09b6f32\",\"windowStart\":\"2026-03-16T12:00:00+00:00\",\"upperBound\":\"2026-03-17T12:55:00+00:00\"}",
         "stderr": "",
-        "command": ["python", "scripts/sync_salesforce_readonly.py"],
+        "command": ["python", "scripts/sync_salesforce_data_ingestion.py"],
         "timedOut": false,
         "maxRuntimeSeconds": 3600,
         "parsed": {
@@ -2369,7 +2369,7 @@ Response (shape matches other `POST .../runs` enqueue responses):
         "status": "started",
         "recordedAt": "2026-03-17T13:00:02.307Z",
         "payload": {
-          "jobKey": "salesforce-readonly-sync",
+          "jobKey": "salesforce-data-ingestion-sync",
           "triggerType": "manual",
           "triggerSource": "settings_job_controls"
         },
@@ -2424,7 +2424,7 @@ Response (shape matches other `POST .../runs` enqueue responses):
 }
 ```
 
-### `GET /api/v1/data-jobs/run-feed?job_key=salesforce-readonly-sync&run_status=blocked`
+### `GET /api/v1/data-jobs/run-feed?job_key=salesforce-data-ingestion-sync&run_status=blocked`
 
 ```json
 {
@@ -2432,9 +2432,9 @@ Response (shape matches other `POST .../runs` enqueue responses):
     {
       "id": "f3e41f4f-c76f-4a4f-bdf8-c5b7045ba0ad",
       "jobId": "dd7d6423-f0b0-4dc2-8f8d-e6e06e1ca221",
-      "jobKey": "salesforce-readonly-sync",
-      "displayName": "Salesforce Readonly Sync",
-      "runKey": "salesforce-readonly-sync:8e6f85f2-2155-45e7-9eb7-cf8a0ccb0377",
+      "jobKey": "salesforce-data-ingestion-sync",
+      "displayName": "Salesforce Data Ingestion",
+      "runKey": "salesforce-data-ingestion-sync:8e6f85f2-2155-45e7-9eb7-cf8a0ccb0377",
       "runStatus": "blocked",
       "triggerType": "scheduler",
       "triggerSource": "scheduler_tick",
@@ -2442,9 +2442,9 @@ Response (shape matches other `POST .../runs` enqueue responses):
       "requestedAt": "2026-03-17T14:00:00.000Z",
       "startedAt": "2026-03-17T14:00:00.115Z",
       "finishedAt": "2026-03-17T14:00:00.901Z",
-      "blockedReason": "salesforce.readonly.sync failed with exit code 1",
+      "blockedReason": "salesforce.data_ingestion.sync failed with exit code 1",
       "errorCode": "runner_failed",
-      "errorMessage": "salesforce.readonly.sync failed with exit code 1",
+      "errorMessage": "salesforce.data_ingestion.sync failed with exit code 1",
       "durationSeconds": 1,
       "outputSizeBytes": 1187,
       "output": {
