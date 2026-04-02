@@ -825,3 +825,4 @@
 2026-04-02 13:33 - Continued Phase 3 with backend command-center section timeouts to return partial snapshots faster when an individual source stalls; added regression coverage asserting degraded partial responses retain available sections.
 2026-04-02 13:41 - Continued Phase 3 frontend performance hardening for run logs by deduplicating in-flight feed refreshes and stabilizing expanded-run detail refresh logic to reduce polling churn during active long-running jobs.
 2026-04-02 13:49 - Reduced run-log poll load by skipping expensive run-feed totals counting during background polling/visibility refresh while keeping totals on manual/filter/page refresh paths.
+2026-04-02 13:58 - Fixed Phase 3 run-log refresh races by making in-flight dedup request-signature-aware and preserving pagination totals ownership; added focused unit coverage for refresh signatures and totals-application rules.
