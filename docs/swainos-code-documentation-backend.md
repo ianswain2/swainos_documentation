@@ -94,6 +94,7 @@ Error envelope:
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
 - Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level distinct itinerary counts read from `mv_supplier_itinerary_fact_v1` via RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
+- Supplier profile KPI and all-time relationship summary fetch distinct-itinerary-count facts only for windows that are rendered (`current` and `all-time`); no unused prior-window distinct-count query is executed.
 - `refresh_itinerary_revenue_rollups_v1()` now refreshes only itinerary-facing revenue/deposit/channel MVs; supplier-facing refresh work is cut over to `refresh_supplier_revenue_rollups_v1()` for supplier core (`mv_supplier_itinerary_fact_v1`, `mv_supplier_travel_revenue_monthly_v1`) and `refresh_supplier_service_type_revenue_rollups_v1()` for `mv_supplier_service_type_revenue_monthly_v1`, keeping the Salesforce downstream job graph below RPC gateway timeout pressure. Booking-pace comparisons continue reading semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
@@ -110,7 +111,7 @@ Error envelope:
 - `/cash-flow/risk-overview|forecast|ap-schedule|scenarios` uses forward AP schedule rows plus projected inflow baseline from trailing customer payment history to flag upcoming cash stress by currency.
 - `/itinerary-trends` and `/itinerary-lead-flow` now fail with explicit `503` error envelopes on repository/query failures (no silent zero-data fallback).
 - `/payments-out/summary` reports AP line-based outstanding and near-term due pressure.
-- `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; Search Console analytics requires `GOOGLE_GSC_SITE_URL` and service-account access.
+- `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; the canonical Google ingest job now refreshes both GA4 and Search Console snapshots, and Search Console analytics requires `GOOGLE_GSC_SITE_URL` plus service-account access.
 
 ## Debt Service Domain
 - Debt facilities are data-driven rows in `debt_facilities`; no loan constants are embedded in service code.
@@ -169,7 +170,10 @@ Error envelope:
 - `scripts/generate_fx_intelligence.py`
 - `scripts/refresh_fx_exposure.py`
 - `scripts/generate_ai_insights.py` (manual runner that calls `AiInsightsService.run_manual_generation`)
-- `scripts/sync_marketing_web_analytics.py` (GA4 runtime sync path)
+- `scripts/sync_marketing_web_analytics.py` (canonical unified Google ingest runner for GA4 + Search Console snapshot refresh)
+- Project-root bootstrapped operational scripts now share `src/core/env_file.load_env_file` for `.env` parsing, and their default `--env-file` resolution is standardized to repository-root `.env` rather than caller cwd-relative behavior.
+- Upsert ingestion scripts with identical batching semantics now share `scripts/batching_helpers.py` (`chunk_rows`, `chunk_values`) with import fallbacks that preserve both direct CLI execution and module-import test contexts.
+- Upsert ingestion scripts in the bounded standardization cluster now also share `scripts/env_helpers.py` for `.env` parsing, with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
 
 ## Data Jobs Control Plane
 - Runtime API routes:
@@ -270,12 +274,15 @@ Error envelope:
   - Response meta includes `marketScope` and `marketLabel` to make backend-applied scope explicit to clients.
 - Quality/consolidation notes:
   - Daily/channel/country storage now persists canonical per-day facts (`date+channel`, `date+country`) and is overwrite-safe for repeated same-day sync runs.
+  - Historical GA4 daily/channel/country snapshot refresh is incremental: first bootstrap can backfill ~800 days, then later runs refresh only a bounded catch-up window (`max(14 days, staleness + 3 days)` per scope) instead of replaying the full history each run.
+  - Search Console snapshot refresh is also incremental under the same unified ingest job: first bootstrap backfills up to 365 days, then later runs refresh only a bounded catch-up window (`max(14 days, staleness + 3 days)` per scope).
   - Overview KPI windows (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) are synced into `marketing_web_analytics_overview_period_summaries` so frontend reads do not recompute distinct users by summing daily rows.
   - Page-activity ingestion is stored at GA4 `pagePath` grain and avoids segmented-row merges that can distort non-additive metrics.
   - Large page-activity and geo writes are chunked in repository upserts to keep sync reliability stable at higher row counts.
   - `/marketing/web-analytics/overview` returns an extended trend window (up to ~800 days) from Supabase snapshots so frontend YoY visualizations do not require live GA4 calls.
+  - Rolling 7/30/90-day marketing/search snapshots and Search Console opportunity/challenge inputs are intentionally recomputed for the current as-of date rather than historical replay, so suggestion surfaces stay current without scanning the full source history on every run.
   - Demographics/device/internal-search enrichment is snapshotted during sync for 30-day reads; custom day ranges still use exact same-window GA4 pulls.
-  - Optional section failures (demographics/devices/internal-search) are now recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
+  - Optional section failures (demographics/devices/internal-search/Search Console) are now recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
   - AI insight generation now applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
 
 ## Salesforce Data Ingestion
@@ -422,6 +429,8 @@ Error envelope:
 - Non-production behavior: manual/scheduler token headers are only enforced when a token is configured; unconfigured local/dev environments are allowed for developer workflows.
 - Production request handling enforces trusted host allowlists before route execution.
 - Subprocess-backed data jobs are bounded by `max_runtime_seconds`; timed-out jobs are force-killed and marked with `runner_timeout_killed`.
+- Subprocess job output handling streams from process stdout and keeps only bounded tail output in persisted run metadata; no unused in-memory stdout accumulator state is retained in the runner path.
+- CLI operational scripts should remain `--help` safe before runtime-only service initialization; runtime-only dependencies should load in execution paths, not block argument parsing/bootstrap.
 - AI generation enforces run-level budgets (`max model calls`, `max tokens`, `max consultants`) and returns partial-safe status when budget limits are hit.
 - Application-layer rate limits are in-memory and process-local; Cloudflare edge rate limiting remains the global cross-instance enforcement layer.
 
