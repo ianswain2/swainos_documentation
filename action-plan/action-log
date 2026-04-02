@@ -818,3 +818,5 @@
 2026-04-02 12:36 - Continued Phase 2 auth hardening by adding router-level authenticated-user guards to `suppliers` and `dashboard-snapshots` API routers so newly added endpoints fail closed by default; added regression tests asserting these guards remain in place.
 2026-04-02 12:44 - Added static regression coverage requiring explicit `*_PERMISSION_DEP` guards on all route handlers in `suppliers` and `dashboard-snapshots` modules to prevent future authorization drift.
 2026-04-02 12:52 - Standardized backend test execution on `uv` (`uv sync --extra dev`, `uv run pytest`) and resolved permission-guard regression-test suffix matching so full backend suite runs green in the project environment.
+2026-04-02 13:01 - Added runtime permission-enforcement regression tests for `suppliers` and `dashboard-snapshots` protected routes to assert 403 fail-closed behavior when required permissions are missing.
+2026-04-02 13:05 - Corrected permission-enforcement runtime tests to use canonical auth role values (`member`/`admin`) and re-ran both targeted and full backend suites successfully under `uv run pytest`.
