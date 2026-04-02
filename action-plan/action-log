@@ -820,3 +820,4 @@
 2026-04-02 12:52 - Standardized backend test execution on `uv` (`uv sync --extra dev`, `uv run pytest`) and resolved permission-guard regression-test suffix matching so full backend suite runs green in the project environment.
 2026-04-02 13:01 - Added runtime permission-enforcement regression tests for `suppliers` and `dashboard-snapshots` protected routes to assert 403 fail-closed behavior when required permissions are missing.
 2026-04-02 13:05 - Corrected permission-enforcement runtime tests to use canonical auth role values (`member`/`admin`) and re-ran both targeted and full backend suites successfully under `uv run pytest`.
+2026-04-02 13:14 - Added top-level API router dependency-guard regression coverage to enforce fail-closed include_router wiring for non-public routers and prevent authorization bypass drift in router composition.
