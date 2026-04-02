@@ -177,6 +177,57 @@ After any backend hosting configuration change, verify:
 - expensive run routes still require expected tokens
 - Cloudflare routing and TLS behavior remain correct
 
+## Render Cron Standards (Data Jobs)
+
+Use Render cron as the default scheduler for app-layer data jobs. The cron target should call:
+
+- `POST /api/v1/data-jobs/scheduler/tick`
+
+### Naming conventions
+
+- Use durable, purpose-first cron names:
+  - `swainos-data-jobs-scheduler-tick-prod`
+  - `swainos-data-jobs-scheduler-tick-staging`
+- Include environment suffix (`-prod`, `-staging`) and avoid temporary names.
+- Keep one owner-of-record per cron job (team or operator), documented in Render notes.
+
+### Protection requirements
+
+- Always set and use `DATA_JOBS_SCHEDULER_TOKEN`.
+- Always send `X-Scheduler-Token` header on scheduler requests.
+- Keep scheduler token values environment-specific; never share production token with non-production.
+- Do not expose scheduler endpoint from public workflows/UI.
+- Keep Cloudflare/edge routing in front of Render; avoid publishing raw Render origin in operator docs.
+
+### Cadence and timeout guidance
+
+- Scheduler tick cadence: every 1-5 minutes.
+- Start with every 1 minute for predictable due-job pickup.
+- Keep `max_jobs` conservative (default `5`) and tune only after observing run durations.
+- Configure cron request timeout to exceed normal tick duration, with buffer for short runner bursts.
+
+### Failure handling and retries
+
+- Treat consecutive cron failures as incident-level signals.
+- Retry policy should be at cron platform layer only for transient failures (short retry window).
+- Do not create duplicate cron jobs for the same endpoint as a fallback; this creates overlap risk.
+- Use data-job retry/backoff controls in app logic for run-level failure behavior.
+
+### Verification checklist (cron-enabled)
+
+- `GET /healthz` returns healthy.
+- `GET /health/ready` passes dependency checks.
+- `POST /api/v1/data-jobs/scheduler/tick` succeeds with scheduler token.
+- `GET /api/v1/data-jobs/health` shows recurring jobs advancing and not stale.
+- `GET /api/v1/data-jobs/run-feed` shows expected scheduler-triggered runs and no repeated blocked spam.
+
+### Deploy window operations
+
+- Before disruptive deploy/migration windows, decide whether cron should remain enabled.
+- If disabling cron, record disable/enable timestamps in the action log.
+- Re-enable cron immediately after readiness checks pass.
+- After re-enable, run one supervised scheduler tick and confirm recurring jobs resume normally.
+
 ## Minimum Production Checklist
 
 - Render backend service exists as `swainos-api`
