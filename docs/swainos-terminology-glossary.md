@@ -15,6 +15,9 @@ This glossary is the canonical source of truth for user-facing terminology acros
 - API contract keys should align to canonical terminology.
 - Prefer explicit labels that distinguish amount vs percent/rate.
 - When backend key names differ from display names, document mapping here and in backend/frontend code documentation.
+- Do not use unqualified lifecycle words such as `active` or ambiguous grouping phrases such as `closed lifecycle` in canonical terminology.
+- `Booked*` metrics are close-date / booking-month metrics unless a row here explicitly says otherwise.
+- `Travel*` metrics are travel-period / travel-start metrics unless a row here explicitly says otherwise.
 
 ## Breaking Contract Targets
 - This glossary defines breaking canonical targets for API and code symbols.
@@ -31,14 +34,14 @@ This glossary is the canonical source of truth for user-facing terminology acros
 |---|---|---|---|---|
 | Gross Revenue | Total gross itinerary value in scope. | Currency | `grossAmount`, `expectedGrossAmount`, `forecastGrossAmount`, `targetGrossAmount` | Gross (ambiguous) |
 | Gross Profit | Profit from itinerary activity. | Currency | `grossProfitAmount`, `expectedGrossProfitAmount`, `forecastGrossProfitAmount`, `targetGrossProfitAmount` | Commission Income, Income, Net |
-| Booked Itineraries | Count of closed-won itineraries attributed to the selected **travel-period** window. | Integer | `bookedItinerariesCount` | When the UI labels **Travel Itineraries**, use that only for travel-start scoped KPIs; do not mix with lead-created windows |
+| Travel Itineraries | Count of closed-won itineraries attributed to the selected travel-period window. This is a travel-basis count, not a booked/close-date count. | Integer | `travelItinerariesCount`, `travel_itineraries_count` | Booked Itineraries |
 | Margin Amount | Absolute margin amount in currency. | Currency | `marginAmount`, `expectedMarginAmount` | Margin (when `%` is not explicit) |
 | Margin % | Margin ratio relative to gross revenue. | Percent | `marginPct`, `expectedMarginPct` | Margin Ratio, Margin Percent |
-| Booked Revenue | Close-date keyed booked revenue for selected scope. Closed lifecycle includes `closed_won` and `closed_active`; booking cutoffs still apply where noted. On travel-consultant **profile** booked matrix only — not the leaderboard primary ranking column. | Currency | `bookedRevenue`, `booked_revenue_amount` (close-date views) | Revenue (generic) |
-| Travel Revenue | Consultant/travel-consultant (and aligned) **travel-start** revenue: month from itinerary **`travel_start_date`**, closed lifecycle `closed_won` + `closed_active`. Includes future travel months for active files. | Currency | `travelRevenue`, `travel_revenue_amount` | Booked Revenue (wrong date basis) |
-| Travel Gross Profit | Same **travel-start** month and lifecycle as Travel Revenue; profit from `itineraries.gross_profit` in scope. | Currency | `travelGrossProfit`, `travel_gross_profit_amount` | Gross Profit (when close-date or ambiguous) |
+| Booked Revenue | Close-date keyed revenue for selected scope. Booked lifecycle is `closed_won` + `closed_active`; booking cutoffs still apply where noted. On travel-consultant **profile** booked matrix only — not the leaderboard primary ranking column. | Currency | `bookedRevenue`, `booked_revenue_amount` (close-date views) | Revenue (generic) |
+| Travel Revenue | Travel-start keyed revenue: month from itinerary **`travel_start_date`** using booked lifecycle `closed_won` + `closed_active`. Includes future travel months for active files where the surface is explicitly travel-basis. | Currency | `travelRevenue`, `travel_revenue_amount` | Booked Revenue (wrong date basis) |
+| Travel Gross Profit | Same travel-start month and booked lifecycle as Travel Revenue; profit from `itineraries.gross_profit` in scope. | Currency | `travelGrossProfit`, `travel_gross_profit_amount` | Gross Profit (when close-date or ambiguous) |
 | Booked Gross Profit | Close-date **booked** gross profit (booking/close month), used on booked-revenue and booking-pace consultant views. | Currency | `booked_gross_profit_amount` | Travel Gross Profit (wrong basis) |
-| Booked Item Value | Total booked destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` | Item Value, Destination Revenue |
+| Travel Item Value | Total travel-period destination item value in scope, aligned to itinerary-item service start period. | Currency | `bookedTotalPrice` (contract key pending rename), `travelTotalPrice` (target) | Booked Item Value, Item Value, Destination Revenue |
 | Supplier Travel Revenue | Supplier-attributed travel revenue grouped by itinerary-item service/travel period. Current-year supplier surfaces use YTD cutoff (`<= current_date`) with PYTD same-month/day comparator. | Currency | `grossAmount` on `/suppliers/*` payloads | Supplier Revenue (ambiguous without travel basis) |
 | Supplier Location Hierarchy Filter | Hierarchical location filter contract allowing any location lookup by `country`, `region`, `city`, or free-text `locationQuery`; hierarchy normalization prefers `supplier_items -> locations` with itinerary-item fallback fields. | Semantic basis | `/suppliers/leaderboard` query params | Supplier geography search (ambiguous) |
 | Destination Country | Country rollup dimension for destination analytics. | Text | `country`, `locationCountry` | Country (when entity context is unclear) |
@@ -49,8 +52,9 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | YoY Variance % | Year-over-year percent change vs comparable prior period. On consultant/travel-trade profile comparisons this is **booking pace** (same-month close-date cutoff), not pure travel-period YTD. | Signed Percent | `yoyToDateVariancePct`, `ytdVariancePct`, derived YoY delta fields | YoY to-date (without %) |
 | PYTD comparison (inline) | Prior-year comparator shown under the current-period value with signed delta percent. For booking-pace surfaces, comparator uses prior-year same-month close-date cutoff. For full-year booked surfaces, comparator is prior full year. | Text + percent | `priorYear` object on channel rows (`itineraryCount`, `grossAmount`, `grossProfitAmount`, …); `prior*` leaderboard fields | PY same-date |
 | Lead basis | Metrics grouped by itinerary `created_at` month. | Semantic basis | `leadCount`, `convertedLeadsCount`, `closedLostCount` families | Funnel rollup (ambiguous) |
-| Booked basis | Closed-won metrics grouped by itinerary `travel_start_date` month. | Semantic basis | `bookedItinerariesCount`, `grossAmount`, `grossProfitAmount` families | Travel/booked mixed naming |
-| Booking pace basis | Closed-lifecycle travel-month cohort (`closed_won` + `closed_active`) constrained by booking month (`close_date` month <= as-of cutoff month), implemented in semantic v2 booking-pace serving views for travel-trade and channel comparisons. | Semantic basis | booking-pace comparison fields and `priorYear` comparators | YTD (ambiguous without cutoff rule) |
+| Travel basis | Metrics grouped by itinerary `travel_start_date` month or selected travel-period window. | Semantic basis | `travelRevenue`, `travelGrossProfit`, `travelItinerariesCount` | Booked basis (wrong for travel-period metrics) |
+| Booked basis | Metrics grouped by itinerary `close_date` month or selected booking-month window. | Semantic basis | `bookedRevenue`, `bookedGrossProfit`, command-center booked buckets | Close-date basis should not be labeled travel-basis |
+| Booking pace basis | Booked-lifecycle travel-month cohort (`closed_won` + `closed_active`) constrained by booking month (`close_date` month <= as-of cutoff month), implemented in semantic v2 booking-pace serving views for travel-trade and channel comparisons. | Semantic basis | booking-pace comparison fields and `priorYear` comparators | YTD (ambiguous without cutoff rule) |
 | Target Variance % | Percent variance against strategic target trajectory. | Signed Percent | `growthTargetVariancePct`, `growthGapPct`, `totalGrowthGapPct` | Growth Gap (without %) |
 | Supplier Liability | Outstanding supplier AP from payable line rollups. | Currency | `totalOutstandingAmount`, `due30dAmount` | Supplier Payables, Open Supplier Liability |
 | Deposit Liability | Outstanding customer receivable/deposit posture in current window. | Currency | `outstandingDeposits`, `availableCashAfterLiability` | Open Deposit Liability |
@@ -60,6 +64,36 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | First Risk Date | Earliest date where projected cash violates risk rule by currency. | Date | `firstRiskDate` | First Breach Date |
 | Cash Buffer Threshold | Operating cash reserve threshold used in risk scoring. | Currency | `cashBufferAmount` | Reserve Floor |
 | Coverage Ratio | Projected inflows divided by projected outflows in selected horizon. | Ratio (`x`) | `coverageRatio` | Inflow/Outflow Ratio |
+
+## Lifecycle And Status Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| Open Pipeline | Itineraries still in an open selling lifecycle and not yet counted as booked outcomes. | Semantic set / status grouping | `open` status families, open-status repository lists | Active (ambiguous), Open Files |
+| Closed Won | Successful sales outcome that counts as won business. Contributes to conversion and close metrics and is included in booked lifecycle metrics. | Semantic set / status grouping | `closed_won` | Won |
+| Closed Active | Won itinerary that is operationally active for fulfillment/travel reporting and remains included in booked lifecycle metrics. | Semantic set / status grouping | `closed_active` | Active File, Active Booking |
+| Closed Lost | Unsuccessful closed sales outcome. Contributes to close-rate denominator and lead-loss reporting only; does not contribute to booked or travel revenue metrics. | Semantic set / status grouping | `closed_lost` | Lost, Closed Loss |
+| Booked Lifecycle | Canonical status set for booked-family and aligned travel-family metrics: `closed_won` + `closed_active`. | Semantic set | status filter families used by booked/travel metrics | Closed lifecycle |
+| Closed Outcome Set | Canonical close-rate outcome set: `closed_won` + `closed_lost`. | Semantic set | close-rate numerator/denominator inputs | Closed lifecycle |
+| Traveling | Operational status indicating an itinerary is currently in the traveling phase. For SwainOS active-travel metrics, this is status-based, not date-overlap based. | Status | `Traveling`, `itineraryStatus` | In Travel |
+| Currently Traveling | User-facing label for active-travel metrics based on itineraries in `Traveling` status. | Display term | `activeTravelSnapshot`, `activeTravelers`, `activeItineraries` | Active Travel (when used as primary display term), Current Travel |
+
+### Lifecycle Guardrails
+- Do not use **Active** by itself in canonical metric copy. Use a qualified term such as **Closed Active**, **Currently Traveling**, **Open Pipeline**, or **Active User**.
+- Do not use **closed lifecycle** in documentation or UI copy. Use **Booked Lifecycle** or **Closed Outcome Set** explicitly.
+- Do not let `closed_lost` enter booked-family or travel-family revenue/profit metrics unless this glossary is explicitly amended.
+
+## Time Window Canonical Terms
+
+| Canonical Display Term | Definition | Preferred Format | Canonical API Field(s) | Deprecated/Synonym Terms |
+|---|---|---|---|---|
+| 3 Months Backward | Rolling three-month lookback ending on the current date or endpoint anchor. | Explicit period label | endpoint-specific explicit backward window params/labels | `3m` (ambiguous) |
+| 6 Months Backward | Rolling six-month lookback ending on the current date or endpoint anchor. | Explicit period label | endpoint-specific explicit backward window params/labels | `6m` (ambiguous) |
+| 12 Months Backward | Rolling twelve-month lookback ending on the current date or endpoint anchor. | Explicit period label | endpoint-specific explicit backward window params/labels | `12m` (ambiguous) |
+| 3 Months Forward | Three-month forward-looking horizon from the current endpoint anchor/month. | Explicit period label | endpoint-specific explicit forward window params/labels | `3m` (ambiguous) |
+| 6 Months Forward | Six-month forward-looking horizon from the current endpoint anchor/month. | Explicit period label | endpoint-specific explicit forward window params/labels | `6m` (ambiguous) |
+| 12 Months Forward | Twelve-month forward-looking horizon from the current endpoint anchor/month. | Explicit period label | endpoint-specific explicit forward window params/labels | `12m` (ambiguous) |
+| This Year | Calendar-year window for the current year using the endpoint's canonical basis and cutoff rules. | Explicit period label | endpoint-specific year selectors | YTD (when cutoff semantics are not obvious) |
 
 ## Debt Service Canonical Terms
 
@@ -178,10 +212,16 @@ This glossary is the canonical source of truth for user-facing terminology acros
 | Section header | Title Case, noun-oriented | `Recommendation Queue` |
 | Filter label | Singular noun or noun phrase | `Domain`, `Severity`, `Status` |
 | Metric toggle label | Canonical metric names only | `Gross Profit`, `Gross Revenue`, `Margin Amount`, `PAX` |
-| Time window toggle | Short window token or explicit period name | `3m`, `6m`, `12m`, `This Year` (many analytics routes now use **fixed** windows from the server loader—only add toggles when product requires them) |
+| Time window toggle | Explicit directional period or explicit calendar period name | `3 Months Backward`, `6 Months Forward`, `This Year` |
 | Empty-state copy | Plain, deterministic, no metric synonym drift | `No recommendations matched current filters.` |
 
 ## Specific Mapping Guidance
+
+### Booked vs Travel Naming
+- Use **Booked** only for close-date / booking-month metric families.
+- Use **Travel** only for travel-start / travel-period metric families.
+- Do not label travel-period counts as **Booked Itineraries** in new copy; use **Travel Itineraries**.
+- Where non-canonical API fields still use booked naming for travel-period counts, document the mapping until code symbols are renamed.
 
 ### Gross Profit
 - User-facing UI should display **Gross Profit**.
@@ -212,6 +252,7 @@ This glossary is the canonical source of truth for user-facing terminology acros
 - Is amount vs percent explicit?
 - Is backend field naming mapped clearly when different from display text?
 - Are AI-generated summaries using canonical display terms?
+- Are lifecycle sets (`Booked Lifecycle`, `Closed Outcome Set`, `Traveling`) used explicitly instead of ambiguous status phrases?
 
 ## Application Access (Sign-in and routing)
 
