@@ -173,7 +173,7 @@ Error envelope:
 - `scripts/sync_marketing_web_analytics.py` (canonical unified Google ingest runner for GA4 + Search Console snapshot refresh)
 - Project-root bootstrapped operational scripts now share `src/core/env_file.load_env_file` for `.env` parsing, and their default `--env-file` resolution is standardized to repository-root `.env` rather than caller cwd-relative behavior.
 - Upsert ingestion scripts with identical batching semantics now share `scripts/batching_helpers.py` (`chunk_rows`, `chunk_values`) with import fallbacks that preserve both direct CLI execution and module-import test contexts.
-- Upsert ingestion scripts in the bounded standardization cluster now also share `scripts/env_helpers.py` for `.env` parsing, with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
+- Upsert ingestion scripts in the bounded standardization cluster now also share `scripts/env_helpers.py` for `.env` parsing (including locations/suppliers/employees/agencies/customer_payments/bookings and supplier-invoice/item upsert scripts), with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
 
 ## Data Jobs Control Plane
 - Runtime API routes:
