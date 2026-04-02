@@ -189,6 +189,51 @@ Polling and refresh guidance:
 - Frontend requests should target the documented API hostname consistently.
 - Do not scatter backend hostnames across multiple environment variables or code paths.
 
+## Web Analytics Conventions And Best Practices
+
+Vercel Web Analytics is enabled for usage visibility and behavior monitoring, not for collecting sensitive identity data.
+
+Baseline setup standard:
+
+- install `@vercel/analytics` in `SwainOS_FrontEnd/apps/web`
+- render `<Analytics />` once in the root app layout
+- use a shared helper (`trackEvent`) for custom events instead of raw ad hoc calls
+
+Event naming standard:
+
+- event names use `snake_case`
+- event names follow `<domain>_<object>_<action>` where possible
+- keep tense/action consistent, for example:
+  - `auth_login_attempted`
+  - `auth_login_succeeded`
+  - `auth_login_failed`
+  - `navigation_item_clicked`
+  - `navigation_collapsed_toggled`
+
+Event-property naming standard:
+
+- event property keys use `camelCase` to match SwainOS JSON conventions
+- property names should be short and explicit, for example:
+  - `targetPath`
+  - `httpStatus`
+  - `requiresCaptcha`
+  - `reason`
+- prefer booleans and enums for segmenting behavior in dashboards
+
+Privacy and security guardrails:
+
+- do not send raw emails, tokens, passwords, full names, or free-text message content
+- do not put secrets, auth headers, or backend credentials in event payloads
+- if identity-level diagnostics are needed, send non-reversible hashes only
+
+Instrumentation best practices:
+
+- track important journey transitions only (attempt, success, failure, click), not every render
+- for failures, include a normalized `reason` and `httpStatus` when available
+- keep event names stable once dashboards depend on them; add new events instead of silently repurposing old names
+- analytics calls must never block user flow or authentication flow
+- keep analytics code isolated in `lib/observability` helpers for maintainability
+
 ## Operations And Verification
 
 After any production deployment or hosting configuration change, verify:
