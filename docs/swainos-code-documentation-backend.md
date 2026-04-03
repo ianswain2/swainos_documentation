@@ -172,9 +172,9 @@ Error envelope:
 - `scripts/generate_ai_insights.py` (manual runner that calls `AiInsightsService.run_manual_generation`)
 - `scripts/sync_marketing_web_analytics.py` (canonical unified Google ingest runner for GA4 + Search Console snapshot refresh)
 - Project-root bootstrapped operational scripts now share `src/core/env_file.load_env_file` for `.env` parsing, and their default `--env-file` resolution is standardized to repository-root `.env` rather than caller cwd-relative behavior.
-- Upsert ingestion scripts with identical batching semantics now share `scripts/batching_helpers.py` (`chunk_rows`, `chunk_values`) with import fallbacks that preserve both direct CLI execution and module-import test contexts.
-- Upsert ingestion scripts in the bounded standardization cluster now also share `scripts/env_helpers.py` for `.env` parsing (including locations/suppliers/employees/agencies/customer_payments/bookings and supplier-invoice/item upsert scripts), with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
-- Additional operational scripts (`sync_salesforce_readonly.py`, `validate_salesforce_readonly_permissions.py`, `resolve_location_lookups.py`, rollup refresh runners, and AI context purge/refresh runners) now use the same `scripts/env_helpers.py` contract to avoid duplicated parser drift while preserving direct CLI execution.
+- Upsert ingestion scripts with identical batching semantics now share `scripts/batching_helpers.py` (`chunk_rows`, `chunk_values`) with import fallbacks that preserve both direct CLI execution and module-import test contexts (including `upsert_itinerary_names.py` and the core CRM upsert scripts).
+- Upsert ingestion scripts in the bounded standardization cluster now also share `scripts/env_helpers.py` for `.env` parsing (including locations/suppliers/employees/agencies/customer_payments/bookings/itinerary_names and supplier-invoice/item upsert scripts), with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
+- Additional operational scripts (`sync_salesforce_readonly.py`, `validate_salesforce_readonly_permissions.py`, `resolve_location_lookups.py`, `cleanup_inactive_employees.py`, `resolve_itinerary_item_supplier_item_links.py`, rollup refresh runners, and AI context purge/refresh runners) now use the same `scripts/env_helpers.py` contract to avoid duplicated parser drift while preserving direct CLI execution.
 
 ## Data Jobs Control Plane
 - Runtime API routes:
