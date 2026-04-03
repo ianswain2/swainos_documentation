@@ -862,3 +862,4 @@
 2026-04-03 18:12 - Reduced FX Command chart panel height from 360px to 280px in the shared chart component to keep AUD/NZD/ZAR three-across layout while lowering visual clutter in the top row.
 2026-04-03 18:18 - Tightened FX Command three-chart layout by clipping panel/chart overflow and reducing shared chart height to 240px so the top-row charts stay contained within their cards and stop visually colliding with the FX Signal section.
 2026-04-03 18:24 - Fixed FX transaction modal stale default-form behavior by replacing module-load date initialization with per-reset default generation and preserving the current transaction date/type after successful submits; revalidated frontend lint clean.
+2026-04-03 (session) - Merged Phase 5 decomposition PRs to `main` on frontend/backend/documentation; `git fetch --prune`, fast-forwarded `main` on all three repos, deleted local `hardening/phase-5-decomposition` after merge.
