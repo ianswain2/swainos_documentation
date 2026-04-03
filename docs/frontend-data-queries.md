@@ -130,7 +130,7 @@ Command center and cash-flow overview / forecast / scenarios use **dashboard sna
 
 ## Operational notes
 - Itinerary revenue surfaces use `grossProfitAmount` as canonical Gross Profit.
-- Itinerary actuals stay **travel-period** reporting. Travel Agencies channel comparison and consultant/agency/agent YoY-variance fields now use booking-pace month-cutoff logic by `close_date`.
+- Itinerary actuals stay **travel-period** reporting. Travel Agencies channel comparison and consultant/agency/agent YoY-variance fields use booking-pace month-cutoff logic by `close_date`.
 - Booking-pace closed-lifecycle reads and booked-revenue-by-close-date reads include both `closed_won` and `closed_active` statuses from `itinerary_status_reference`.
 - Itinerary lead-flow panel: **itinerary actuals** only.
 - Destination matrix API still carries passenger fields; destination UI hides passenger metrics where noted in product rules.
