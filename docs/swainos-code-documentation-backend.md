@@ -271,6 +271,7 @@ Error envelope:
     - `SwainOS_BackEnd/supabase/migrations/0099_allow_marketing_sync_partial_status_v1.sql`
 - Search Console ingestion is active and persisted in Supabase canonical facts for query/page/country/device analysis.
 - Search Console sync-window resolution, snapshot upsert orchestration, insights rollup shaping, and page-profile shaping are owned by `MarketingSearchConsoleService`; `MarketingWebAnalyticsService` delegates those responsibilities while keeping API contracts unchanged.
+- Shared pure helpers for marketing country-scope normalization, Search Console date parsing, branded-query detection, decimal coercion, and safe-rate math live in `src/services/marketing_web_analytics_helpers.py`; both services import the same implementation so helper behavior does not drift between GA4 and Search Console code paths.
 - Search Console Supabase rollups:
   - `marketing_search_console_insights_rollup_v1` (baseline workspace rollup)
   - `marketing_search_console_us_workspace_v1` (US-first workspace rollup)
