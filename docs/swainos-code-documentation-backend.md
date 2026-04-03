@@ -192,8 +192,12 @@ Error envelope:
   - `src/api/data_job_runs.py`
 - Core orchestration:
   - `src/services/data_job_service.py`
+  - `src/services/data_job_run_executor.py`
   - `src/repositories/data_job_repository.py`
   - `src/services/job_runners/*`
+- Data-jobs execution boundary:
+  - `DataJobService` owns job lookup, dependency/active-run gating, scheduler dispatch decisions, and delegation.
+  - `data_job_run_executor.execute_job_run` owns run lifecycle execution (run row creation, step/progress persistence, checkpoint emission, runner invocation, terminal updates, and post-success dependent dispatch callback execution).
 - Supabase control-plane objects (migration `0090_create_data_jobs_control_plane_v1.sql`):
   - `public.data_jobs`
   - `public.data_job_dependencies`
@@ -235,6 +239,7 @@ Error envelope:
 ## Marketing Web Analytics (GA4-First)
 - Runtime API route: `src/api/marketing_web_analytics.py`
 - Service orchestration: `src/services/marketing_web_analytics_service.py`
+- Search Console collaborator: `src/services/marketing_search_console_service.py`
 - Persistence adapter: `src/repositories/marketing_web_analytics_repository.py`
 - GA4 integration client: `src/integrations/google_analytics_client.py`
 - Search Console integration client: `src/integrations/google_search_console_client.py`
@@ -265,6 +270,7 @@ Error envelope:
     - `SwainOS_BackEnd/supabase/migrations/0087_create_search_console_analytics_tables.sql`
     - `SwainOS_BackEnd/supabase/migrations/0099_allow_marketing_sync_partial_status_v1.sql`
 - Search Console ingestion is active and persisted in Supabase canonical facts for query/page/country/device analysis.
+- Search Console sync-window resolution, snapshot upsert orchestration, insights rollup shaping, and page-profile shaping are owned by `MarketingSearchConsoleService`; `MarketingWebAnalyticsService` delegates those responsibilities while keeping API contracts unchanged.
 - Search Console Supabase rollups:
   - `marketing_search_console_insights_rollup_v1` (baseline workspace rollup)
   - `marketing_search_console_us_workspace_v1` (US-first workspace rollup)

@@ -119,6 +119,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - `/api/v1/debt-service/scenarios` and `/api/v1/debt-service/scenarios/run`
 - Destination analytics: `itinerary-destinations/*` via `features/sales/destination-server-loader.ts` and `app/destination/page.tsx`
 - FX Command reads rates/exposure/signals/holdings/transactions/intelligence/invoice-pressure
+  - `fx-command-page.tsx` acts as route orchestration and section composition
+  - `fx-command-helpers.ts` owns pure FX formatting/rate helper functions
+  - `fx-transaction-modal.tsx` owns transaction modal state, validation, and submit behavior
 - Marketing Web Analytics reads:
   - `/api/v1/marketing/web-analytics/overview`
   - `/api/v1/marketing/web-analytics/page-activity`
