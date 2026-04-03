@@ -51,7 +51,7 @@
 
 ## Supplier Item Linkage (Phase 1)
 
-- Itinerary item rows now preserve source item lookup in `itinerary_items.supplier_item_external_id`.
+- Itinerary item rows preserve source item lookup in `itinerary_items.supplier_item_external_id`.
 - UUID FK linkage uses `itinerary_items.supplier_item_id` resolved from `supplier_items.external_id`.
 - Canonical source object for this lookup: `KaptioTravel__Item__c` (Kaptio UI label: Service).
 
@@ -73,7 +73,7 @@
 
 | Source Field | Mapping Status |
 | --- | --- |
-| _None_ | All currently requested source fields are mapped |
+| _None_ | All requested source fields are mapped |
 
 ## Destination Booked Rollup Filter Rules
 

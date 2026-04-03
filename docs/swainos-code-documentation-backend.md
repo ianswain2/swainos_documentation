@@ -94,7 +94,8 @@ Error envelope:
 - Status classification: `itinerary_status_reference` (`pipeline_bucket`, `pipeline_category`, `is_filter_out`)
 - Itinerary revenue rollups remain keyed by travel period for actuals/outlook, while booked-revenue YoY uses a dedicated close-date semantic rollup path
 - Supplier production analytics are sourced from `mv_supplier_travel_revenue_monthly_v1` (fact basis: `itinerary_items`; hierarchy enrichment via `supplier_items.location_id -> locations` with itinerary-item location fallback; current-year travel surfaces are cut to `current_date` for true YTD). Supplier-level distinct itinerary counts read from `mv_supplier_itinerary_fact_v1` via RPCs `supplier_distinct_itinerary_counts_v1` and `supplier_monthly_distinct_itinerary_counts_v1` so KPI counts are not derived by summing location-bucket distincts.
-- `refresh_itinerary_revenue_rollups_v1()` now refreshes only itinerary-facing revenue/deposit/channel MVs; supplier-facing refresh work is cut over to `refresh_supplier_revenue_rollups_v1()` for supplier core (`mv_supplier_itinerary_fact_v1`, `mv_supplier_travel_revenue_monthly_v1`) and `refresh_supplier_service_type_revenue_rollups_v1()` for `mv_supplier_service_type_revenue_monthly_v1`, keeping the Salesforce downstream job graph below RPC gateway timeout pressure. Booking-pace comparisons continue reading semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
+- Supplier profile KPI and all-time relationship summary fetch distinct-itinerary-count facts only for windows that are rendered (`current` and `all-time`); no unused prior-window distinct-count query is executed.
+- `refresh_itinerary_revenue_rollups_v1()` refreshes itinerary-facing revenue/deposit/channel MVs; supplier-facing refresh work runs through `refresh_supplier_revenue_rollups_v1()` for supplier core (`mv_supplier_itinerary_fact_v1`, `mv_supplier_travel_revenue_monthly_v1`) and `refresh_supplier_service_type_revenue_rollups_v1()` for `mv_supplier_service_type_revenue_monthly_v1`, keeping the Salesforce downstream job graph below RPC gateway timeout pressure. Booking-pace comparisons read semantic v2 serving views refreshed by `refresh_semantic_rollups_v2()`
 - `/itinerary-revenue/conversion` **observed** metrics (open quoted, confirmed, lost, pipeline total, `observed_close_ratio`, gross splits by stage class) are computed in Supabase view `itinerary_pipeline_conversion_monthly_v1`, which aggregates `mv_itinerary_pipeline_stages` in SQL. The service layer only applies **projections** (scenario close rates × open pipeline, gross-profit yield from `mv_itinerary_revenue_monthly`) and the lookback blend with revenue outlook buckets—no re-aggregation of stage rows in Python for the timeline.
 - Consultant and company AI context is materialized and refreshed via `refresh_consultant_ai_rollups_v1()`
 - Travel trade analytics reads from semantic v2 serving views refreshed via `refresh_semantic_rollups_v2()`
@@ -108,9 +109,9 @@ Error envelope:
 - FX invoice pressure endpoint reads from AP pressure rollups (`ap_pressure_30_60_90_v1`) instead of header-only supplier invoice totals.
 - `/cash-flow/summary|timeseries` uses customer payments + AP payment-calendar rows for historical/net liquidity slices.
 - `/cash-flow/risk-overview|forecast|ap-schedule|scenarios` uses forward AP schedule rows plus projected inflow baseline from trailing customer payment history to flag upcoming cash stress by currency.
-- `/itinerary-trends` and `/itinerary-lead-flow` now fail with explicit `503` error envelopes on repository/query failures (no silent zero-data fallback).
+- `/itinerary-trends` and `/itinerary-lead-flow` return explicit `503` error envelopes on repository/query failures (no silent zero-data fallback).
 - `/payments-out/summary` reports AP line-based outstanding and near-term due pressure.
-- `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; Search Console analytics requires `GOOGLE_GSC_SITE_URL` and service-account access.
+- `/marketing/web-analytics/*` is GA4 + Supabase snapshot-first; the canonical Google ingest job refreshes both GA4 and Search Console snapshots, and Search Console analytics requires `GOOGLE_GSC_SITE_URL` plus service-account access.
 
 ## Debt Service Domain
 - Debt facilities are data-driven rows in `debt_facilities`; no loan constants are embedded in service code.
@@ -128,7 +129,7 @@ Error envelope:
 - `mv_itinerary_pipeline_stages` (itinerary pipeline by travel month and derived stage; refreshed with itinerary revenue rollup jobs)
 - `mv_itinerary_revenue_monthly`
 - `mv_itinerary_revenue_weekly`
-- `mv_itinerary_deposit_monthly` (retained for operational/refresh paths; not exposed via current itinerary-revenue HTTP contract)
+- `mv_itinerary_deposit_monthly` (retained for operational/refresh paths; not exposed via the itinerary-revenue HTTP contract)
 - `mv_itinerary_consortia_monthly`
 - `mv_itinerary_trade_agency_monthly`
 - `mv_itinerary_consortia_actuals_monthly`
@@ -169,7 +170,21 @@ Error envelope:
 - `scripts/generate_fx_intelligence.py`
 - `scripts/refresh_fx_exposure.py`
 - `scripts/generate_ai_insights.py` (manual runner that calls `AiInsightsService.run_manual_generation`)
-- `scripts/sync_marketing_web_analytics.py` (GA4 runtime sync path)
+- `scripts/sync_marketing_web_analytics.py` (canonical unified Google ingest runner for GA4 + Search Console snapshot refresh)
+- Project-root bootstrapped operational scripts share `src/core/env_file.load_env_file` for `.env` parsing, and their default `--env-file` resolution points to repository-root `.env` rather than caller cwd-relative behavior.
+- Upsert ingestion scripts with identical batching semantics share `scripts/batching_helpers.py` (`chunk_rows`, `chunk_values`) with import fallbacks that preserve both direct CLI execution and module-import test contexts (including `upsert_itinerary_names.py` and the core CRM upsert scripts).
+- Upsert ingestion scripts in the bounded standardization cluster share `scripts/env_helpers.py` for `.env` parsing (including locations/suppliers/employees/agencies/customer_payments/bookings/itinerary_names and supplier-invoice/item upsert scripts), with matching fallback import behavior so CLI usage and import-based test harnesses resolve the helper consistently.
+- `scripts/env_helpers.py` delegates to `src/core/env_file.load_env_file` and exposes the superset parser options (`strip_key_whitespace`, `strip_wrapping_quotes`) needed by script-specific import flows, so `.env` parsing logic has one implementation source.
+- Additional operational scripts (`sync_salesforce_readonly.py`, `validate_salesforce_readonly_permissions.py`, `resolve_location_lookups.py`, `cleanup_inactive_employees.py`, `resolve_itinerary_item_supplier_item_links.py`, rollup refresh runners, and AI context purge/refresh runners) use the same `scripts/env_helpers.py` contract while preserving direct CLI execution.
+
+## Script and Code Standardization Rules
+- Keep `.env` parsing in shared helpers (`src/core/env_file.py` for project-root scripts, `scripts/env_helpers.py` for script-cluster imports); avoid inline parser copies.
+- Keep row batching in `scripts/batching_helpers.py`; avoid script-local `chunk_rows` / `chunk_values` duplicates.
+- For scripts that must run both as direct CLI files and as import targets in tests, use dual-path imports (`scripts.*` first, fallback to local module after `sys.path` insertion).
+- Keep `--help` bootstrap safe: parse args and load env before runtime-only service imports; defer optional heavy dependencies to execution paths.
+- Preserve behavior-specific parsing through explicit helper options (for example `strip_wrapping_quotes`) instead of introducing one-off script forks.
+- Apply route → service → repository layering for API behavior; keep script logic operational and side-effect scoped.
+- Treat this document as a contract snapshot: describe system behavior in present tense and avoid migration-status phrasing.
 
 ## Data Jobs Control Plane
 - Runtime API routes:
@@ -258,10 +273,10 @@ Error envelope:
   - `/marketing/web-analytics/page-activity` for best/worst pages, itinerary-page filtering, quality scoring, and dedicated lookbook/destination page slices via deterministic path-contains classification
   - `/marketing/web-analytics/geo` for country/region/city performance plus audience demographics (`userAgeBracket`, `userGender`) and device-category breakdowns
   - `/marketing/web-analytics/events` for event catalog definitions and conversion classification
-  - `/marketing/web-analytics/search` now includes source/medium mix, referral source leaders, value-ranked sources, and explicit traffic-quality signals (`bounceRate`, `qualifiedSessionRate`, `qualityLabel`) in addition to landing pages and internal site-search demand
+- `/marketing/web-analytics/search` includes source/medium mix, referral source leaders, value-ranked sources, and explicit traffic-quality signals (`bounceRate`, `qualifiedSessionRate`, `qualityLabel`) in addition to landing pages and internal site-search demand
   - `/marketing/web-analytics/search-console` serves a US-first Search Console workspace: overview, top queries/pages, country+device mix, market benchmarks, query intent buckets, position-band summaries, and deterministic opportunities/challenges/issues from Supabase rollups (with controlled live refresh when stale)
   - `/marketing/web-analytics/search-console/page-profile` serves single-page URL drill-down data (overview, daily trend, top queries, market benchmarks, diagnostics, recommended actions) from Supabase rollups
-  - `/marketing/web-analytics/ai-insights` now returns structured action-engine output (`category`, `focusArea`, `targetLabel`, `ownerHint`, `impactScore`, `confidenceScore`) for direct marketer/sales/AI consumption
+- `/marketing/web-analytics/ai-insights` returns structured action-engine output (`category`, `focusArea`, `targetLabel`, `ownerHint`, `impactScore`, `confidenceScore`) for direct marketer/sales/AI consumption
 - Scope contract:
   - GA4-backed read endpoints accept optional `country` query param.
   - `country=all` (or omitted) keeps snapshot-first `All markets` behavior for GA4-backed surfaces.
@@ -269,14 +284,17 @@ Error envelope:
   - Search Console Insights routes are intentionally US-first and do not accept a market selector parameter.
   - Response meta includes `marketScope` and `marketLabel` to make backend-applied scope explicit to clients.
 - Quality/consolidation notes:
-  - Daily/channel/country storage now persists canonical per-day facts (`date+channel`, `date+country`) and is overwrite-safe for repeated same-day sync runs.
+- Daily/channel/country storage persists canonical per-day facts (`date+channel`, `date+country`) and is overwrite-safe for repeated same-day sync runs.
+  - Historical GA4 daily/channel/country snapshot refresh is incremental: first bootstrap can backfill ~800 days, then later runs refresh only a bounded catch-up window (`max(14 days, staleness + 3 days)` per scope) instead of replaying the full history each run.
+  - Search Console snapshot refresh is also incremental under the same unified ingest job: first bootstrap backfills up to 365 days, then later runs refresh only a bounded catch-up window (`max(14 days, staleness + 3 days)` per scope).
   - Overview KPI windows (`current_30d`, `previous_30d`, `year_ago_30d`, `today`, `yesterday`) are synced into `marketing_web_analytics_overview_period_summaries` so frontend reads do not recompute distinct users by summing daily rows.
   - Page-activity ingestion is stored at GA4 `pagePath` grain and avoids segmented-row merges that can distort non-additive metrics.
   - Large page-activity and geo writes are chunked in repository upserts to keep sync reliability stable at higher row counts.
   - `/marketing/web-analytics/overview` returns an extended trend window (up to ~800 days) from Supabase snapshots so frontend YoY visualizations do not require live GA4 calls.
+- Rolling 7/30/90-day marketing/search snapshots and Search Console opportunity/challenge inputs are recomputed for each run-date as-of value rather than historical replay, so suggestion surfaces stay current without scanning the full source history on every run.
   - Demographics/device/internal-search enrichment is snapshotted during sync for 30-day reads; custom day ranges still use exact same-window GA4 pulls.
-  - Optional section failures (demographics/devices/internal-search) are now recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
-  - AI insight generation now applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
+- Optional section failures (demographics/devices/internal-search/Search Console) are recorded as `partial` sync runs with section details in `error_message` instead of silently reporting full `success`.
+- AI insight generation applies ruthless marketing heuristics across landing pages, channels, device mix, geo quality, internal site search, destination demand, and content-removal candidates.
 
 ## Salesforce Data Ingestion
 - Runtime orchestrator: `scripts/sync_salesforce_data_ingestion.py`
@@ -409,10 +427,10 @@ Error envelope:
   - `vw_travel_consultant_lead_monthly_v2`
   - `vw_travel_consultant_booked_revenue_monthly_v2` (close-date booked revenue + `booked_gross_profit_amount`)
   - `vw_travel_consultant_booking_pace_monthly_v2` (booking-pace; includes `booked_gross_profit_amount`)
-- Travel-agent consultant affinity now reads from `vw_travel_agent_consultant_affinity_monthly_v2`.
+- Travel-agent consultant affinity reads from `vw_travel_agent_consultant_affinity_monthly_v2`.
 - New refresh RPC: `refresh_semantic_rollups_v2()`; wired as a parallel system-managed data job (`semantic-rollups-v2-refresh`).
 - Parity diagnostic view: `vw_semantic_rollup_v2_parity_checks` (legacy closed-won baseline checks for totals/top-10/PYTD pace sanity); booked-revenue close-date diagnostics are exposed via `vw_semantic_booked_revenue_v2_checks`.
-- Baseline freeze utility script: `scripts/capture_semantic_rollup_baseline_v1.py` now snapshots v2 serving views to a v2 baseline artifact for parity validation.
+- Baseline freeze utility script: `scripts/capture_semantic_rollup_baseline_v1.py` snapshots v2 serving views to a v2 baseline artifact for parity validation.
 
 ## Runtime Security and Cost Guardrails
 - Production startup requires non-empty values for:
@@ -422,6 +440,8 @@ Error envelope:
 - Non-production behavior: manual/scheduler token headers are only enforced when a token is configured; unconfigured local/dev environments are allowed for developer workflows.
 - Production request handling enforces trusted host allowlists before route execution.
 - Subprocess-backed data jobs are bounded by `max_runtime_seconds`; timed-out jobs are force-killed and marked with `runner_timeout_killed`.
+- Subprocess job output handling streams from process stdout and keeps only bounded tail output in persisted run metadata; no unused in-memory stdout accumulator state is retained in the runner path.
+- CLI operational scripts should remain `--help` safe before runtime-only service initialization; runtime-only dependencies should load in execution paths, not block argument parsing/bootstrap.
 - AI generation enforces run-level budgets (`max model calls`, `max tokens`, `max consultants`) and returns partial-safe status when budget limits are hit.
 - Application-layer rate limits are in-memory and process-local; Cloudflare edge rate limiting remains the global cross-instance enforcement layer.
 

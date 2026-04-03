@@ -149,7 +149,7 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 
 ## UX and Composition Notes
 - System shell and navigation live in `components/layout/*`
-- `PageShell` now provides layout spacing and optional action controls only; route-level title/subtitle header chrome has been intentionally removed across tabs to reduce vertical clutter.
+- `PageShell` provides layout spacing and optional action controls only; route-level title/subtitle header chrome is removed across tabs to reduce vertical clutter.
 - Assistant panel uses module/entity context and entity AI endpoint when entity context is present
 - Itinerary lead-flow panel is rendered on itinerary actuals, not itinerary forecast
 - Chart containers use fluid `ResponsiveContainer` rendering; shell enforces `min-w-0` and overflow guards for responsive stability
@@ -174,10 +174,10 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
   - Top-bar manual payment action that opens a prefilled prompt and only posts on explicit confirm
   - Facility selector to target schedule/payments/scenarios and payment posting per selected loan
   - Initial server-load failure path returns a safe snapshot with user-visible error state instead of route crash
-  - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service currently uses compact `1rem` values)
+  - KPI typography can be tuned per page with `valueClassName` overrides (Debt Service uses compact `1rem` values)
   - Event-driven refresh and mutation handlers (`useState`, `useMemo`, `useTransition`) without `useEffect`-driven synchronization logic
 - Cash Flow + Command Center posture:
-  - **Command center** uses the dashboard snapshot only and is now focused on executive booking/travel performance (booked revenue + booked gross profit snapshot cards, travel revenue/travel gross profit year cards, top open itineraries, top consultant rankings, briefing).
+- **Command center** uses the dashboard snapshot only and focuses on executive booking/travel performance (booked revenue + booked gross profit snapshot cards, travel revenue/travel gross profit year cards, top open itineraries, top consultant rankings, briefing).
   - **AP** pages and cash-flow drill-downs continue using granular `/api/v1/ap/*` and `/api/v1/cash-flow/*` routes as documented in `frontend-data-queries.md`.
 - Cash Flow module is split into overview + detail routes with decision-first order:
   - Overview answers `Are we at risk?`, `When is first risk?`, and `Why?`
@@ -244,6 +244,9 @@ SwainOS frontend is a Next.js App Router application with feature-based modules 
 - No unused imports, dead code, or compatibility shims
 - Contract/display terms align with `docs/swainos-terminology-glossary.md`
 - Legacy manual-run frontend proxy route (`/app/api/fx/rates/run/route.ts`) is removed; active frontend manual runs call `/api/v1/data-jobs/{job_key}/runs`.
+- Standardize new work around shared primitives first: `lib/api/httpClient.ts`, `lib/api/parallelFetch.ts`, shared `*Service.ts` clients, and `components/ui/table.tsx` table primitives; avoid one-off fetch wrappers and ad-hoc table systems in feature files.
+- Keep route behavior server-first through route loaders and snapshot services; add client hooks only for explicit interaction paths that cannot be satisfied by server snapshots.
+- Document behavior as present-tense system contracts and avoid migration timeline language.
 
 ## Related documentation
 

@@ -78,7 +78,7 @@
    - `python3 scripts/upsert_itinerary_items.py "<path-to-itinerary-items-csv>" --strict-fk-resolver --skip-unresolved-fks --export-unresolved-csv ./tmp/unresolved_itinerary_item_refs.csv`
 
 ## Incremental Sync Contract (Phase 2)
-- Salesforce read-only sync now treats supplier items as a first-class object (`KaptioTravel__Item__c`) in the scheduled incremental window (`SystemModstamp` + `Id` cursor semantics).
+- Salesforce read-only sync treats supplier items as a first-class object (`KaptioTravel__Item__c`) in the scheduled incremental window (`SystemModstamp` + `Id` cursor semantics).
 - Default extraction is intentionally minimal/schema-safe (no optional field toggles): `Id`, `KaptioTravel__Supplier__c`, `Name`, `CurrencyIsoCode`, `IsDeleted`, `CreatedDate`, `LastModifiedDate`, `SystemModstamp`.
 - Required itinerary-item lookup field in each incremental pull:
   - `KaptioTravel__Itinerary_Item__c.KaptioTravel__Item__c` -> `itinerary_items.supplier_item_external_id`
